@@ -40,13 +40,17 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
   const info = utInfo(ut.tipo);
   const base = `/p/${p.id}/e/${eid}/u/${uid}`;
 
-  const steps = [
-    { k: 'fatores', n: '01', t: 'Fatores de risco', s: info.quadro },
-    { k: 'efetivo', n: '02', t: 'Efetivo', s: precisaEfetivo(ut.tipo) ? `${fmt(ef.total)} pessoas` : 'Evacuação' },
-    { k: 'carga', n: '03', t: 'Carga de incêndio', s: precisaCarga(ut.tipo) ? `${fmt(carga.q)} MJ/m²` : 'Opcional' },
-    { k: 'categoria', n: '04', t: 'Categoria', s: CAT_NOME[cls.cat] },
-    { k: 'medidas', n: '05', t: 'Medidas', s: 'RT-SCIE' },
+  const todos = [
+    { k: 'fatores', t: 'Fatores de risco', s: info.quadro },
+    precisaEfetivo(ut.tipo)
+      ? { k: 'efetivo', t: 'Efetivo', s: `${fmt(ef.total)} pessoas` }
+      : { k: 'efetivo', t: 'Espaços', s: 'Locais de risco e evacuação' },
+    ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
+    { k: 'categoria', t: 'Categoria', s: CAT_NOME[cls.cat] },
+    { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
+  const steps = todos.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
+  if (!steps.some((x) => x.k === step)) step = 'fatores';
   const props: UTProps = { ed, ut, upU };
 
   return (

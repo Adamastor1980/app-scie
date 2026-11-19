@@ -36,10 +36,13 @@ export default function UTCategoria({ ut }: UTProps) {
           </p>
           {c.notas.map((n) => <p key={n} className="mt-2 text-[12.5px] text-ink-3">{n}</p>)}
           {c.falta.length > 0 && <div className="mt-3"><Note tone="warn">Dados em falta: {c.falta.join('; ')}. A categoria apresentada assume o valor zero para esses fatores.</Note></div>}
-          <div className="mt-5 grid gap-px border border-ink bg-ink sm:grid-cols-3">
-            <div className="bg-white p-3"><p className="label">Efetivo</p><p className="num text-[18px] font-semibold">{fmt(ef.total)}</p></div>
-            <div className="bg-white p-3"><p className="label">Altura da UT</p><p className="num text-[18px] font-semibold">{fmt(ut.altura, 2)} m</p></div>
-            <div className="bg-white p-3"><p className="label">q modificada</p><p className="num text-[18px] font-semibold">{fmt(carga.q, 1)} MJ/m²</p></div>
+          <div className={`mt-5 grid gap-px border border-ink bg-ink ${['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3', 'sm:grid-cols-4'][Math.min(c.fatores.length, 4)]}`}>
+            {c.fatores.map((f) => (
+              <div key={f.id} className="bg-white p-3">
+                <p className="label">{f.rotulo}</p>
+                <p className="num text-[18px] font-semibold">{typeof f.valor === 'number' ? fmt(f.valor, f.unidade === 'm' ? 2 : f.unidade === 'MJ/m²' ? 1 : 0) : f.valor}{typeof f.valor === 'number' && f.unidade ? ` ${f.unidade}` : ''}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

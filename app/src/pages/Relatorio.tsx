@@ -235,8 +235,8 @@ export default function Relatorio() {
 
         <H1 n={S()}>Densidade de carga de incêndio modificada</H1>
         <P>Determinada segundo o Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020: método determinístico Qs = Σ Mi·Hi·Ci·Rai; método probabilístico Qs = Σ qsi·Si·Ci·Rai (atividades) e Qs = Σ qvi·hi·Si·Ci·Rai (armazenamento); qs = Qs/S. Para a UT: q = Σ qsk·Sk / Σ Sk (n.º 4.º).</P>
-        {todas.filter((u) => u.ut.compartimentos.length).length === 0 && <P>Não foram calculadas cargas de incêndio (fator de risco apenas nas UT XI e XII).</P>}
-        {todas.filter((u) => u.ut.compartimentos.length).map(({ ut, carga }) => (
+        {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).length === 0 && <P>Não foram calculadas cargas de incêndio (fator de risco apenas nas UT XI e XII).</P>}
+        {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).map(({ ut, carga }) => (
           <div key={ut.id} className="mb-6">
             <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             {ut.compartimentos.map((c) => { const r = cargaCompartimento(c); return (
