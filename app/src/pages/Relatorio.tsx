@@ -5,7 +5,7 @@ import { useP } from './ProjetoShell';
 import { DIPLOMAS, LOCAIS, ROMANO, SUBTIPOS_C, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
 import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt } from '../engine/calc';
-import { contexto, gerarMedidas, TEMAS, type Medida } from '../engine/medidas';
+import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import QuadroAnexo from './ut/QuadroAnexo';
 import { CAT_COR, Toggle } from '../ui/primitives';
 import type { Cat, LocalRisco } from '../data/types';
@@ -127,7 +127,7 @@ export default function Relatorio() {
         </table>
         <H1 n="—">Índice</H1>
         <ol className="space-y-1.5 text-[12.5px]">
-          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor'].map((t, i) => (
+          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor'].map((t, i) => (
             <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire">{i + 1}</span>{t}</li>
           ))}
         </ol>
@@ -247,19 +247,34 @@ export default function Relatorio() {
         ))}
 
         <H1 n={S()}>Condições de segurança exigíveis</H1>
-        <P>Exigências concretizadas para cada utilização-tipo em função da categoria de risco, da altura do edifício e dos locais de risco. «A verificar» identifica exigências cujo cumprimento depende de elementos de projeto não introduzidos.</P>
-        {todas.map(({ ut, ed, medidas, cls }) => (
+        <P>Organizadas segundo os capítulos II a VII da memória descritiva do anexo IV do RJ-SCIE (art. 2.º), com a mesma numeração. Para cada utilização-tipo, as exigências são concretizadas em função da categoria de risco, da altura do edifício e dos locais de risco. «Verificar» identifica exigências cujo cumprimento depende de elementos de projeto não introduzidos; «n/a» indica a razão legal da não aplicação.</P>
+        {todas.map(({ ut, ed, medidas, cls }, ui) => (
           <div key={ut.id} className="mb-8">
-            <p className="avoid-break mb-2 border-b border-ink pb-1 text-[13.5px] font-bold">{ed.nome} · {tituloUT(ut)} · {CAT_NOME[cls.cat]}</p>
-            {TEMAS.filter((t) => t !== 'Autoproteção').map((t) => {
-              const m = filtraMed(medidas.filter((x) => x.tema === t));
-              if (!m.length) return null;
+            <p className="avoid-break mb-3 border-b-2 border-ink pb-1 text-[14px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)} · {CAT_NOME[cls.cat]}</p>
+            {GRUPOS.filter((g) => g !== 'Medidas de autoproteção').map((g) => {
+              const secs = SECOES.filter((x) => x.g === g);
+              const temAlgo = secs.some((x) => medidas.some((m) => m.tema === x.c));
+              if (!temAlgo) return null;
               return (
-                <div key={t} className="mb-3">
-                  <p className="avoid-break mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-fire">{t}</p>
-                  <table className="tbl"><tbody>{m.map((x) => (
-                    <tr key={x.id}><td className="w-[27%] font-semibold">{x.titulo}{x.estado !== 'aplica' && <span className={`ml-1 font-mono text-[9.5px] ${x.estado === 'verificar' ? 'text-warn' : 'text-ink-4'}`}>[{x.estado === 'verificar' ? 'verificar' : 'n/a'}]</span>}</td><td className="text-[11.5px] leading-relaxed">{x.exigencia}{x.motivo && <span className="block italic text-ink-3">{x.motivo}</span>}</td><td className="w-[20%] text-[10px] text-ink-3">{x.base}</td></tr>
-                  ))}</tbody></table>
+                <div key={g} className="mb-4">
+                  <p className="keep-next avoid-break mb-1.5 mt-3 font-display text-[13.5px] font-bold">{g}</p>
+                  {secs.map((x) => {
+                    const todasSec = medidas.filter((m) => m.tema === x.c);
+                    if (!todasSec.length) return null;
+                    const m = filtraMed(todasSec);
+                    return (
+                      <div key={x.c} className="mb-2.5">
+                        {x.c !== '0' && x.c !== 'ESP' && <p className="keep-next avoid-break mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">{secRotulo(x.c)}</p>}
+                        {m.length ? (
+                          <table className="tbl"><tbody>{m.map((y) => (
+                            <tr key={y.id}><td className="w-[27%] font-semibold">{y.titulo}{y.estado !== 'aplica' && <span className={`ml-1 font-mono text-[9.5px] ${y.estado === 'verificar' ? 'text-warn' : 'text-ink-4'}`}>[{y.estado === 'verificar' ? 'verificar' : 'n/a'}]</span>}</td><td className="text-[11.5px] leading-relaxed">{y.exigencia}{y.motivo && <span className="block italic text-ink-3">{y.motivo}</span>}</td><td className="w-[20%] text-[10px] text-ink-3">{y.base}</td></tr>
+                          ))}</tbody></table>
+                        ) : (
+                          <p className="border-b border-paper-3 py-1.5 text-[11px] italic text-ink-3">Não aplicável a esta utilização-tipo — {todasSec.map((y) => y.motivo).filter(Boolean).join(' ')}</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -267,8 +282,9 @@ export default function Relatorio() {
         ))}
 
         <H1 n={S()}>Medidas de autoproteção</H1>
+        <P>RJ-SCIE, arts. 20.º a 22.º; RT-SCIE, título VII (arts. 193.º a 207.º). As medidas de autoproteção constituem documento autónomo, sujeito a parecer da entidade competente.</P>
         {todas.map(({ ut, ed, medidas }) => {
-          const m = filtraMed(medidas.filter((x) => x.tema === 'Autoproteção'));
+          const m = filtraMed(medidas.filter((x) => x.tema === 'MAP'));
           return (
             <div key={ut.id} className="avoid-break mb-4">
               <p className="mb-1 text-[12.5px] font-bold">{ed.nome} · {tituloUT(ut)}</p>

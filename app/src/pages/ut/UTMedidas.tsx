@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { UTProps } from '../UTPage';
-import { contexto, gerarMedidas, resumoMedidas, TEMAS, type Estado, type Medida } from '../../engine/medidas';
+import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida } from '../../engine/medidas';
 import { Note } from '../../ui/primitives';
 
 const ESTADO: Record<Estado, { l: string; c: string }> = {
@@ -15,7 +15,7 @@ export default function UTMedidas({ ed, ut }: UTProps) {
   const [filtro, setFiltro] = useState<'todas' | Estado>('aplica');
   const [q, setQ] = useState('');
   const list = M.filter((m) => (filtro === 'todas' || m.estado === filtro) && (!q || (m.titulo + m.exigencia + m.base).toLowerCase().includes(q.toLowerCase())));
-  const porTema = TEMAS.map((t) => ({ t, m: list.filter((x) => x.tema === t) })).filter((g) => g.m.length);
+  const porTema = GRUPOS.map((g) => ({ t: g, secs: SECOES.filter((x) => x.g === g).map((x) => ({ x, m: list.filter((y) => y.tema === x.c) })).filter((z) => z.m.length) })).filter((g) => g.secs.length);
 
   return (
     <div>
@@ -32,16 +32,20 @@ export default function UTMedidas({ ed, ut }: UTProps) {
         <div className="flex-1"><Note>Exigências do RJ-SCIE e do RT-SCIE concretizadas para esta UT, com a categoria, a altura do edifício e os locais de risco registados. As marcadas «verificar» dependem de elementos do projeto que a app não recolhe.</Note></div>
       </div>
       <div className="flex flex-col gap-8">
-        {porTema.map((g, gi) => (
+        {porTema.map((g) => (
           <section key={g.t}>
             <h3 className="mb-2 flex items-baseline gap-3 border-b-2 border-ink pb-1.5">
-              <span className="font-mono text-[11px] font-semibold text-fire">{String(gi + 1).padStart(2, '0')}</span>
               <span className="font-display text-[18px] font-bold">{g.t}</span>
-              <span className="ref">{g.m.length}</span>
+              <span className="ref">{g.secs.reduce((n, z) => n + z.m.length, 0)}</span>
             </h3>
-            <div className="border-x border-ink bg-white">
-              {g.m.map((m) => <Linha key={m.id} m={m} />)}
-            </div>
+            {g.secs.map(({ x, m }) => (
+              <div key={x.c} className="mb-3">
+                {x.c !== '0' && x.c !== 'MAP' && x.c !== 'ESP' && <p className="mb-1 mt-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-fire">{secRotulo(x.c)}</p>}
+                <div className="border-x border-t border-ink bg-white">
+                  {m.map((y) => <Linha key={y.id} m={y} />)}
+                </div>
+              </div>
+            ))}
           </section>
         ))}
       </div>

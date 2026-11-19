@@ -54,7 +54,7 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   .report-page { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; padding: 0 !important; border: 0 !important; }
   .page-break { break-before: page; }
   .avoid-break { break-inside: avoid; }
-  h1, h2, h3 { break-after: avoid; }
+  h1, h2, h3, .keep-next { break-after: avoid; }
   table { break-inside: auto; }
   tr, img { break-inside: avoid; }
   thead { display: table-header-group; }
