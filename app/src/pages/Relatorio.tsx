@@ -197,8 +197,8 @@ export default function Relatorio() {
         {locaisLista.length ? (
           <table className="tbl mb-3"><thead><tr><th>UT</th><th>Espaço</th><th>Piso</th><th>Local</th><th className="text-right">Efetivo</th><th>Enquadramento</th></tr></thead>
             <tbody>{locaisLista.map(({ u, e, c }) => (
-              <tr key={e.id}><td className="num">{ROMANO[u.ut.tipo]}</td><td>{e.nome || '—'}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
-                <td className="text-[11px] text-ink-3">{e.subtipoC ? SUBTIPOS_C.find((s) => s.id === e.subtipoC)?.txt : LOCAIS[e.local as LocalRisco].nome}</td></tr>
+              <tr key={e.id}><td className="num">{ROMANO[u.ut.tipo]}</td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
+                <td className="text-[11px] text-ink-3">{e.subtipoC ? SUBTIPOS_C.find((s) => s.id === e.subtipoC)?.txt : LOCAIS[e.local as LocalRisco].nome}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
             ))}</tbody></table>
         ) : <P>Sem espaços registados.</P>}
         <H2 n={`${sec}.2`}>Fatores e categorias de risco (RJ-SCIE, arts. 12.º e 13.º e anexo III)</H2>
@@ -225,7 +225,7 @@ export default function Relatorio() {
             <table className="tbl"><thead><tr><th>Espaço</th><th>Cálculo</th><th>Base legal</th><th className="text-right">Efetivo</th></tr></thead>
               <tbody>
                 {ut.espacos.map((e) => { const c = efetivoEspaco(e); return (
-                  <tr key={e.id} className={e.naoSimultaneo ? 'text-ink-4' : ''}><td>{e.nome || '—'}<br /><span className="ref">{e.piso} · local {e.local === 'Cag' ? 'C agrav.' : e.local}</span></td><td className="font-mono text-[11px]">{c.formula}{e.mobilidadeReduzida ? ` (evac.: ×1,3 = ${c.evacuacao})` : ''}</td><td className="text-[10.5px] text-ink-3">{c.base}{e.naoSimultaneo ? ' · não somado (n.º 9)' : ''}{e.justificacao ? ` · ${e.justificacao}` : ''}</td><td className="num text-right font-semibold">{c.valor}</td></tr>
+                  <tr key={e.id} className={e.naoSimultaneo ? 'text-ink-4' : ''}><td>{e.nome || nomeUT(ut).nome}<br /><span className="ref">{e.piso} · local {e.local === 'Cag' ? 'C agrav.' : e.local}</span></td><td className="font-mono text-[11px]">{c.formula}{e.mobilidadeReduzida ? ` (evac.: ×1,3 = ${c.evacuacao})` : ''}</td><td className="text-[10.5px] text-ink-3">{c.base}{e.naoSimultaneo ? ' · não somado (n.º 9)' : ''}{e.justificacao ? ` · ${e.justificacao}` : ''}</td><td className="num text-right font-semibold">{c.valor}</td></tr>
                 ); })}
                 <tr><td colSpan={3} className="font-bold">Efetivo da UT{ef.origem === 'manual' ? ' (valor introduzido manualmente)' : ''}</td><td className="num text-right text-[14px] font-bold">{ef.total}</td></tr>
                 {(ef.emD > 0 || ef.emE > 0) && <tr><td colSpan={3}>Efetivo em locais de risco D / E</td><td className="num text-right">{ef.emD} / {ef.emE}</td></tr>}
