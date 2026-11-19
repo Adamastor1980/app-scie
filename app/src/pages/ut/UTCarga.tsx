@@ -20,6 +20,39 @@ const ITENS_QV = QUADRO_II.filter((a) => a.qv).map((a) => ({ key: a.id, label: a
 export default function UTCarga({ ut, upU }: UTProps) {
   const total = cargaUT(ut);
   const [tab, setTab] = useState<'none' | 'I' | 'II'>('none');
+  const [alvo, setAlvo] = useState<string>('');
+  const [aviso, setAviso] = useState('');
+  const alvoId = ut.compartimentos.find((c) => c.id === alvo)?.id ?? ut.compartimentos[ut.compartimentos.length - 1]?.id;
+
+  /** Acrescenta ao compartimento escolhido uma linha vinda dos quadros do Despacho */
+  const adicionarDoQuadro = (fn: (c: Compartimento) => string) => {
+    let msg = '';
+    upU((u) => {
+      let c = u.compartimentos.find((x) => x.id === alvoId);
+      if (!c) {
+        c = novoCompartimento(u.compartimentos.length + 1);
+        u.compartimentos.push(c);
+      }
+      msg = `${fn(c)} → ${c.nome}. Preencha a área${c.metodo === 'deterministico' ? ' e a massa' : ''} no compartimento abaixo.`;
+    });
+    setAviso(msg);
+  };
+  const pickHi = (i: number) => adicionarDoQuadro((c) => {
+    const p = QUADRO_I_HI[i];
+    c.metodo = 'deterministico';
+    c.itens.push({ id: uid(), produto: p.p, hi: p.h, massa: 0, ci: 1, rai: 1 });
+    return `Adicionado «${p.p}» (Hi = ${fmt(p.h, 2)} MJ/kg) — método determinístico`;
+  });
+  const pickQ2 = (id: number, tipo: 'qs' | 'qv') => adicionarDoQuadro((c) => {
+    const a = QUADRO_II.find((x) => x.id === id)!;
+    c.metodo = 'probabilistico';
+    if (tipo === 'qs') {
+      c.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs!, area: 0, ci: 1, rai: RAI[a.rs!] });
+      return `Adicionada a atividade «${a.a}» (qsi = ${fmt(a.qs)} MJ/m²)`;
+    }
+    c.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv!, altura: 0, area: 0, ci: 1, rai: RAI[a.rv!] });
+    return `Adicionado o armazenamento «${a.a}» (qvi = ${fmt(a.qv)} MJ/m³)`;
+  });
   const setC = (i: number, fn: (c: Compartimento) => void) => upU((u) => fn(u.compartimentos[i]));
 
   return (
@@ -47,8 +80,18 @@ export default function UTCarga({ ut, upU }: UTProps) {
           <button className={tab === 'II' ? 'btn-primary' : 'btn'} onClick={() => setTab(tab === 'II' ? 'none' : 'II')}>Quadro II — qsi, qvi, Rai</button>
         </div>
       </div>
-      {tab === 'I' && <div className="mb-8"><QuadroIView /></div>}
-      {tab === 'II' && <div className="mb-8"><QuadroIIView /></div>}
+      {tab !== 'none' && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 border border-ink bg-paper px-4 py-3">
+          <span className="text-[12.5px] font-semibold">Clique numa linha para a adicionar ao compartimento:</span>
+          <select className="input w-auto min-w-[260px]" value={alvoId ?? ''} onChange={(e) => setAlvo(e.target.value)}>
+            {ut.compartimentos.length === 0 && <option value="">(será criado um compartimento novo)</option>}
+            {ut.compartimentos.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          {aviso && <span className="w-full text-[12.5px] font-semibold text-ok">✓ {aviso}</span>}
+        </div>
+      )}
+      {tab === 'I' && <div className="mb-8"><QuadroIView onPick={pickHi} /></div>}
+      {tab === 'II' && <div className="mb-8"><QuadroIIView onPick={pickQ2} /></div>}
 
       <Section n="3.1" title="Compartimentos corta-fogo" sub="Um bloco por compartimento. Em cada um escolha o método de cálculo." right={
         <button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Compartimento</button>

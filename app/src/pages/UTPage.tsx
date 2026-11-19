@@ -60,6 +60,8 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             <input
               className="mt-1 w-full bg-transparent font-display text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire"
               value={ut.designacao}
+              placeholder="Nome desta UT (ex.: Escritórios piso 1)"
+              title="Clique para alterar o nome" 
               onChange={(e) => upU((u) => { u.designacao = e.target.value; })}
             />
             <p className="mt-1 max-w-3xl text-[12.5px] leading-snug text-ink-3">{info.definicao}</p>
