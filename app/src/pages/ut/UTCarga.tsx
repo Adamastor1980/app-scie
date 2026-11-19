@@ -19,40 +19,6 @@ const ITENS_QV = QUADRO_II.filter((a) => a.qv).map((a) => ({ key: a.id, label: a
 
 export default function UTCarga({ ut, upU }: UTProps) {
   const total = cargaUT(ut);
-  const [tab, setTab] = useState<'none' | 'I' | 'II'>('none');
-  const [alvo, setAlvo] = useState<string>('');
-  const [aviso, setAviso] = useState('');
-  const alvoId = ut.compartimentos.find((c) => c.id === alvo)?.id ?? ut.compartimentos[ut.compartimentos.length - 1]?.id;
-
-  /** Acrescenta ao compartimento escolhido uma linha vinda dos quadros do Despacho */
-  const adicionarDoQuadro = (fn: (c: Compartimento) => string) => {
-    let msg = '';
-    upU((u) => {
-      let c = u.compartimentos.find((x) => x.id === alvoId);
-      if (!c) {
-        c = novoCompartimento(u.compartimentos.length + 1);
-        u.compartimentos.push(c);
-      }
-      msg = `${fn(c)} → ${c.nome}. Preencha a área${c.metodo === 'deterministico' ? ' e a massa' : ''} no compartimento abaixo.`;
-    });
-    setAviso(msg);
-  };
-  const pickHi = (i: number) => adicionarDoQuadro((c) => {
-    const p = QUADRO_I_HI[i];
-    c.metodo = 'deterministico';
-    c.itens.push({ id: uid(), produto: p.p, hi: p.h, massa: 0, ci: 1, rai: 1 });
-    return `Adicionado «${p.p}» (Hi = ${fmt(p.h, 2)} MJ/kg) — método determinístico`;
-  });
-  const pickQ2 = (id: number, tipo: 'qs' | 'qv') => adicionarDoQuadro((c) => {
-    const a = QUADRO_II.find((x) => x.id === id)!;
-    c.metodo = 'probabilistico';
-    if (tipo === 'qs') {
-      c.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs!, area: 0, ci: 1, rai: RAI[a.rs!] });
-      return `Adicionada a atividade «${a.a}» (qsi = ${fmt(a.qs)} MJ/m²)`;
-    }
-    c.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv!, altura: 0, area: 0, ci: 1, rai: RAI[a.rv!] });
-    return `Adicionado o armazenamento «${a.a}» (qvi = ${fmt(a.qv)} MJ/m³)`;
-  });
   const setC = (i: number, fn: (c: Compartimento) => void) => upU((u) => fn(u.compartimentos[i]));
 
   return (
@@ -67,31 +33,11 @@ export default function UTCarga({ ut, upU }: UTProps) {
         <Stat label="Compartimentos" value={total.n} />
       </div>
 
-      <div className="mb-8 border border-ink bg-white p-5">
-        <p className="label mb-3">Fórmulas — Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020</p>
-        <div className="grid gap-4 font-mono text-[12.5px] md:grid-cols-3">
-          <div><p className="mb-1 font-sans text-[11px] font-semibold text-fire">Determinístico — n.º 3.º, 1</p>Qs = Σ Mi · Hi · Ci · Rai<br />qs = Σ (Mi · Hi · Ci · Rai) / S</div>
-          <div><p className="mb-1 font-sans text-[11px] font-semibold text-fire">Probabilístico — atividades (a1/b1)</p>Qs = Σ qsi · Si · Ci · Rai<br />qs = Σ (qsi · Si · Ci · Rai) / S</div>
-          <div><p className="mb-1 font-sans text-[11px] font-semibold text-fire">Probabilístico — armazenamento (a2/b2)</p>Qs = Σ qvi · hi · Si · Ci · Rai<br />qs = Σ (qvi · hi · Si · Ci · Rai) / S</div>
-        </div>
-        <p className="mt-4 border-t border-paper-3 pt-3 font-mono text-[12.5px]">UT: q = Σ qsk · Sk / Σ Sk <span className="font-sans text-[11.5px] text-ink-3">(n.º 4.º — média dos compartimentos corta-fogo ponderada pelas áreas)</span></p>
-        <div className="mt-4 flex gap-2">
-          <button className={tab === 'I' ? 'btn-primary' : 'btn'} onClick={() => setTab(tab === 'I' ? 'none' : 'I')}>Quadro I — Hi</button>
-          <button className={tab === 'II' ? 'btn-primary' : 'btn'} onClick={() => setTab(tab === 'II' ? 'none' : 'II')}>Quadro II — qsi, qvi, Rai</button>
-        </div>
+      <div className="mb-8 border border-ink bg-white px-5 py-4 text-[12.5px]">
+        <span className="label mr-3">Resultado da UT</span>
+        <span className="font-mono">q = Σ qsk · Sk / Σ Sk</span>
+        <span className="ml-2 text-ink-3">— média das densidades dos compartimentos corta-fogo ponderada pelas áreas (n.º 4.º do Despacho). Em cada compartimento escolha o método: determinístico ou probabilístico (n.º 2.º).</span>
       </div>
-      {tab !== 'none' && (
-        <div className="mb-3 flex flex-wrap items-center gap-3 border border-ink bg-paper px-4 py-3">
-          <span className="text-[12.5px] font-semibold">Clique numa linha para a adicionar ao compartimento:</span>
-          <select className="input w-auto min-w-[260px]" value={alvoId ?? ''} onChange={(e) => setAlvo(e.target.value)}>
-            {ut.compartimentos.length === 0 && <option value="">(será criado um compartimento novo)</option>}
-            {ut.compartimentos.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
-          {aviso && <span className="w-full text-[12.5px] font-semibold text-ok">✓ {aviso}</span>}
-        </div>
-      )}
-      {tab === 'I' && <div className="mb-8"><QuadroIView onPick={pickHi} /></div>}
-      {tab === 'II' && <div className="mb-8"><QuadroIIView onPick={pickQ2} /></div>}
 
       <Section n="3.1" title="Compartimentos corta-fogo" sub="Um bloco por compartimento. Em cada um escolha o método de cálculo." right={
         <button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Compartimento</button>
@@ -125,6 +71,23 @@ export default function UTCarga({ ut, upU }: UTProps) {
 
 function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compartimento) => void) => void; remove: () => void }) {
   const r = cargaCompartimento(c);
+  const [verQuadro, setVerQuadro] = useState(false);
+  const [aviso, setAviso] = useState('');
+  const pickHi = (i: number) => {
+    const p = QUADRO_I_HI[i];
+    set((x) => { x.itens.push({ id: uid(), produto: p.p, hi: p.h, massa: 0, ci: 1, rai: 1 }); });
+    setAviso(`Adicionado «${p.p}» (Hi = ${fmt(p.h, 2)} MJ/kg). Preencha a massa na tabela abaixo.`);
+  };
+  const pickQ2 = (id: number, tipo: 'qs' | 'qv') => {
+    const a = QUADRO_II.find((x) => x.id === id)!;
+    if (tipo === 'qs') {
+      set((x) => { x.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs!, area: 0, ci: 1, rai: RAI[a.rs!] }); });
+      setAviso(`Adicionada a atividade «${a.a}» (qsi = ${fmt(a.qs)} MJ/m²). Preencha a área Si nas zonas de atividade.`);
+    } else {
+      set((x) => { x.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv!, altura: 0, area: 0, ci: 1, rai: RAI[a.rv!] }); });
+      setAviso(`Adicionado o armazenamento «${a.a}» (qvi = ${fmt(a.qv)} MJ/m³). Preencha a altura hi e a área Si nas zonas de armazenamento.`);
+    }
+  };
   const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (art. 10.º n.º 3 n))' : '';
   const somaZonas = [...c.atividades, ...c.armazens].reduce((s, z) => s + z.area, 0);
   return (
@@ -136,13 +99,42 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           <span className="label">Método (n.º 2.º do Despacho)</span>
           <div className="grid grid-cols-2 border border-ink">
             {(['deterministico', 'probabilistico'] as const).map((m) => (
-              <button key={m} className={`h-9 text-[12.5px] font-semibold ${c.metodo === m ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`} onClick={() => set((x) => { x.metodo = m; })}>
+              <button key={m} className={`h-9 text-[12.5px] font-semibold ${c.metodo === m ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`} onClick={() => { set((x) => { x.metodo = m; }); setAviso(''); }}>
                 {m === 'deterministico' ? 'Determinístico' : 'Probabilístico'}
               </button>
             ))}
           </div>
         </div>
         <button className="btn-icon" onClick={() => confirm('Apagar este compartimento?') && remove()}><Trash2 size={15} /></button>
+      </div>
+
+      <div className="border-b border-ink bg-paper px-4 py-4">
+        {c.metodo === 'deterministico' ? (
+          <>
+            <p className="font-display text-[16px] font-bold">Método determinístico — «sei o que lá está e quanto pesa»</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais combustíveis e as quantidades: inventário de stock, fichas técnicas, pesagens. Por cada material: massa Mi (kg), poder calorífico Hi (quadro I), coeficiente de combustibilidade Ci (n.º 6.º) e coeficiente de ativação Rai da atividade do compartimento (quadro II).</p>
+            <p className="mt-2 font-mono text-[13px]">qs = Σ (Mi × Hi × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 1, b) do Despacho</span></p>
+          </>
+        ) : (
+          <>
+            <p className="font-display text-[16px] font-bold">Método probabilístico — «sei a atividade e as áreas»</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas, só a atividade e a área que ocupa. É o mais usado em projeto. Divide-se em dois tipos de zona:</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              <p className="text-[12.5px]"><b>a) Zonas de fabrico ou reparação</b><br /><span className="font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
+              <p className="text-[12.5px]"><b>b) Zonas de armazenamento</b><br /><span className="font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
+            </div>
+          </>
+        )}
+        <button className={`${verQuadro ? 'btn-primary' : 'btn'} mt-3`} onClick={() => setVerQuadro((v) => !v)}>
+          {verQuadro ? 'Ocultar' : 'Abrir'} {c.metodo === 'deterministico' ? 'quadro I — poder calorífico Hi' : 'quadro II — qsi, qvi e Rai por atividade'}
+        </button>
+        {verQuadro && (
+          <div className="mt-3">
+            <p className="mb-2 text-[12px] text-ink-2">{c.metodo === 'deterministico' ? 'Clique num produto para o adicionar como constituinte deste compartimento.' : 'Use «+ Atividade» (fabrico/reparação, qsi) ou «+ Armazém» (armazenamento, qvi) para adicionar a este compartimento.'}</p>
+            {aviso && <p className="mb-2 text-[12.5px] font-semibold text-ok">✓ {aviso}</p>}
+            {c.metodo === 'deterministico' ? <QuadroIView onPick={pickHi} /> : <QuadroIIView onPick={pickQ2} />}
+          </div>
+        )}
       </div>
 
       {c.metodo === 'deterministico' ? (
