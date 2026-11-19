@@ -42,9 +42,11 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
 
   const todos = [
     { k: 'fatores', t: 'Fatores de risco', s: info.quadro },
-    precisaEfetivo(ut.tipo)
-      ? { k: 'efetivo', t: 'Efetivo', s: `${fmt(ef.total)} pessoas` }
-      : { k: 'efetivo', t: 'Espaços', s: 'Locais de risco e evacuação' },
+    ...(precisaEfetivo(ut.tipo)
+      ? [{ k: 'efetivo', t: 'Efetivo', s: `${fmt(ef.total)} pessoas` }]
+      : ut.tipo === 12
+        ? [{ k: 'efetivo', t: 'Espaços', s: 'Locais de risco e evacuação' }]
+        : []),
     ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
     { k: 'categoria', t: 'Categoria', s: CAT_NOME[cls.cat] },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
