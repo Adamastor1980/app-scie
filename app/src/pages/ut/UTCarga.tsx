@@ -152,6 +152,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               {c.raiDet ? <>Rai = <b className="num mx-1">{fmt(c.raiDet, 1)}</b> ({RAI_NOME[c.raiDet === 2 ? 'A' : c.raiDet === 1.5 ? 'M' : 'B']}) — aplicado a todos os materiais</> : 'Escolha a atividade para obter o Rai'}
             </div>
           </div>
+          <p className="-mt-3 mb-5 text-[11.5px] text-ink-3">A atividade escolhida serve <b>apenas para obter o Rai</b>. Não soma carga de incêndio: o qsi/qvi do quadro II não entra no método determinístico. A carga resulta só dos materiais da tabela abaixo (Mi × Hi × Ci × Rai).</p>
           <p className="label mb-2">2. Materiais combustíveis — material, massa e Ci</p>
           <table className="tbl">
             <thead><tr><th>Material (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[140px] text-right">Massa Mi (kg)</th><th className="w-[150px]">Ci</th><th className="w-[140px] text-right">Mi·Hi·Ci·Rai (MJ)</th><th className="w-8" /></tr></thead>
