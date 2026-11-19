@@ -43,9 +43,10 @@ export const novoEdificio = (n: number): Edificio => ({
   uts: [],
 });
 
-export const novoEspaco = (): Espaco => ({
-  id: uid(), nome: '', piso: 'Piso 0', local: 'A', criterio: 'indice', indiceId: 'sala-escritorio', area: 0,
-});
+export const novoEspaco = (tipo?: UTNum): Espaco =>
+  tipo === 12
+    ? { id: uid(), nome: '', piso: 'Piso 0', local: 'A', criterio: 'declarado', n: 0, area: 0 }
+    : { id: uid(), nome: '', piso: 'Piso 0', local: 'A', criterio: 'indice', indiceId: 'sala-escritorio', area: 0 };
 
 export const novoPiso = (i: number): Piso => ({ id: uid(), nome: `Piso ${i}`, cota: i * 3, area: 0 });
 

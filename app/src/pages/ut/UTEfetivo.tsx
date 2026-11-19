@@ -28,13 +28,14 @@ const LOCAL_OPTS: { v: LocalRisco; l: string }[] = [
 export default function UTEfetivo({ ut, upU }: UTProps) {
   const ef = efetivoUT(ut);
   const [showQ, setShowQ] = useState(false);
-  const crits = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
+  const crits0 = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
+  const crits = ut.tipo === 12 ? [...crits0.filter((c) => c.v === 'declarado'), ...crits0.filter((c) => c.v !== 'declarado')] : crits0;
   const setE = (i: number, fn: (e: Espaco) => void) => upU((u) => fn(u.espacos[i]));
 
   return (
     <div>
       {!precisaEfetivo(ut.tipo) && (
-        <div className="mb-6"><Note>O efetivo não é fator de risco da UT {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][ut.tipo - 1]} (art. 12.º n.º 2). Registe os espaços para classificar os locais de risco e dimensionar saídas e vias de evacuação.</Note></div>
+        <div className="mb-6"><Note>O efetivo não é fator de risco da UT {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][ut.tipo - 1]} (art. 12.º n.º 2). Registe os espaços para classificar os locais de risco (art. 10.º) e dimensionar saídas e vias de evacuação (arts. 54.º a 64.º).{ut.tipo === 12 && <> Na UT XII o critério legal para zonas de produção, armazéns e espaços sem público é o <b>número de ocupantes declarado pela entidade exploradora, com o mínimo de 0,03 pessoas/m²</b> (art. 51.º n.º 2 e)). Os índices do quadro XXVII só se usam em espaços integrados de outro tipo (escritórios, refeitórios, balneários).</>}</Note></div>
       )}
       <div className="mb-8 grid gap-3 md:grid-cols-4">
         <Stat label="Efetivo da UT" value={fmt(ef.total)} unit="pessoas" sub={ef.origem === 'manual' ? 'Valor introduzido manualmente' : 'Somatório dos espaços (art. 51.º n.º 1)'} accent />
@@ -44,10 +45,10 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
       </div>
 
       <Section n="2.1" title="Espaços e locais de risco" sub="Um espaço por linha. O efetivo de cada espaço é arredondado ao inteiro superior (art. 51.º n.os 2 e 3)."
-        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco()); })}><Plus size={15} /> Espaço</button></div>}>
+        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco(u.tipo)); })}><Plus size={15} /> Espaço</button></div>}>
         {showQ && <QuadroXXVII />}
         {ut.espacos.length === 0 ? (
-          <Empty title="Sem espaços." action={<button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco()); })}><Plus size={15} /> Adicionar espaço</button>}>
+          <Empty title="Sem espaços." action={<button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco(u.tipo)); })}><Plus size={15} /> Adicionar espaço</button>}>
             Para cada espaço escolha o critério legal de cálculo do efetivo e o local de risco (art. 10.º do RJ-SCIE).
           </Empty>
         ) : (
