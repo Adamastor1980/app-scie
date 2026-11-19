@@ -43,7 +43,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
         <span className="ml-2 text-ink-3">— média das densidades dos compartimentos corta-fogo ponderada pelas áreas (n.º 4.º do Despacho). Em cada compartimento escolha o método: determinístico ou probabilístico (n.º 2.º).</span>
       </div>
 
-      <Section n="3.1" title="Compartimentos corta-fogo" sub="Um bloco por compartimento. Em cada um escolha o método de cálculo." right={
+      <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
         <button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Compartimento</button>
       }>
         {ut.compartimentos.length === 0 && (
