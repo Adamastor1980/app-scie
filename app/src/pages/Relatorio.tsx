@@ -100,19 +100,12 @@ export default function Relatorio() {
           <p className="mt-4 font-display text-[22px] font-bold leading-tight text-ink-2">{p.nome}</p>
           <p className="mt-2 text-[13px] text-ink-3">{[p.morada, p.concelho, p.distrito].filter(Boolean).join(', ')}</p>
         </div>
-        <div className="mt-auto grid grid-cols-[1fr_auto] items-end gap-6 border-t-[3px] border-ink pt-5">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[11.5px]">
+        <div className="mt-auto border-t-[3px] border-ink pt-5">
+          <div className="grid grid-cols-3 gap-x-8 gap-y-3 text-[11.5px]">
             <div><p className="label">Cliente</p><p className="font-semibold">{p.cliente || '—'}</p></div>
-            <div><p className="label">Autor</p><p className="font-semibold">{p.autor.nome || '—'}</p><p className="text-ink-3">{[p.autor.qualificacao, p.autor.ordem && `${p.autor.ordem} n.º ${p.autor.numero}`].filter(Boolean).join(' · ')}</p></div>
-            <div><p className="label">Utilizações-tipo</p><p className="font-mono font-semibold">{todas.map((u) => ROMANO[u.ut.tipo]).join(' · ') || '—'}</p></div>
-            <div><p className="label">Edifícios</p><p className="font-semibold">{p.edificios.length}</p></div>
+            <div><p className="label">Elaborado por</p><p className="font-semibold">{p.autor.nome || '—'}</p><p className="text-ink-3">{[p.autor.qualificacao, p.autor.ordem && `${p.autor.ordem} n.º ${p.autor.numero}`].filter(Boolean).join(' · ')}</p></div>
+            <div><p className="label">Data</p><p className="font-semibold">{dataPt || '—'}</p><p className="text-ink-3">Versão {p.versao}</p></div>
           </div>
-          {maxCat && (
-            <div className={`${CAT_COR[maxCat]} px-6 py-4 text-center text-white`}>
-              <p className="font-mono text-[9px] uppercase tracking-wider">Categoria mais gravosa</p>
-              <p className="h-display text-[56px]">{maxCat}.ª</p>
-            </div>
-          )}
         </div>
       </Sheet>
 
