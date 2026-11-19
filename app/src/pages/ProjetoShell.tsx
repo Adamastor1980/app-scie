@@ -3,7 +3,7 @@ import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Pl
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
-import { ROMANO } from '../data/rjscie';
+import { ROMANO, utInfo } from '../data/rjscie';
 import { classificar } from '../engine/calc';
 import { CAT_COR } from '../ui/primitives';
 import Overview from './Overview';
@@ -51,8 +51,9 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   const mU = match('/e/:eid/u/:uid/:step', rel) || match('/e/:eid/u/:uid', rel);
   const mE = match('/e/:eid', rel);
 
-  const adicionarUT = (eid: string, tipo: UTNum) => {
+  const adicionarUT = (eid: string, tipo: UTNum, nome: string) => {
     const ut = novaUT(tipo);
+    if (nome) ut.designacao = nome;
     up((pp) => {
       const e = pp.edificios.find((x) => x.id === eid);
       e?.uts.push(ut);
@@ -119,7 +120,13 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
                     <a key={u.id} href={`#${base}/e/${e.id}/u/${u.id}/fatores`} className={`ml-[22px] flex h-8 items-center gap-2 border-l px-3 text-[12.5px] ${act ? 'border-fire bg-white font-semibold text-ink' : 'border-ink-4/40 text-ink-2 hover:bg-white/60'}`}>
                       <span className={`h-2 w-2 shrink-0 ${CAT_COR[c]}`} />
                       <span className="w-9 shrink-0 font-mono text-[11px]">{ROMANO[u.tipo]}</span>
-                      <span className="truncate">{u.designacao.replace(/^UT [IVX]+ — /, '')}</span>
+                      {(() => {
+                        const def = novaUT(u.tipo).designacao;
+                        const semNome = !u.designacao.trim() || u.designacao === def;
+                        return semNome
+                          ? <span className="truncate italic text-ink-4">Sem nome · {utInfo(u.tipo).nome}</span>
+                          : <span className="truncate" title={u.designacao}>{u.designacao.replace(/^UT [IVX]+ — /, '')}</span>;
+                      })()}
                       {act && <ChevronRight size={13} className="ml-auto shrink-0 text-fire" />}
                     </a>
                   );
@@ -140,7 +147,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
         </aside>
         <div className="min-w-0 flex-1">{page}</div>
       </div>
-      {escolher && <EscolherUT onClose={() => setEscolher(null)} onPick={(t) => adicionarUT(escolher, t)} />}
+      {escolher && <EscolherUT onClose={() => setEscolher(null)} onPick={(t, n) => adicionarUT(escolher, t, n)} />}
     </PCtx.Provider>
   );
 }

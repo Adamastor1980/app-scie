@@ -9,7 +9,7 @@ import type { UTNum } from '../data/types';
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-export function QuadroIView() {
+export function QuadroIView({ onPick }: { onPick?: (i: number) => void } = {}) {
   const [q, setQ] = useState('');
   const l = QUADRO_I_HI.filter((p) => norm(p.p).includes(norm(q)));
   return (
@@ -19,7 +19,11 @@ export function QuadroIView() {
         <input className="h-7 w-56 border-0 bg-white/10 px-2 text-[12px] text-white outline-none placeholder:text-white/50" placeholder="Pesquisar…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="grid max-h-[460px] overflow-y-auto md:grid-cols-3">
-        {l.map((p, i) => (
+        {l.map((p, i) => onPick ? (
+          <button key={i} onClick={() => onPick(QUADRO_I_HI.indexOf(p))} className="group flex justify-between gap-2 border-b border-r border-paper-3 px-3 py-1.5 text-left text-[12.5px] hover:bg-ink hover:text-white" title="Adicionar como constituinte">
+            <span><span className="mr-1.5 font-mono text-fire">+</span>{p.p}</span><span className="num font-semibold">{fmt(p.h, 2)}</span>
+          </button>
+        ) : (
           <div key={i} className="flex justify-between gap-2 border-b border-r border-paper-3 px-3 py-1.5 text-[12.5px]"><span>{p.p}</span><span className="num font-semibold">{fmt(p.h, 2)}</span></div>
         ))}
       </div>
@@ -28,7 +32,7 @@ export function QuadroIView() {
   );
 }
 
-export function QuadroIIView() {
+export function QuadroIIView({ onPick }: { onPick?: (id: number, tipo: 'qs' | 'qv') => void } = {}) {
   const [q, setQ] = useState('');
   const l = useMemo(() => QUADRO_II.filter((a) => norm(a.a).includes(norm(q))), [q]);
   return (
@@ -39,7 +43,7 @@ export function QuadroIIView() {
       </div>
       <div className="max-h-[520px] overflow-y-auto">
         <table className="tbl">
-          <thead className="sticky top-0"><tr><th>Atividade</th><th className="text-right">qsi (MJ/m²)</th><th>Rai</th><th className="text-right">qvi (MJ/m³)</th><th>Rai</th></tr></thead>
+          <thead className="sticky top-0"><tr><th>Atividade</th><th className="text-right">qsi (MJ/m²)</th><th>Rai</th><th className="text-right">qvi (MJ/m³)</th><th>Rai</th>{onPick && <th>Adicionar</th>}</tr></thead>
           <tbody>
             {l.map((a) => (
               <tr key={a.id}>
@@ -48,6 +52,12 @@ export function QuadroIIView() {
                 <td className="text-ink-3">{a.rs ? `${RAI_NOME[a.rs]} (${RAI[a.rs].toFixed(1).replace('.', ',')})` : ''}</td>
                 <td className="num text-right">{a.qv ? fmt(a.qv) : ''}</td>
                 <td className="text-ink-3">{a.rv ? `${RAI_NOME[a.rv]} (${RAI[a.rv].toFixed(1).replace('.', ',')})` : ''}</td>
+                {onPick && (
+                  <td className="whitespace-nowrap">
+                    {a.qs !== undefined && <button className="btn h-7 px-2 text-[11.5px]" onClick={() => onPick(a.id, 'qs')}>+ Atividade</button>}
+                    {a.qv !== undefined && <button className="btn ml-1 h-7 px-2 text-[11.5px]" onClick={() => onPick(a.id, 'qv')}>+ Armazém</button>}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
