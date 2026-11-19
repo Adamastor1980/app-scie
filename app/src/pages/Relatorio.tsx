@@ -190,7 +190,7 @@ export default function Relatorio() {
         {locaisLista.length ? (
           <table className="tbl mb-3"><thead><tr><th>UT</th><th>Espaço</th><th>Piso</th><th>Local</th><th className="text-right">Efetivo</th><th>Enquadramento</th></tr></thead>
             <tbody>{locaisLista.map(({ u, e, c }) => (
-              <tr key={e.id}><td className="num">{ROMANO[u.ut.tipo]}</td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
+              <tr key={e.id}><td><span className="num font-semibold">{ROMANO[u.ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(u.ut.tipo).nome}</span></td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
                 <td className="text-[11px] text-ink-3">{e.subtipoC ? SUBTIPOS_C.find((s) => s.id === e.subtipoC)?.txt : LOCAIS[e.local as LocalRisco].nome}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
             ))}</tbody></table>
         ) : <P>Sem espaços registados.</P>}
@@ -208,7 +208,7 @@ export default function Relatorio() {
           </div>
         ))}
         <table className="tbl"><thead><tr><th>Edifício</th><th>UT</th><th>Designação</th><th>Categoria</th></tr></thead>
-          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td className="num">{ROMANO[ut.tipo]}</td><td>{nomeUT(ut).nome}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td></tr>)}</tbody></table>
+          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td>{nomeUT(ut).nome}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td></tr>)}</tbody></table>
 
         <H1 n={S()}>Cálculo do efetivo</H1>
         <P>O efetivo é o somatório dos efetivos de todos os espaços suscetíveis de ocupação (RT-SCIE, art. 51.º n.º 1), arredondados ao inteiro superior. A correção pelo fator 1,3 (art. 51.º n.º 5) aplica-se apenas ao dimensionamento das vias de evacuação e saídas.</P>
@@ -313,7 +313,7 @@ export default function Relatorio() {
         {p.plantas.length === 0 && <P>Não foram anexadas peças desenhadas. O anexo IV do RJ-SCIE (art. 3.º) exige planta de localização, cortes e alçados, planta de implantação e plantas de todos os pisos.</P>}
         <table className="tbl mb-4"><thead><tr><th>Edifício</th><th>UT</th><th className="text-right">Efetivo</th><th className="text-right">q (MJ/m²)</th><th>Categoria</th><th>Medidas aplicáveis</th></tr></thead>
           <tbody>{todas.map(({ ut, ed, ef, carga, cls, medidas }) => (
-            <tr key={ut.id}><td>{ed.nome}</td><td className="num">{ROMANO[ut.tipo]}</td><td className="num text-right">{ef.total}</td><td className="num text-right">{carga.S ? fmt(carga.q, 1) : '—'}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td><td className="num">{medidas.filter((m) => m.estado === 'aplica').length} (+{medidas.filter((m) => m.estado === 'verificar').length} a verificar)</td></tr>
+            <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td className="num text-right">{ef.total}</td><td className="num text-right">{carga.S ? fmt(carga.q, 1) : '—'}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td><td className="num">{medidas.filter((m) => m.estado === 'aplica').length} (+{medidas.filter((m) => m.estado === 'verificar').length} a verificar)</td></tr>
           ))}</tbody></table>
         {todas.map(({ ut, cls }) => (
           <P key={ut.id}>A UT {ROMANO[ut.tipo]} ({nomeUT(ut).nome}) classifica-se na <b>{CAT_NOME[cls.cat]}</b> de risco{cls.determinantes.length ? `, determinada por ${cls.determinantes.join(' e ').toLowerCase()}` : ''}{cls.falta.length ? ` — dados em falta: ${cls.falta.join(', ')}` : ''}.</P>

@@ -16,5 +16,5 @@ export function nomeUT(ut: UT): { nome: string; temNome: boolean } {
   return { nome: `Sem nome · ${utInfo(ut.tipo).nome}`, temNome: false };
 }
 
-/** «UT III — Nome» para títulos e relatório */
-export const tituloUT = (ut: UT) => `UT ${ROMANO[ut.tipo]} — ${nomeUT(ut).nome}`;
+/** «UT III «Administrativos» — Nome» para títulos e relatório */
+export const tituloUT = (ut: UT) => `UT ${ROMANO[ut.tipo]} «${utInfo(ut.tipo).nome}» — ${nomeUT(ut).nome}`;
