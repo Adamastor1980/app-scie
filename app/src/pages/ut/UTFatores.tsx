@@ -4,8 +4,10 @@ import { Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
 import { classificar, efetivoUT, fmt } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
+import { novaUT } from '../../store';
 
 export default function UTFatores({ ut, upU }: UTProps) {
+  const semNome = !ut.designacao.trim() || ut.designacao === novaUT(ut.tipo).designacao;
   const t = ut.tipo;
   const info = utInfo(t);
   const ef = efetivoUT(ut);
@@ -18,6 +20,12 @@ export default function UTFatores({ ut, upU }: UTProps) {
   return (
     <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
       <div>
+        <div className={`mb-8 border p-4 ${semNome ? 'border-fire bg-fire-soft' : 'border-ink bg-white'}`}>
+          <Field label="Nome da utilização-tipo (obrigatório)" hint={semNome ? 'Atribua um nome a esta UT: é o nome usado no menu lateral, no painel e no relatório.' : undefined}>
+            <input className="input h-11 text-[15px] font-semibold" value={semNome ? '' : ut.designacao} placeholder="ex.: Parque de estacionamento piso -1"
+              onChange={(e) => upU((u) => { u.designacao = e.target.value.trim() ? e.target.value : novaUT(u.tipo).designacao; })} />
+          </Field>
+        </div>
         <Section n="1.1" title="Fatores de risco" sub={info.fatores}>
           <div className="grid gap-4 md:grid-cols-2">
             {temArLivre && (
