@@ -182,14 +182,16 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         </div>
       ) : (
         <div className="p-4">
-          <p className="label mb-2">a) Zonas de fabrico ou reparação — atividade, área e Ci</p>
+          <p className="label mb-2">Zonas do compartimento — para cada zona escolha se é de fabrico/reparação ou de armazenamento</p>
           <table className="tbl">
-            <thead><tr><th>Atividade (quadro II)</th><th className="w-[110px] text-right">qsi (MJ/m²)</th><th className="w-[130px] text-right">Área Si (m²)</th><th className="w-[150px]">Ci</th><th className="w-[90px] text-right">Rai</th><th className="w-[130px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
+            <thead><tr><th className="w-[200px]">Tipo de zona</th><th>Atividade / produto (quadro II)</th><th className="w-[100px] text-right">qsi / qvi</th><th className="w-[110px] text-right">Altura hi (m)</th><th className="w-[120px] text-right">Área Si (m²)</th><th className="w-[145px]">Ci</th><th className="w-[70px] text-right">Rai</th><th className="w-[120px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.atividades.map((z, k) => (
                 <tr key={z.id}>
-                  <td><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
-                  <td className="num pt-4 text-right">{z.qs ? fmt(z.qs) : '—'}</td>
+                  <td><Select value="f" onChange={(v) => v === 'a' && set((x) => { const [o] = x.atividades.splice(k, 1); x.armazens.push({ id: o.id, nome: '', qv: 0, altura: 0, area: o.area, ci: o.ci, rai: 1 }); })} options={[{ v: 'f', l: 'Fabrico/reparação' }, { v: 'a', l: 'Armazenamento' }]} /></td>
+                  <td><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade de fabrico/reparação" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
+                  <td className="num pt-4 text-right">{z.qs ? <>{fmt(z.qs)}<span className="block text-[10px] text-ink-4">MJ/m²</span></> : '—'}</td>
+                  <td className="pt-4 text-right text-[11px] text-ink-4">não se aplica</td>
                   <td><Num value={z.area} onChange={(v) => set((x) => { x.atividades[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.atividades[k].ci = v; })} options={CI_OPTS} /></td>
                   <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
@@ -197,18 +199,11 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                   <td><button className="btn-icon" onClick={() => set((x) => { x.atividades.splice(k, 1); })}><Trash2 size={13} /></button></td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-          <button className="btn mt-3" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
-
-          <p className="label mb-2 mt-6">b) Zonas de armazenamento — produto armazenado, altura, área e Ci</p>
-          <table className="tbl">
-            <thead><tr><th>Armazenamento (quadro II)</th><th className="w-[110px] text-right">qvi (MJ/m³)</th><th className="w-[120px] text-right">Altura hi (m)</th><th className="w-[130px] text-right">Área Si (m²)</th><th className="w-[150px]">Ci</th><th className="w-[90px] text-right">Rai</th><th className="w-[130px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
-            <tbody>
               {c.armazens.map((z, k) => (
                 <tr key={z.id}>
+                  <td><Select value="a" onChange={(v) => v === 'f' && set((x) => { const [o] = x.armazens.splice(k, 1); x.atividades.push({ id: o.id, nome: '', qs: 0, area: o.area, ci: o.ci, rai: 1 }); })} options={[{ v: 'f', l: 'Fabrico/reparação' }, { v: 'a', l: 'Armazenamento' }]} /></td>
                   <td><Combo items={ITENS_QV} value={z.nome} placeholder="Escolher produto armazenado" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.armazens[k], { atividadeId: a.id, nome: a.a, qv: a.qv!, rai: RAI[a.rv!] }); })} /></td>
-                  <td className="num pt-4 text-right">{z.qv ? fmt(z.qv) : '—'}</td>
+                  <td className="num pt-4 text-right">{z.qv ? <>{fmt(z.qv)}<span className="block text-[10px] text-ink-4">MJ/m³</span></> : '—'}</td>
                   <td><Num value={z.altura} onChange={(v) => set((x) => { x.armazens[k].altura = v; })} /></td>
                   <td><Num value={z.area} onChange={(v) => set((x) => { x.armazens[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.armazens[k].ci = v; })} options={CI_OPTS} /></td>
@@ -219,8 +214,12 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               ))}
             </tbody>
           </table>
-          <button className="btn mt-3" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
-
+          <div className="mt-3 flex gap-2">
+            <button className="btn" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
+            <button className="btn" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
+          </div>
+          {c.armazens.some((z) => !z.altura) && <div className="mt-3"><Note tone="warn">Há zonas de armazenamento sem altura de armazenagem hi: a parcela dessa zona fica a zero até a preencher.</Note></div>}
+          <p className="mt-3 text-[11.5px] text-ink-3"><b>Fabrico/reparação:</b> qsi (MJ/m²) × Si × Ci × Rai — sem altura. <b>Armazenamento:</b> qvi (MJ/m³) × hi × Si × Ci × Rai — a altura de armazenagem é obrigatória. Cada lista mostra apenas as atividades que têm valor na respetiva coluna do quadro II (ex.: «Alimentação, expedição» só tem valor de fabrico).</p>
           <p className="mt-4 text-[11.5px] text-ink-3">qsi, qvi e Rai são lidos do quadro II quando escolhe a atividade.{r.raiNota ? ' Várias zonas no compartimento — ' + r.raiNota : ''}</p>
           {c.area > 0 && somaZonas > c.area + 0.01 && <div className="mt-3"><Note tone="warn">A soma das áreas das zonas ({fmt(somaZonas, 1)} m²) excede a área útil do compartimento ({fmt(c.area, 1)} m²).</Note></div>}
         </div>
