@@ -11,11 +11,11 @@ import { novoEspaco, uid } from '../../store';
 
 const CRITERIOS: { v: CriterioEfetivo; l: string; uts?: number[] }[] = [
   { v: 'indice', l: 'Índice de ocupação × área útil (quadro XXVII)' },
-  { v: 'lugares', l: 'Número de lugares fixos (n.º 2 d))' },
+  { v: 'lugares', l: 'Número de lugares fixos (n.º 2 d))', uts: [3, 4, 5, 6, 7, 8, 9, 10, 11] },
   { v: 'camas', l: 'Ocupantes em camas (n.º 2 a))', uts: [4, 5, 7] },
   { v: 'acamados', l: '3,2 × lugares de acamados (n.º 2 b))', uts: [5] },
   { v: 'tipologia', l: 'Apartamentos/moradias turísticas Tn (quadro XXVI)', uts: [7] },
-  { v: 'comprimento', l: 'Por metro de banco ou frente (quadro XXVIII)' },
+  { v: 'comprimento', l: 'Por metro de banco ou frente (quadro XXVIII)', uts: [3, 4, 6, 7, 8, 9, 10, 11] },
   { v: 'desportivo', l: 'Instalações desportivas (art. 283.º)', uts: [9] },
   { v: 'declarado', l: 'Declarado pela entidade, mín. 0,03 p/m² (n.º 2 e))', uts: [11, 12] },
   { v: 'fundamentado', l: 'Valor fundamentado pelo autor (n.º 8)' },
@@ -39,9 +39,9 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
       )}
       <div className="mb-8 grid gap-3 md:grid-cols-4">
         <Stat label="Efetivo da UT" value={fmt(ef.total)} unit="pessoas" sub={ef.origem === 'manual' ? 'Valor introduzido manualmente' : 'Somatório dos espaços (art. 51.º n.º 1)'} accent />
-        <Stat label="Efetivo em locais D" value={fmt(ef.emD)} unit="pessoas" />
-        <Stat label="Efetivo em locais E" value={fmt(ef.emE)} unit="pessoas" />
-        <Stat label="Para evacuação (×1,3)" value={fmt(ef.totalEvacuacao)} unit="pessoas" sub="Art. 51.º n.º 5: só dimensiona vias e saídas" />
+        {(ut.tipo === 4 || ut.tipo === 5) && <Stat label="Efetivo em locais D ou E" value={fmt(ef.emDE)} unit="pessoas" sub="Fator de risco do quadro IV" />}
+        {ut.tipo === 7 && <Stat label="Efetivo em locais E" value={fmt(ef.emE)} unit="pessoas" sub="Fator de risco do quadro VI" />}
+        {ut.espacos.some((e) => e.mobilidadeReduzida) && <Stat label="Para evacuação (×1,3)" value={fmt(ef.totalEvacuacao)} unit="pessoas" sub="Art. 51.º n.º 5: só dimensiona vias e saídas" />}
       </div>
 
       <Section n="2.1" title="Espaços e locais de risco" sub="Um espaço por linha. O efetivo de cada espaço é arredondado ao inteiro superior (art. 51.º n.os 2 e 3)."
@@ -75,9 +75,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                         <Select value={e.subtipoC ?? ''} onChange={(v) => setE(i, (x) => { x.subtipoC = v; })} options={[{ v: '', l: '—' }, ...SUBTIPOS_C.map((s) => ({ v: s.id, l: s.txt }))]} />
                       </Field>
                     )}
-                    <Field label="Efetivo de público" hint="Para distinguir A/B (art. 10.º)."><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>
-                    <Field label="Saídas existentes" hint="Opcional: verificação."><Num value={e.saidasExistentes} onChange={(v) => setE(i, (x) => { x.saidasExistentes = v || undefined; })} /></Field>
-                    <Field label="UP existentes" hint="Opcional: verificação."><Num value={e.upExistentes} onChange={(v) => setE(i, (x) => { x.upExistentes = v || undefined; })} /></Field>
+                    {ut.tipo !== 12 && <Field label="Efetivo de público" hint="Distingue local A de B (art. 10.º n.º 1)."><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-paper-3 px-4 py-3">
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas (×1,3 na evacuação — art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
@@ -122,12 +120,13 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
         </div>
       </Section>
 
-      <Section n="2.4" title="Valor manual (opcional)" sub="Só para lotações licenciadas ou declaradas que não se possam reconstituir por espaços. Fica identificado no relatório.">
+      {ut.usarEfetivoManual && (      <Section n="2.4" title="Valor manual (opcional)" sub="Só para lotações licenciadas ou declaradas que não se possam reconstituir por espaços. Fica identificado no relatório.">
         <div className="grid gap-3 md:grid-cols-[1fr_240px]">
           <Toggle checked={ut.usarEfetivoManual} onChange={(v) => upU((u) => { u.usarEfetivoManual = v; })} label="Usar efetivo introduzido manualmente" hint="Substitui o somatório dos espaços no fator de risco." />
           <Field label="Efetivo manual"><Num value={ut.efetivoManual} onChange={(v) => upU((u) => { u.efetivoManual = Math.ceil(v); })} /></Field>
         </div>
       </Section>
+      )}
     </div>
   );
 }
