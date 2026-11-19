@@ -204,16 +204,17 @@ export function cargaCompartimento(c: Compartimento): CargaComp {
   let raiNota: string | undefined;
   if (c.metodo === 'deterministico') {
     for (const i of c.itens) {
-      const p = i.massa * i.hi * i.ci * i.rai;
+      const rai = c.raiDet ?? i.rai;
+      const p = i.massa * i.hi * i.ci * rai;
       Qs += p;
       linhas.push({
         desc: i.produto || 'Constituinte',
         parcela: p,
-        formula: `${fmt(i.massa, 2)} kg × ${fmt(i.hi, 2)} MJ/kg × ${fmt(i.ci, 2)} × ${fmt(i.rai, 2)}`,
+        formula: `${fmt(i.massa, 2)} kg × ${fmt(i.hi, 2)} MJ/kg × ${fmt(i.ci, 2)} × ${fmt(rai, 2)}`,
       });
     }
   } else {
-    const r = c.regraRai ? raiCompartimento(c) : null;
+    const r = raiCompartimento(c); // n.º 7.º, 3: obrigatório com várias atividades
     if (r) {
       raiAplicado = r.rai;
       raiNota = r.nota;

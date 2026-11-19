@@ -50,6 +50,7 @@ export function exemploProjeto(): Projeto {
     },
     {
       id: uid(), nome: 'CCF3 — Oficina de manutenção', area: 200, metodo: 'deterministico', regraRai: true, atividades: [], armazens: [],
+      atividadeDetId: atv('Aparelhos, oficinas de reparação').id * 2, raiDet: RAI[atv('Aparelhos, oficinas de reparação').rs!],
       itens: [
         { id: uid(), produto: 'Gasóleo', hi: 42, massa: 150, ci: 1.3, rai: 1.5 },
         { id: uid(), produto: 'Madeira', hi: 16.7, massa: 800, ci: 1, rai: 1.5 },

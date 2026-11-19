@@ -132,7 +132,9 @@ export interface Compartimento {
   itens: ItemDet[];
   atividades: ZonaAtividade[];
   armazens: ZonaArmazem[];
-  regraRai: boolean; // aplicar n.º 7.º-3 (várias atividades no mesmo compartimento)
+  regraRai: boolean; // (legado) o n.º 7.º-3 aplica-se sempre
+  atividadeDetId?: number; // determinístico: atividade do compartimento (quadro II) que define o Rai
+  raiDet?: number;
 }
 
 export interface UT {

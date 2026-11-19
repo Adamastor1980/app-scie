@@ -2,18 +2,22 @@ import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
 import { precisaCarga } from '../UTPage';
-import type { Compartimento, Risco } from '../../data/types';
+import type { Compartimento } from '../../data/types';
 import { QUADRO_I_HI, QUADRO_II } from '../../data/despacho';
 import { CI_OPCOES, RAI, RAI_NOME, cargaCompartimento, cargaUT, fmt } from '../../engine/calc';
-import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle } from '../../ui/primitives';
+import { Empty, Field, Note, Num, Section, Select, Stat, Text } from '../../ui/primitives';
 import Combo from '../../ui/Combo';
 import { novoCompartimento, uid } from '../../store';
 import { QuadroIView, QuadroIIView } from '../Tabelas';
 
-const RAI_OPTS = (['A', 'M', 'B'] as Risco[]).map((r) => ({ v: RAI[r], l: `${RAI[r].toFixed(1).replace('.', ',')} ${RAI_NOME[r].toLowerCase()}` }));
 const CI_OPTS = CI_OPCOES.map((c) => ({ v: c.v, l: `${c.v.toFixed(2).replace('.', ',')} ${c.rotulo.split(' — ')[0].replace('Risco ', '')}` }));
 
 const ITENS_HI = QUADRO_I_HI.map((p, i) => ({ key: i, label: p.p, right: `${fmt(p.h, 2)} MJ/kg` }));
+const ITENS_HI_OUTRO = [...ITENS_HI, { key: -1, label: 'Outro material (não listado no quadro I)', right: 'Hi manual' }];
+const ITENS_ALL = QUADRO_II.flatMap((a) => [
+  ...(a.qs !== undefined ? [{ key: a.id * 2, label: `${a.a} — fabrico/reparação`, right: `Rai ${RAI_NOME[a.rs!].toLowerCase()}` }] : []),
+  ...(a.qv !== undefined ? [{ key: a.id * 2 + 1, label: `${a.a} — armazenamento`, right: `Rai ${RAI_NOME[a.rv!].toLowerCase()}` }] : []),
+]);
 const ITENS_QS = QUADRO_II.filter((a) => a.qs).map((a) => ({ key: a.id, label: a.a, right: `${fmt(a.qs)} MJ/m² · ${RAI_NOME[a.rs!]}` }));
 const ITENS_QV = QUADRO_II.filter((a) => a.qv).map((a) => ({ key: a.id, label: a.a, right: `${fmt(a.qv)} MJ/m³ · ${RAI_NOME[a.rv!]}` }));
 
@@ -112,13 +116,13 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         {c.metodo === 'deterministico' ? (
           <>
             <p className="font-display text-[16px] font-bold">Método determinístico — «sei o que lá está e quanto pesa»</p>
-            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais combustíveis e as quantidades: inventário de stock, fichas técnicas, pesagens. Por cada material: massa Mi (kg), poder calorífico Hi (quadro I), coeficiente de combustibilidade Ci (n.º 6.º) e coeficiente de ativação Rai da atividade do compartimento (quadro II).</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais combustíveis e as quantidades: inventário de stock, fichas técnicas, pesagens. Preenche: 1) a atividade do compartimento, que dá o Rai (quadro II); 2) por cada material, o material (Hi automático do quadro I), a massa Mi em kg e o Ci (n.º 6.º).</p>
             <p className="mt-2 font-mono text-[13px]">qs = Σ (Mi × Hi × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 1, b) do Despacho</span></p>
           </>
         ) : (
           <>
             <p className="font-display text-[16px] font-bold">Método probabilístico — «sei a atividade e as áreas»</p>
-            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas, só a atividade e a área que ocupa. É o mais usado em projeto. Divide-se em dois tipos de zona:</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas, só a atividade e a área que ocupa. É o mais usado em projeto. Preenche por zona a atividade (qsi/qvi e Rai automáticos do quadro II), a área Si, o Ci e, no armazenamento, a altura hi. Dois tipos de zona:</p>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               <p className="text-[12.5px]"><b>a) Zonas de fabrico ou reparação</b><br /><span className="font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
               <p className="text-[12.5px]"><b>b) Zonas de armazenamento</b><br /><span className="font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
@@ -139,63 +143,76 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
 
       {c.metodo === 'deterministico' ? (
         <div className="p-4">
-          <p className="label mb-2">Constituintes combustíveis (Mi, Hi, Ci, Rai)</p>
+          <div className="mb-5 grid items-end gap-3 md:grid-cols-[1.6fr_1fr]">
+            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="n.º 3.º, 1 e n.º 7.º">
+              <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
+                onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
+            </Field>
+            <div className={`flex h-9 items-center border px-3 text-[13px] ${c.raiDet ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
+              {c.raiDet ? <>Rai = <b className="num mx-1">{fmt(c.raiDet, 1)}</b> ({RAI_NOME[c.raiDet === 2 ? 'A' : c.raiDet === 1.5 ? 'M' : 'B']}) — aplicado a todos os materiais</> : 'Escolha a atividade para obter o Rai'}
+            </div>
+          </div>
+          <p className="label mb-2">2. Materiais combustíveis — material, massa e Ci</p>
           <table className="tbl">
-            <thead><tr><th>Constituinte (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[130px] text-right">Massa Mi (kg)</th><th className="w-[170px]">Ci</th><th className="w-[160px]">Rai</th><th className="w-[130px] text-right">Mi·Hi·Ci·Rai</th><th className="w-8" /></tr></thead>
+            <thead><tr><th>Material (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[140px] text-right">Massa Mi (kg)</th><th className="w-[150px]">Ci</th><th className="w-[140px] text-right">Mi·Hi·Ci·Rai (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
-              {c.itens.map((it, k) => (
-                <tr key={it.id}>
-                  <td>
-                    <Combo items={ITENS_HI} value={it.produto} placeholder="Escolher produto ou escrever abaixo" onPick={(o) => set((x) => { const p = QUADRO_I_HI[o.key as number]; x.itens[k].produto = p.p; x.itens[k].hi = p.h; })} />
-                    <input className="mt-1 w-full bg-transparent text-[11.5px] text-ink-3 outline-none" value={it.produto} placeholder="Designação livre (Hi por fonte fundamentada)" onChange={(e) => set((x) => { x.itens[k].produto = e.target.value; })} />
-                  </td>
-                  <td><Num value={it.hi} onChange={(v) => set((x) => { x.itens[k].hi = v; })} /></td>
-                  <td><Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} /></td>
-                  <td><Select value={it.ci} onChange={(v) => set((x) => { x.itens[k].ci = v; })} options={CI_OPTS} /></td>
-                  <td><Select value={it.rai} onChange={(v) => set((x) => { x.itens[k].rai = v; })} options={RAI_OPTS} /></td>
-                  <td className="num text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
-                  <td><button className="btn-icon" onClick={() => set((x) => { x.itens.splice(k, 1); })}><Trash2 size={13} /></button></td>
-                </tr>
-              ))}
+              {c.itens.map((it, k) => {
+                const doQuadro = QUADRO_I_HI.some((p) => p.p === it.produto && p.h === it.hi);
+                return (
+                  <tr key={it.id}>
+                    <td>
+                      <Combo items={ITENS_HI_OUTRO} value={it.produto} placeholder="Escolher material" onPick={(o) => set((x) => {
+                        if (o.key === -1) { x.itens[k].produto = ''; x.itens[k].hi = 0; return; }
+                        const p = QUADRO_I_HI[o.key as number]; x.itens[k].produto = p.p; x.itens[k].hi = p.h;
+                      })} />
+                      {!doQuadro && <input className="input mt-1 h-8 text-[12px]" value={it.produto} placeholder="Material não listado: designação (Hi de fonte fundamentada)" onChange={(e) => set((x) => { x.itens[k].produto = e.target.value; })} />}
+                    </td>
+                    <td>{doQuadro ? <span className="num block pr-2.5 pt-2 text-right">{fmt(it.hi, 2)}</span> : <Num value={it.hi} onChange={(v) => set((x) => { x.itens[k].hi = v; })} />}</td>
+                    <td><Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} /></td>
+                    <td><Select value={it.ci} onChange={(v) => set((x) => { x.itens[k].ci = v; })} options={CI_OPTS} /></td>
+                    <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
+                    <td><button className="btn-icon" onClick={() => set((x) => { x.itens.splice(k, 1); })}><Trash2 size={13} /></button></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-          <button className="btn mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Constituinte</button>
-          <p className="mt-3 text-[11.5px] text-ink-3">Rai «em função do tipo de atividade ou do armazenamento inerente ao compartimento» (n.º 3.º, 1): use o risco de ativação do quadro II da atividade do compartimento.</p>
+          <button className="btn mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Material</button>
         </div>
       ) : (
         <div className="p-4">
-          <p className="label mb-2">Zonas de atividade — fabricação e reparação (qsi, Si, Ci, Rai)</p>
+          <p className="label mb-2">a) Zonas de fabrico ou reparação — atividade, área e Ci</p>
           <table className="tbl">
-            <thead><tr><th>Atividade (quadro II)</th><th className="w-[110px] text-right">qsi (MJ/m²)</th><th className="w-[120px] text-right">Si (m²)</th><th className="w-[170px]">Ci</th><th className="w-[150px]">Rai</th><th className="w-[130px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
+            <thead><tr><th>Atividade (quadro II)</th><th className="w-[110px] text-right">qsi (MJ/m²)</th><th className="w-[130px] text-right">Área Si (m²)</th><th className="w-[150px]">Ci</th><th className="w-[90px] text-right">Rai</th><th className="w-[130px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.atividades.map((z, k) => (
                 <tr key={z.id}>
-                  <td><Combo items={ITENS_QS} value={z.nome} onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
-                  <td><Num value={z.qs} onChange={(v) => set((x) => { x.atividades[k].qs = v; })} /></td>
+                  <td><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
+                  <td className="num pt-4 text-right">{z.qs ? fmt(z.qs) : '—'}</td>
                   <td><Num value={z.area} onChange={(v) => set((x) => { x.atividades[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.atividades[k].ci = v; })} options={CI_OPTS} /></td>
-                  <td><Select value={z.rai} onChange={(v) => set((x) => { x.atividades[k].rai = v; })} options={RAI_OPTS} /></td>
-                  <td className="num text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
+                  <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
+                  <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
                   <td><button className="btn-icon" onClick={() => set((x) => { x.atividades.splice(k, 1); })}><Trash2 size={13} /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button className="btn mt-3" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de atividade</button>
+          <button className="btn mt-3" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
 
-          <p className="label mb-2 mt-6">Zonas de armazenamento (qvi, hi, Si, Ci, Rai)</p>
+          <p className="label mb-2 mt-6">b) Zonas de armazenamento — produto armazenado, altura, área e Ci</p>
           <table className="tbl">
-            <thead><tr><th>Armazenamento (quadro II)</th><th className="w-[110px] text-right">qvi (MJ/m³)</th><th className="w-[100px] text-right">hi (m)</th><th className="w-[110px] text-right">Si (m²)</th><th className="w-[160px]">Ci</th><th className="w-[140px]">Rai</th><th className="w-[120px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
+            <thead><tr><th>Armazenamento (quadro II)</th><th className="w-[110px] text-right">qvi (MJ/m³)</th><th className="w-[120px] text-right">Altura hi (m)</th><th className="w-[130px] text-right">Área Si (m²)</th><th className="w-[150px]">Ci</th><th className="w-[90px] text-right">Rai</th><th className="w-[130px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.armazens.map((z, k) => (
                 <tr key={z.id}>
-                  <td><Combo items={ITENS_QV} value={z.nome} onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.armazens[k], { atividadeId: a.id, nome: a.a, qv: a.qv!, rai: RAI[a.rv!] }); })} /></td>
-                  <td><Num value={z.qv} onChange={(v) => set((x) => { x.armazens[k].qv = v; })} /></td>
+                  <td><Combo items={ITENS_QV} value={z.nome} placeholder="Escolher produto armazenado" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.armazens[k], { atividadeId: a.id, nome: a.a, qv: a.qv!, rai: RAI[a.rv!] }); })} /></td>
+                  <td className="num pt-4 text-right">{z.qv ? fmt(z.qv) : '—'}</td>
                   <td><Num value={z.altura} onChange={(v) => set((x) => { x.armazens[k].altura = v; })} /></td>
                   <td><Num value={z.area} onChange={(v) => set((x) => { x.armazens[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.armazens[k].ci = v; })} options={CI_OPTS} /></td>
-                  <td><Select value={z.rai} onChange={(v) => set((x) => { x.armazens[k].rai = v; })} options={RAI_OPTS} /></td>
-                  <td className="num text-right font-semibold">{fmt(r.linhas[c.atividades.length + k]?.parcela)}</td>
+                  <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
+                  <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[c.atividades.length + k]?.parcela)}</td>
                   <td><button className="btn-icon" onClick={() => set((x) => { x.armazens.splice(k, 1); })}><Trash2 size={13} /></button></td>
                 </tr>
               ))}
@@ -203,9 +220,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           </table>
           <button className="btn mt-3" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
 
-          <div className="mt-5">
-            <Toggle checked={c.regraRai} onChange={(v) => set((x) => { x.regraRai = v; })} label="Aplicar o n.º 7.º, 3 (várias atividades no mesmo compartimento)" legal="Despacho 2074/2009, n.º 7.º, 3" hint={r.raiNota ?? 'Só atua com duas ou mais zonas: substitui os Rai individuais pelo Rai do compartimento.'} />
-          </div>
+          <p className="mt-4 text-[11.5px] text-ink-3">qsi, qvi e Rai são lidos do quadro II quando escolhe a atividade.{r.raiNota ? ' Várias zonas no compartimento — ' + r.raiNota : ''}</p>
           {c.area > 0 && somaZonas > c.area + 0.01 && <div className="mt-3"><Note tone="warn">A soma das áreas das zonas ({fmt(somaZonas, 1)} m²) excede a área útil do compartimento ({fmt(c.area, 1)} m²).</Note></div>}
         </div>
       )}
