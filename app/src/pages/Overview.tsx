@@ -1,3 +1,4 @@
+import { nomeUT } from '../nome';
 import { ArrowRight, CheckCircle2, Circle, FileText } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { classificar, efetivoUT, CAT_NOME, fmt } from '../engine/calc';
@@ -61,7 +62,7 @@ export default function Overview() {
                   <tr key={u.id} className="cursor-pointer" onClick={() => go(`${base}/e/${e.id}/u/${u.id}/fatores`)}>
                     <td>{e.nome}</td>
                     <td className="num font-semibold">{ROMANO[u.tipo]}</td>
-                    <td>{u.designacao}</td>
+                    <td>{nomeUT(u).nome}</td>
                     <td className="num text-right">{fmt(ef.total)}</td>
                     <td className="text-ink-3">{c.falta.length ? <span className="text-warn">Falta: {c.falta.join(', ')}</span> : c.determinantes.join('; ') || 'Todos os fatores na 1.ª categoria'}</td>
                     <td><CatBadge cat={c.cat} size="sm" /></td>

@@ -1,9 +1,10 @@
+import { nomeUT } from '../nome';
 import { createContext, useContext, useState } from 'react';
 import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Plus, Settings2 } from 'lucide-react';
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
-import { ROMANO, utInfo } from '../data/rjscie';
+import { ROMANO } from '../data/rjscie';
 import { classificar } from '../engine/calc';
 import { CAT_COR } from '../ui/primitives';
 import Overview from './Overview';
@@ -121,11 +122,8 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
                       <span className={`h-2 w-2 shrink-0 ${CAT_COR[c]}`} />
                       <span className="w-9 shrink-0 font-mono text-[11px]">{ROMANO[u.tipo]}</span>
                       {(() => {
-                        const def = novaUT(u.tipo).designacao;
-                        const semNome = !u.designacao.trim() || u.designacao === def;
-                        return semNome
-                          ? <span className="truncate italic text-ink-4">Sem nome · {utInfo(u.tipo).nome}</span>
-                          : <span className="truncate" title={u.designacao}>{u.designacao.replace(/^UT [IVX]+ — /, '')}</span>;
+                        const n = nomeUT(u);
+                        return <span className={`truncate ${n.temNome ? '' : 'italic text-ink-4'}`} title={n.nome}>{n.nome}</span>;
                       })()}
                       {act && <ChevronRight size={13} className="ml-auto shrink-0 text-fire" />}
                     </a>

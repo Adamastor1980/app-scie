@@ -1,3 +1,4 @@
+import { nomeUT } from '../nome';
 import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { go } from '../router';
@@ -63,7 +64,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
                 <button key={u.id} onClick={() => go(`/p/${p.id}/e/${e.id}/u/${u.id}/fatores`)} className="group flex items-center gap-4 bg-white p-4 text-left hover:bg-paper">
                   <span className="w-16 font-display text-[36px] font-extrabold leading-none text-fire">{ROMANO[u.tipo]}</span>
                   <span className="flex-1">
-                    <span className="block font-semibold">{u.designacao}</span>
+                    <span className="block font-semibold">{nomeUT(u).nome}</span>
                     <span className="ref">{utInfo(u.tipo).quadro} · efetivo {fmt(ef.total)} · H {fmt(u.altura, 1)} m</span>
                   </span>
                   <CatBadge cat={c.cat} size="sm" />

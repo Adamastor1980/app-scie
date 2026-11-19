@@ -1,3 +1,4 @@
+import { nomeUT, tituloUT } from '../nome';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
@@ -179,7 +180,7 @@ export default function Relatorio() {
             {ed.descricao && <P>{ed.descricao}</P>}
             {uts.map(({ ut }) => (
               <div key={ut.id} className="mb-3 border-l-[3px] border-ink pl-3">
-                <p className="text-[12.5px] font-bold">UT {ROMANO[ut.tipo]} — {ut.designacao}</p>
+                <p className="text-[12.5px] font-bold">{tituloUT(ut)}</p>
                 <p className="text-[11.5px] text-ink-3">{utInfo(ut.tipo).definicao} (RJ-SCIE, art. 8.º n.º 1 {utInfo(ut.tipo).alinea})</p>
                 {ut.descricao && <p className="mt-1 text-[12px]">{ut.descricao}</p>}
                 {ut.pisos.length > 0 && (
@@ -204,7 +205,7 @@ export default function Relatorio() {
         {todas.map(({ ut, cls, ed }) => (
           <div key={ut.id} className="avoid-break mb-5">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[12.5px] font-bold">{ed.nome} · UT {ROMANO[ut.tipo]} — {ut.designacao}</p>
+              <p className="text-[12.5px] font-bold">{ed.nome} · {tituloUT(ut)}</p>
               <span className={`${CAT_COR[cls.cat]} px-2 py-0.5 font-mono text-[11px] font-semibold text-white`}>{CAT_NOME[cls.cat]}</span>
             </div>
             <QuadroAnexo c={cls} titulo={`${cls.quadro} do anexo III`} />
@@ -214,13 +215,13 @@ export default function Relatorio() {
           </div>
         ))}
         <table className="tbl"><thead><tr><th>Edifício</th><th>UT</th><th>Designação</th><th>Categoria</th></tr></thead>
-          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td className="num">{ROMANO[ut.tipo]}</td><td>{ut.designacao}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td></tr>)}</tbody></table>
+          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td className="num">{ROMANO[ut.tipo]}</td><td>{nomeUT(ut).nome}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td></tr>)}</tbody></table>
 
         <H1 n={S()}>Cálculo do efetivo</H1>
         <P>O efetivo é o somatório dos efetivos de todos os espaços suscetíveis de ocupação (RT-SCIE, art. 51.º n.º 1), arredondados ao inteiro superior. A correção pelo fator 1,3 (art. 51.º n.º 5) aplica-se apenas ao dimensionamento das vias de evacuação e saídas.</P>
         {todas.filter((u) => u.ut.espacos.length).map(({ ut, ef }) => (
           <div key={ut.id} className="avoid-break mb-5">
-            <p className="mb-1 text-[12.5px] font-bold">UT {ROMANO[ut.tipo]} — {ut.designacao}</p>
+            <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             <table className="tbl"><thead><tr><th>Espaço</th><th>Cálculo</th><th>Base legal</th><th className="text-right">Efetivo</th></tr></thead>
               <tbody>
                 {ut.espacos.map((e) => { const c = efetivoEspaco(e); return (
@@ -237,7 +238,7 @@ export default function Relatorio() {
         {todas.filter((u) => u.ut.compartimentos.length).length === 0 && <P>Não foram calculadas cargas de incêndio (fator de risco apenas nas UT XI e XII).</P>}
         {todas.filter((u) => u.ut.compartimentos.length).map(({ ut, carga }) => (
           <div key={ut.id} className="mb-6">
-            <p className="mb-1 text-[12.5px] font-bold">UT {ROMANO[ut.tipo]} — {ut.designacao}</p>
+            <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             {ut.compartimentos.map((c) => { const r = cargaCompartimento(c); return (
               <div key={c.id} className="avoid-break mb-3">
                 <table className="tbl"><thead><tr><th colSpan={2}>{c.nome} · S = {fmt(c.area, 2)} m² · método {c.metodo === 'deterministico' ? 'determinístico' : 'probabilístico'}</th><th className="text-right">MJ</th></tr></thead>
@@ -256,7 +257,7 @@ export default function Relatorio() {
         <P>Exigências concretizadas para cada utilização-tipo em função da categoria de risco, da altura do edifício e dos locais de risco. «A verificar» identifica exigências cujo cumprimento depende de elementos de projeto não introduzidos.</P>
         {todas.map(({ ut, ed, medidas, cls }) => (
           <div key={ut.id} className="mb-8">
-            <p className="avoid-break mb-2 border-b border-ink pb-1 text-[13.5px] font-bold">{ed.nome} · UT {ROMANO[ut.tipo]} — {ut.designacao} · {CAT_NOME[cls.cat]}</p>
+            <p className="avoid-break mb-2 border-b border-ink pb-1 text-[13.5px] font-bold">{ed.nome} · {tituloUT(ut)} · {CAT_NOME[cls.cat]}</p>
             {TEMAS.filter((t) => t !== 'Autoproteção').map((t) => {
               const m = filtraMed(medidas.filter((x) => x.tema === t));
               if (!m.length) return null;
@@ -277,7 +278,7 @@ export default function Relatorio() {
           const m = filtraMed(medidas.filter((x) => x.tema === 'Autoproteção'));
           return (
             <div key={ut.id} className="avoid-break mb-4">
-              <p className="mb-1 text-[12.5px] font-bold">{ed.nome} · UT {ROMANO[ut.tipo]} — {ut.designacao}</p>
+              <p className="mb-1 text-[12.5px] font-bold">{ed.nome} · {tituloUT(ut)}</p>
               <table className="tbl"><tbody>{m.map((x) => <tr key={x.id}><td className="w-[27%] font-semibold">{x.titulo}</td><td className="text-[11.5px]">{x.exigencia}{x.motivo && <span className="block italic text-ink-3">{x.motivo}</span>}</td><td className="w-[20%] text-[10px] text-ink-3">{x.base}</td></tr>)}</tbody></table>
             </div>
           );
@@ -306,7 +307,7 @@ export default function Relatorio() {
             <tr key={ut.id}><td>{ed.nome}</td><td className="num">{ROMANO[ut.tipo]}</td><td className="num text-right">{ef.total}</td><td className="num text-right">{carga.S ? fmt(carga.q, 1) : '—'}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td><td className="num">{medidas.filter((m) => m.estado === 'aplica').length} (+{medidas.filter((m) => m.estado === 'verificar').length} a verificar)</td></tr>
           ))}</tbody></table>
         {todas.map(({ ut, cls }) => (
-          <P key={ut.id}>A UT {ROMANO[ut.tipo]} ({ut.designacao}) classifica-se na <b>{CAT_NOME[cls.cat]}</b> de risco{cls.determinantes.length ? `, determinada por ${cls.determinantes.join(' e ').toLowerCase()}` : ''}{cls.falta.length ? ` — dados em falta: ${cls.falta.join(', ')}` : ''}.</P>
+          <P key={ut.id}>A UT {ROMANO[ut.tipo]} ({nomeUT(ut).nome}) classifica-se na <b>{CAT_NOME[cls.cat]}</b> de risco{cls.determinantes.length ? `, determinada por ${cls.determinantes.join(' e ').toLowerCase()}` : ''}{cls.falta.length ? ` — dados em falta: ${cls.falta.join(', ')}` : ''}.</P>
         ))}
         {maxCat && <P>Entidade competente para a categoria mais gravosa: {maxCat === 1 ? 'câmara municipal' : 'ANEPC'} (RJ-SCIE, art. 5.º).</P>}
         {p.conclusoes && <div className="mt-4 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}

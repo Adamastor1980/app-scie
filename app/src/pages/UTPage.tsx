@@ -1,3 +1,5 @@
+import { nomeUT } from '../nome';
+import { novaUT } from '../store';
 import { Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { go } from '../router';
@@ -59,10 +61,10 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             <p className="label">{ed.nome} · UT {ROMANO[ut.tipo]} · art. 8.º n.º 1 {info.alinea} RJ-SCIE</p>
             <input
               className="mt-1 w-full bg-transparent font-display text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire"
-              value={ut.designacao}
-              placeholder="Nome desta UT (ex.: Escritórios piso 1)"
-              title="Clique para alterar o nome" 
-              onChange={(e) => upU((u) => { u.designacao = e.target.value; })}
+              value={ut.designacao === novaUT(ut.tipo).designacao ? '' : ut.designacao}
+              placeholder={nomeUT(ut).temNome ? nomeUT(ut).nome : 'Nome desta UT (ex.: Escritórios piso 1)'}
+              title="Clique para alterar o nome"
+              onChange={(e) => upU((u) => { u.designacao = e.target.value || novaUT(u.tipo).designacao; })}
             />
             <p className="mt-1 max-w-3xl text-[12.5px] leading-snug text-ink-3">{info.definicao}</p>
           </div>
