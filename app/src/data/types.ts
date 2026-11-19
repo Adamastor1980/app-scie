@@ -1,0 +1,199 @@
+export type Risco = 'A' | 'M' | 'B';
+
+export interface ProdutoHi {
+  p: string;
+  h: number;
+}
+
+export interface Atividade {
+  id: number;
+  a: string;
+  qs?: number;
+  rs?: Risco;
+  qv?: number;
+  rv?: Risco;
+}
+
+export type Cat = 1 | 2 | 3 | 4;
+export type UTNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type LocalRisco = 'A' | 'B' | 'C' | 'Cag' | 'D' | 'E' | 'F';
+
+/* ------------------------------------------------------------------ */
+/* Modelo de dados do projeto                                          */
+/* ------------------------------------------------------------------ */
+
+export interface Empresa {
+  nome: string;
+  nif: string;
+  morada: string;
+  telefone: string;
+  email: string;
+  website: string;
+  alvara: string;
+  apresentacao: string;
+  logo?: string; // dataURL
+}
+
+export interface Autor {
+  nome: string;
+  qualificacao: string;
+  ordem: string;
+  numero: string;
+  registoAnepc: string;
+  email: string;
+}
+
+export interface Planta {
+  id: string;
+  tipo: 'localizacao' | 'implantacao' | 'cortes' | 'piso' | 'outra';
+  titulo: string;
+  escala: string;
+  imagem: string; // dataURL
+  legenda: string;
+}
+
+export type CriterioEfetivo =
+  | 'indice'
+  | 'camas'
+  | 'acamados'
+  | 'tipologia'
+  | 'lugares'
+  | 'declarado'
+  | 'comprimento'
+  | 'desportivo'
+  | 'fundamentado';
+
+export interface Espaco {
+  id: string;
+  nome: string;
+  piso: string;
+  local: LocalRisco;
+  subtipoC?: string; // alínea do art. 10.º n.º 3
+  criterio: CriterioEfetivo;
+  indiceId?: string;
+  area?: number;
+  n?: number; // camas, lugares, acamados, n.º apartamentos, declarado, manual
+  tipologia?: number; // n do Tn
+  comprimento?: number;
+  comprimentoTipo?: 'sentados' | 'pe';
+  desportivoTipo?: 'apoio' | 'patinagem' | 'agua';
+  espectadores?: number;
+  efetivoPublico?: number;
+  mobilidadeReduzida?: boolean; // fator 1,3 (art. 51.º n.º 5 / art. 232.º)
+  naoSimultaneo?: boolean; // art. 51.º n.º 9
+  justificacao?: string;
+  saidasExistentes?: number;
+  upExistentes?: number;
+}
+
+export interface Piso {
+  id: string;
+  nome: string;
+  cota: number; // m relativamente ao plano de referência (negativo = abaixo)
+  area: number; // área de pavimento do piso afeta à UT (m²)
+  tecnico?: boolean; // só instalações técnicas (não conta para pisos abaixo)
+}
+
+export interface ItemDet {
+  id: string;
+  produto: string;
+  hi: number;
+  massa: number;
+  ci: number;
+  rai: number;
+}
+
+export interface ZonaAtividade {
+  id: string;
+  atividadeId?: number;
+  nome: string;
+  qs: number;
+  area: number;
+  ci: number;
+  rai: number;
+}
+
+export interface ZonaArmazem {
+  id: string;
+  atividadeId?: number;
+  nome: string;
+  qv: number;
+  altura: number;
+  area: number;
+  ci: number;
+  rai: number;
+}
+
+export interface Compartimento {
+  id: string;
+  nome: string;
+  area: number;
+  metodo: 'deterministico' | 'probabilistico';
+  itens: ItemDet[];
+  atividades: ZonaAtividade[];
+  armazens: ZonaArmazem[];
+  regraRai: boolean; // aplicar n.º 7.º-3 (várias atividades no mesmo compartimento)
+}
+
+export interface UT {
+  id: string;
+  tipo: UTNum;
+  designacao: string;
+  descricao: string;
+  altura: number;
+  pisosAbaixo: number;
+  areaBruta: number;
+  arLivre: boolean;
+  exclusivoArmazem: boolean;
+  saidaIndependenteD: boolean; // locais D/E com saídas independentes diretas ao exterior no plano de referência
+  efetivoManual?: number;
+  usarEfetivoManual: boolean;
+  pisos: Piso[];
+  espacos: Espaco[];
+  compartimentos: Compartimento[];
+  // dados complementares para as medidas
+  parqueAutomatico?: boolean;
+  turismoRural?: boolean;
+  temCozinhaC?: boolean;
+  temGas?: boolean;
+  espacoCenicoIsolavel?: boolean;
+  patrimonio?: boolean;
+  liquidosInflamaveisL?: number;
+  pinturaArea?: number;
+  casoXII?: 1 | 2 | 3 | 4;
+  observacoes: string;
+}
+
+export interface Edificio {
+  id: string;
+  nome: string;
+  descricao: string;
+  altura: number; // altura do edifício (anexo I RT-SCIE)
+  pisosAcima: number;
+  pisosAbaixo: number;
+  independente: boolean;
+  comunicacoesComuns: boolean; // utilização mista com comunicações interiores comuns
+  uts: UT[];
+}
+
+export interface Projeto {
+  id: string;
+  nome: string;
+  referencia: string;
+  cliente: string;
+  morada: string;
+  concelho: string;
+  distrito: string;
+  coordenadas: string;
+  tipoIntervencao: string;
+  objetivo: string;
+  data: string;
+  versao: string;
+  autor: Autor;
+  empresa: Empresa;
+  edificios: Edificio[];
+  plantas: Planta[];
+  conclusoes: string;
+  criadoEm: number;
+  atualizadoEm: number;
+}
