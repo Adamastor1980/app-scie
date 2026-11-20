@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { ArrowUpRight, Copy, FilePlus2, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
+import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
 import { go } from '../router';
 import { classificar } from '../engine/calc';
@@ -16,9 +17,12 @@ export default function Home() {
 
   const onImport = async (f: File) => {
     try {
-      const p = JSON.parse(await f.text()) as Projeto;
-      if (!p.edificios) throw new Error('Ficheiro inválido');
-      go(`/p/${importar(p)}`);
+      const dados = JSON.parse(await f.text()) as Projeto | Projeto[];
+      const lista = Array.isArray(dados) ? dados : [dados];
+      if (!lista.length || lista.some((p) => !p.edificios)) throw new Error('Ficheiro inválido');
+      const ids = lista.map((p) => importar(p));
+      if (ids.length === 1) go(`/p/${ids[0]}`);
+      else alert(`${ids.length} projetos importados.`);
     } catch {
       alert('Ficheiro inválido: não é um projeto SCIE/CALC exportado em JSON.');
     }
@@ -42,7 +46,7 @@ export default function Home() {
               <FilePlus2 size={17} /> Novo projeto
             </button>
             <button className="btn h-11 px-4" onClick={() => fileRef.current?.click()}>
-              <Upload size={16} /> Importar JSON
+              <Upload size={16} /> Importar projeto (JSON)
             </button>
             <button className="btn h-11 px-4" onClick={() => go(`/p/${importar(exemploProjeto())}`)}>
               Abrir exemplo
@@ -66,6 +70,16 @@ export default function Home() {
 
       <div className="mb-4 flex items-end justify-between">
         <h2 className="section-title">Projetos <span className="font-mono text-[14px] text-ink-3">({projetos.length})</span></h2>
+        {projetos.length > 0 && (
+          <button className="btn" onClick={() => {
+            const blob = new Blob([JSON.stringify(projetos, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `scie-calc-copia-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }}><Download size={15} /> Exportar todos (cópia de segurança)</button>
+        )}
       </div>
 
       {projetos.length === 0 ? (
@@ -100,6 +114,7 @@ export default function Home() {
                     {p.edificios.length} edif. · {uts.length} UT · {new Date(p.atualizadoEm).toLocaleDateString('pt-PT')}
                   </span>
                   <div className="flex items-center">
+                    <button className="btn-icon" title="Exportar este projeto (JSON)" onClick={() => exportarJSON(p)}><Download size={15} /></button>
                     <button className="btn-icon" title="Duplicar" onClick={() => duplicar(p.id)}><Copy size={15} /></button>
                     <button className="btn-icon" title="Apagar" onClick={() => confirm(`Apagar o projeto «${p.nome}»?`) && apagar(p.id)}><Trash2 size={15} /></button>
                     <button className="btn-icon !text-ink" title="Abrir" onClick={() => go(`/p/${p.id}`)}><ArrowUpRight size={17} /></button>
