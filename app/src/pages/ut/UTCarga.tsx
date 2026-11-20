@@ -179,12 +179,9 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                       ) : (
                         <div className="flex flex-col gap-1">
                           <Num value={it.litros} onChange={(v) => set((x) => { const y = x.itens[k]; y.litros = v; y.massa = v * (y.densidade ?? 0); })} suffix="L" />
-                          <Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="densidade" />
-                          <input className="input h-7 text-[11px]" value={it.fonteDensidade ?? ''} placeholder="fonte (ex.: FDS secção 9)" onChange={(e) => set((x) => { x.itens[k].fonteDensidade = e.target.value; })} />
+                          <Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="FDS secç. 9" />
+                          <input className="input h-7 text-[11px]" value={it.fonteDensidade ?? ''} placeholder="fonte: FDS do produto, secção 9" onChange={(e) => set((x) => { x.itens[k].fonteDensidade = e.target.value; })} />
                           <span className="num text-right text-[11px] text-ink-3">= {fmt(it.massa, 1)} kg</span>
-                          <span className="border-l-2 border-fire bg-white px-2 py-1 text-[10.5px] leading-snug text-ink-3">
-                            <b className="text-ink-2">Onde obter a densidade:</b> Ficha de Dados de Segurança (FDS) do produto, <b className="text-ink-2">secção 9</b> — «densidade» ou «densidade relativa» (a 20 °C, em kg/L ≈ g/cm³). Sem FDS: ficha técnica do fabricante. kg = litros × densidade.
-                          </span>
                         </div>
                       )}
                     </td>
