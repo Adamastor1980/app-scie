@@ -101,6 +101,11 @@ export interface ItemDet {
   massa: number;
   ci: number;
   rai: number;
+  /** líquidos: quantidade em litros e densidade (kg/L) — massa = litros × densidade */
+  emLitros?: boolean;
+  litros?: number;
+  densidade?: number;
+  fonteDensidade?: string;
 }
 
 export interface ZonaAtividade {

@@ -105,6 +105,13 @@ describe('Carga de incêndio — Despacho 2074/2009 (red. 8954/2020)', () => {
     expect(r.Qs).toBeCloseTo(1000 * 16.7 * 1.5 + 100 * 42 * 1.3 * 1.5, 6);
     expect(r.qs).toBeCloseTo(r.Qs / 50, 6);
   });
+  it('determinístico com líquido em litros × densidade', () => {
+    const c: Compartimento = { id: 'c', nome: 'c', area: 100, metodo: 'deterministico', atividades: [], armazens: [], regraRai: true,
+      itens: [{ id: '1', produto: 'Parafina/óleo de parafina', hi: 42, massa: 150 * 0.85, emLitros: true, litros: 150, densidade: 0.85, ci: 1.3, rai: 1 }] };
+    const r = cargaCompartimento(c);
+    expect(r.Qs).toBeCloseTo(127.5 * 42 * 1.3, 6);
+    expect(r.linhas[0].formula).toContain('150,00 L');
+  });
   it('probabilístico armazenamento qvi hi Si Ci Rai', () => {
     const c: Compartimento = { id: 'c', nome: 'c', area: 200, metodo: 'probabilistico', itens: [], atividades: [], regraRai: false,
       armazens: [{ id: '1', nome: 'a', qv: 1000, altura: 3, area: 100, ci: 1, rai: 2 }] };

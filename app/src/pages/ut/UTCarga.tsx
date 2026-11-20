@@ -155,7 +155,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           <p className="-mt-3 mb-5 text-[11.5px] text-ink-3">A atividade escolhida serve <b>apenas para obter o Rai</b>. Não soma carga de incêndio: o qsi/qvi do quadro II não entra no método determinístico. A carga resulta só dos materiais da tabela abaixo (Mi × Hi × Ci × Rai).</p>
           <p className="label mb-2">2. Materiais combustíveis — material, massa e Ci</p>
           <table className="tbl">
-            <thead><tr><th>Material (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[140px] text-right">Massa Mi (kg)</th><th className="w-[150px]">Ci</th><th className="w-[140px] text-right">Mi·Hi·Ci·Rai (MJ)</th><th className="w-8" /></tr></thead>
+            <thead><tr><th>Material (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[170px] text-right">Massa Mi (kg ou litros)</th><th className="w-[150px]">Ci</th><th className="w-[140px] text-right">Mi·Hi·Ci·Rai (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.itens.map((it, k) => {
                 const doQuadro = QUADRO_I_HI.some((p) => p.p === it.produto && p.h === it.hi);
@@ -169,7 +169,22 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                       {!doQuadro && <input className="input mt-1 h-8 text-[12px]" value={it.produto} placeholder="Material não listado: designação (Hi de fonte fundamentada)" onChange={(e) => set((x) => { x.itens[k].produto = e.target.value; })} />}
                     </td>
                     <td>{doQuadro ? <span className="num block pr-2.5 pt-2 text-right">{fmt(it.hi, 2)}</span> : <Num value={it.hi} onChange={(v) => set((x) => { x.itens[k].hi = v; })} />}</td>
-                    <td><Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} /></td>
+                    <td>
+                      <div className="mb-1 grid grid-cols-2 border border-ink text-[11px] font-semibold">
+                        <button className={`h-6 ${!it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = false; })}>kg</button>
+                        <button className={`h-6 ${it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = true; })}>litros</button>
+                      </div>
+                      {!it.emLitros ? (
+                        <Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} suffix="kg" />
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <Num value={it.litros} onChange={(v) => set((x) => { const y = x.itens[k]; y.litros = v; y.massa = v * (y.densidade ?? 0); })} suffix="L" />
+                          <Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="densidade" />
+                          <input className="input h-7 text-[11px]" value={it.fonteDensidade ?? ''} placeholder="fonte (ex.: FDS secção 9)" onChange={(e) => set((x) => { x.itens[k].fonteDensidade = e.target.value; })} />
+                          <span className="num text-right text-[11px] text-ink-3">= {fmt(it.massa, 1)} kg</span>
+                        </div>
+                      )}
+                    </td>
                     <td><Select value={it.ci} onChange={(v) => set((x) => { x.itens[k].ci = v; })} options={CI_OPTS} /></td>
                     <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
                     <td><button className="btn-icon" onClick={() => set((x) => { x.itens.splice(k, 1); })}><Trash2 size={13} /></button></td>
@@ -179,7 +194,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </tbody>
           </table>
           <button className="btn-fire mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Adicionar material a este compartimento</button>
-          <p className="mt-2 text-[11.5px] text-ink-3">Cada material leva só a massa: não tem área própria. Todos os materiais deste compartimento são somados e divididos pela área útil S indicada no topo.</p>
+          <p className="mt-2 text-[11.5px] text-ink-3">Cada material leva só a massa (em kg, ou em litros × densidade para líquidos, com a densidade da FDS): não tem área própria. Todos os materiais deste compartimento são somados e divididos pela área útil S indicada no topo.</p>
         </div>
       ) : (
         <div className="p-4">
