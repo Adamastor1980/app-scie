@@ -1,15 +1,15 @@
-import { nomeUT, tituloUT } from '../nome';
+import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
-import { DIPLOMAS, LOCAIS, ROMANO, SUBTIPOS_C, utInfo } from '../data/rjscie';
+import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
 import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
 import { CAT_COR, Toggle } from '../ui/primitives';
-import type { Cat, LocalRisco } from '../data/types';
+import type { Cat } from '../data/types';
 
 const TIPO_PLANTA: Record<string, string> = {
   localizacao: 'Planta de localização', implantacao: 'Planta de implantação', cortes: 'Cortes e alçados', piso: 'Planta de piso', outra: 'Peça desenhada',
@@ -69,6 +69,7 @@ export default function Relatorio() {
 
   const filtraMed = (m: Medida[]) => m.filter((x) => x.estado === 'aplica' || (incluirVerif && x.estado === 'verificar') || (incluirNao && x.estado === 'nao'));
 
+  const cod = codigosEspacos(p);
   const locaisLista = todas.flatMap((u) => u.ut.espacos.map((e) => ({ u, e, c: efetivoEspaco(e) })));
   let sec = 0;
   const S = () => String(++sec);
@@ -172,15 +173,24 @@ export default function Relatorio() {
               <tr><td className="font-semibold">Edifício independente (art. 2.º j))</td><td>{ed.independente ? 'Sim' : 'Não'}</td></tr>
             </tbody></table>
             {ed.descricao && <P>{ed.descricao}</P>}
+            {uts.some(({ ut }) => ut.pisos.length) && (
+              <table className="tbl mb-3"><thead><tr><th>Utilização-tipo</th><th>Piso</th><th className="text-right">Cota (m)</th><th className="text-right">Área (m²)</th><th className="text-right">Área por UT (m²)</th></tr></thead>
+                <tbody>
+                  {uts.filter(({ ut }) => ut.pisos.length).map(({ ut }) => ut.pisos.map((pi, k) => (
+                    <tr key={pi.id}>
+                      {k === 0 && <td rowSpan={ut.pisos.length} className="text-[11px]"><b>UT {ROMANO[ut.tipo]}</b> «{utInfo(ut.tipo).nome}»<br />{nomeUT(ut).nome}</td>}
+                      <td>{pi.nome}{pi.tecnico ? ' (técnico)' : ''}</td><td className="num text-right">{fmt(pi.cota, 2)}</td><td className="num text-right">{fmt(pi.area, 2)}</td>
+                      {k === 0 && <td rowSpan={ut.pisos.length} className="num text-right font-semibold">{fmt(ut.pisos.reduce((a, x) => a + x.area, 0), 2)}</td>}
+                    </tr>
+                  )))}
+                  <tr><td colSpan={4} className="text-right font-bold">Total do edifício</td><td className="num text-right font-bold">{fmt(uts.reduce((a, { ut }) => a + ut.pisos.reduce((x, y) => x + y.area, 0), 0), 2)}</td></tr>
+                </tbody></table>
+            )}
             {uts.map(({ ut }) => (
               <div key={ut.id} className="mb-3 border-l-[3px] border-ink pl-3">
                 <p className="text-[12.5px] font-bold">{tituloUT(ut)}</p>
                 <p className="text-[11.5px] text-ink-3">{utInfo(ut.tipo).definicao} (RJ-SCIE, art. 8.º n.º 1 {utInfo(ut.tipo).alinea})</p>
                 {ut.descricao && <p className="mt-1 text-[12px]">{ut.descricao}</p>}
-                {ut.pisos.length > 0 && (
-                  <table className="tbl mt-2"><thead><tr><th>Piso</th><th className="text-right">Cota (m)</th><th className="text-right">Área (m²)</th><th>Observação</th></tr></thead>
-                    <tbody>{ut.pisos.map((pi) => <tr key={pi.id}><td>{pi.nome}</td><td className="num text-right">{fmt(pi.cota, 2)}</td><td className="num text-right">{fmt(pi.area, 1)}</td><td>{pi.tecnico ? 'Só instalações técnicas' : ''}</td></tr>)}</tbody></table>
-                )}
               </div>
             ))}
           </div>
@@ -189,10 +199,10 @@ export default function Relatorio() {
         <H1 n={S()}>Classificação e identificação do risco</H1>
         <H2 n={`${sec}.1`}>Locais de risco (RJ-SCIE, art. 10.º)</H2>
         {locaisLista.length ? (
-          <table className="tbl mb-3"><thead><tr><th>UT</th><th>Espaço</th><th>Piso</th><th>Local</th><th className="text-right">Efetivo</th><th>Enquadramento</th></tr></thead>
+          <table className="tbl mb-3"><thead><tr><th>Código</th><th>UT</th><th>Espaço</th><th>Piso</th><th>Local</th><th className="text-right">Efetivo</th><th>Justificação</th></tr></thead>
             <tbody>{locaisLista.map(({ u, e, c }) => (
-              <tr key={e.id}><td><span className="num font-semibold">{ROMANO[u.ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(u.ut.tipo).nome}</span></td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
-                <td className="text-[11px] text-ink-3">{e.subtipoC ? SUBTIPOS_C.find((s) => s.id === e.subtipoC)?.txt : LOCAIS[e.local as LocalRisco].nome}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
+              <tr key={e.id}><td className="whitespace-nowrap font-mono text-[10.5px]">{cod.get(e.id)}</td><td><span className="num font-semibold">{ROMANO[u.ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(u.ut.tipo).nome}</span></td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
+                <td className="text-[11px] text-ink-3">{justificacaoLocal(e, c.valor)}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
             ))}</tbody></table>
         ) : <P>Sem espaços registados.</P>}
         <H2 n={`${sec}.2`}>Fatores e categorias de risco (RJ-SCIE, arts. 12.º e 13.º e anexo III)</H2>
@@ -218,9 +228,19 @@ export default function Relatorio() {
             <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             <table className="tbl"><thead><tr><th>Espaço</th><th>Cálculo</th><th>Base legal</th><th className="text-right">Efetivo</th></tr></thead>
               <tbody>
-                {ut.espacos.map((e) => { const c = efetivoEspaco(e); return (
-                  <tr key={e.id} className={e.naoSimultaneo ? 'text-ink-4' : ''}><td>{e.nome || nomeUT(ut).nome}<br /><span className="ref">{e.piso} · local {e.local === 'Cag' ? 'C agrav.' : e.local}</span></td><td className="font-mono text-[11px]">{c.formula}{e.mobilidadeReduzida ? ` (evac.: ×1,3 = ${c.evacuacao})` : ''}</td><td className="text-[10.5px] text-ink-3">{c.base}{e.naoSimultaneo ? ' · não somado (n.º 9)' : ''}{e.justificacao ? ` · ${e.justificacao}` : ''}</td><td className="num text-right font-semibold">{c.valor}</td></tr>
+                {[...new Set(ut.espacos.map((e) => e.piso || '—'))].map((piso) => {
+                  const doPiso = ut.espacos.filter((e) => (e.piso || '—') === piso);
+                  const sub = doPiso.filter((e) => !e.naoSimultaneo).reduce((a, e) => a + efetivoEspaco(e).valor, 0);
+                  return (
+                    <Fragment key={piso}>
+                      <tr><td colSpan={4} className="bg-paper font-display text-[11.5px] font-bold">{piso}</td></tr>
+                      {doPiso.map((e) => { const c = efetivoEspaco(e); return (
+                  <tr key={e.id} className={e.naoSimultaneo ? 'text-ink-4' : ''}><td><span className="font-mono text-[10px] text-ink-3">{cod.get(e.id)}</span> {e.nome || nomeUT(ut).nome}<br /><span className="ref">{e.piso} · local {e.local === 'Cag' ? 'C agrav.' : e.local}</span></td><td className="font-mono text-[11px]">{c.formula}{e.mobilidadeReduzida ? ` (evac.: ×1,3 = ${c.evacuacao})` : ''}</td><td className="text-[10.5px] text-ink-3">{c.base}{e.naoSimultaneo ? ' · não somado (n.º 9)' : ''}{e.justificacao ? ` · ${e.justificacao}` : ''}</td><td className="num text-right font-semibold">{c.valor}</td></tr>
                 ); })}
+                      <tr><td colSpan={3} className="text-right text-[11px] font-semibold">Efetivo do piso</td><td className="num text-right font-semibold">{sub}</td></tr>
+                    </Fragment>
+                  );
+                })}
                 <tr><td colSpan={3} className="font-bold">Efetivo da UT{ef.origem === 'manual' ? ' (valor introduzido manualmente)' : ''}</td><td className="num text-right text-[14px] font-bold">{ef.total}</td></tr>
                 {(ef.emD > 0 || ef.emE > 0) && <tr><td colSpan={3}>Efetivo em locais de risco D / E</td><td className="num text-right">{ef.emD} / {ef.emE}</td></tr>}
               </tbody></table>

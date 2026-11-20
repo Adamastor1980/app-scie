@@ -8,6 +8,8 @@ import { LOCAIS, SUBTIPOS_C } from '../../data/rjscie';
 import { efetivoEspaco, efetivoUT, fmt } from '../../engine/calc';
 import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
+import { useP } from '../ProjetoShell';
+import { codigosEspacos } from '../../nome';
 
 const CRITERIOS: { v: CriterioEfetivo; l: string; uts?: number[] }[] = [
   { v: 'indice', l: 'Índice de ocupação × área útil (quadro XXVII)' },
@@ -26,6 +28,7 @@ const LOCAL_OPTS: { v: LocalRisco; l: string }[] = [
 ];
 
 export default function UTEfetivo({ ut, upU }: UTProps) {
+  const cod = codigosEspacos(useP().p);
   const ef = efetivoUT(ut);
   const [showQ, setShowQ] = useState(false);
   const crits0 = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
@@ -59,7 +62,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
               return (
                 <div key={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
                   <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
-                    <Field label="Espaço"><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
+                    <Field label={`Espaço · ${cod.get(e.id) ?? ""}`}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
                     <Field label="Piso"><Text value={e.piso} onChange={(v) => setE(i, (x) => { x.piso = v; })} /></Field>
                     <Field label="Local de risco" legal="art. 10.º"><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
                     <Field label="Critério do efetivo" legal="RT-SCIE art. 51.º"><Select value={e.criterio} onChange={(v) => setE(i, (x) => { x.criterio = v; })} options={crits.map((k) => ({ v: k.v, l: k.l }))} /></Field>
