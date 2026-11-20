@@ -159,13 +159,13 @@ export function readFile(file: File): Promise<string> {
 }
 
 /** Reduz imagens grandes para poupar espaço (mantém PDF nítido até ~2000 px) */
-export async function compressImage(dataUrl: string, max = 2200, quality = 0.88): Promise<string> {
+export async function compressImage(dataUrl: string, max = 2200, quality = 0.88, force = false): Promise<string> {
   if (!dataUrl.startsWith('data:image/') || dataUrl.startsWith('data:image/svg')) return dataUrl;
   const img = new Image();
   img.src = dataUrl;
   await img.decode();
   const k = Math.min(1, max / Math.max(img.width, img.height));
-  if (k === 1 && dataUrl.length < 1_500_000) return dataUrl;
+  if (!force && k === 1 && dataUrl.length < 1_500_000) return dataUrl;
   const c = document.createElement('canvas');
   c.width = Math.round(img.width * k);
   c.height = Math.round(img.height * k);
@@ -174,4 +174,17 @@ export async function compressImage(dataUrl: string, max = 2200, quality = 0.88)
   ctx.fillRect(0, 0, c.width, c.height);
   ctx.drawImage(img, 0, 0, c.width, c.height);
   return c.toDataURL('image/jpeg', quality);
+}
+
+/** Garante que a imagem cabe num documento da nuvem (limite de 1 MiB): reduz qualidade e dimensão se necessário */
+export async function caberNaNuvem(dataUrl: string, maxChars = 900_000): Promise<string> {
+  let d = dataUrl;
+  let lado = 2200;
+  let q = 0.85;
+  for (let i = 0; i < 8 && d.length > maxChars; i++) {
+    d = await compressImage(dataUrl, lado, q, true);
+    if (q > 0.6) q -= 0.08;
+    else lado = Math.round(lado * 0.85);
+  }
+  return d;
 }

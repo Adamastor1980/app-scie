@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import ProjetoShell from './pages/ProjetoShell';
 import Tabelas from './pages/Tabelas';
 import Perfil from './pages/Perfil';
+import Conta, { useLigacaoNuvem } from './cloud/Conta';
 
 function Logo() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
   const [ready, setReady] = useState(useStore.persist.hasHydrated());
   useEffect(() => useStore.persist.onFinishHydration(() => setReady(true)), []);
 
+  useLigacaoNuvem();
   const pm = match('/p/:pid', path) || matchPrefix(path);
   const isTabelas = path.startsWith('/tabelas');
   const isPerfil = path.startsWith('/empresa');
@@ -46,12 +48,15 @@ export default function App() {
             </a>
           </nav>
         </div>
-        <div className="hidden items-center gap-3 font-mono text-[10.5px] uppercase tracking-wider text-white/50 lg:flex">
+        <div className="flex items-center gap-6">
+        <Conta />
+        <div className="hidden items-center gap-3 font-mono text-[10.5px] uppercase tracking-wider text-white/50 2xl:flex">
           <span>DL 220/2008 · Lei 123/2019</span>
           <span className="text-fire">■</span>
           <span>Portaria 135/2020</span>
           <span className="text-fire">■</span>
           <span>Despacho 8954/2020</span>
+        </div>
         </div>
       </header>
       {!ready ? (

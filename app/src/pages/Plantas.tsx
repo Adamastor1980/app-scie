@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ImagePlus, Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import type { Planta } from '../data/types';
-import { Empty, Field, Note, Select, Text, compressImage, readFile } from '../ui/primitives';
+import { Empty, Field, Note, Select, Text, caberNaNuvem, compressImage, readFile } from '../ui/primitives';
 import { uid } from '../store';
 
 const TIPOS: { v: Planta['tipo']; l: string; ref: string }[] = [
@@ -47,7 +47,7 @@ export default function Plantas() {
     try {
       const novas: Planta[] = [];
       for (const f of Array.from(files)) {
-        const imgs = f.type === 'application/pdf' ? await pdfParaImagens(f) : [await compressImage(await readFile(f))];
+        const imgs = await Promise.all((f.type === 'application/pdf' ? await pdfParaImagens(f) : [await compressImage(await readFile(f))]).map((x) => caberNaNuvem(x)));
         imgs.forEach((img, k) => novas.push({
           id: uid(), tipo, titulo: f.name.replace(/\.[^.]+$/, '') + (imgs.length > 1 ? ` — pág. ${k + 1}` : ''), escala: '', imagem: img, legenda: '',
         }));
