@@ -1,4 +1,5 @@
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
+import { GLOSSARIO } from '../data/glossario';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
@@ -53,12 +54,12 @@ export default function Relatorio() {
     const esc = (s: string) => s.replace(/["\\]/g, '');
     st.textContent = `@page { @top-left { content: "${esc(p.empresa.nome || 'SCIE')}"; font: 8pt Inter, sans-serif; color: #5C5B55; }
       @top-right { content: "${esc(p.referencia || p.nome)} · v${esc(p.versao)}"; font: 8pt 'JetBrains Mono', monospace; color: #5C5B55; }
-      @bottom-left { content: "Segurança contra incêndio em edifícios — ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8E8D86; }
+      @bottom-left { content: "Realizado por: ${esc(p.autor.nome || p.empresa.nome || '')} · ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8E8D86; }
       @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #0F0F0E; } }
       @page :first { @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`;
     document.head.appendChild(st);
     return () => { st.remove(); };
-  }, [p.empresa.nome, p.referencia, p.nome, p.versao]);
+  }, [p.empresa.nome, p.autor.nome, p.referencia, p.nome, p.versao]);
 
   const imprimir = () => {
     const t = document.title;
@@ -75,7 +76,7 @@ export default function Relatorio() {
   const S = () => String(++sec);
 
   return (
-    <div className="bg-paper-3/60 pb-16">
+    <div className="bg-paper-3/60 pb-16 print:bg-white print:pb-0">
       <div className="no-print sticky top-14 z-30 mb-8 border-b border-ink bg-white">
         <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-4 px-6 py-3">
           <div className="mr-auto">
@@ -92,7 +93,7 @@ export default function Relatorio() {
       {/* ------------------------------ CAPA ------------------------------ */}
       <Sheet className="flex flex-col">
         <div className="flex items-start justify-between">
-          {p.empresa.logo ? <img src={p.empresa.logo} className="h-[80px] w-[80px] object-contain" /> : <span className="font-display text-[20px] font-extrabold">{p.empresa.nome || 'Empresa'}</span>}
+<div className="flex items-center gap-5">{p.empresa.logo ? <img src={p.empresa.logo} className="h-[80px] w-[80px] object-contain" /> : <span className="font-display text-[20px] font-extrabold">{p.empresa.nome || 'Empresa'}</span>}{p.clienteLogo && <><span className="h-12 w-px bg-ink-4" /><img src={p.clienteLogo} className="h-[80px] w-[80px] object-contain" /></>}</div>
           <span className="text-right font-mono text-[10px] uppercase leading-relaxed tracking-wider text-ink-3">{p.referencia || 'S/ ref.'}<br />Versão {p.versao}<br />{dataPt}</span>
         </div>
         <div className="mt-[52mm]">
@@ -129,7 +130,7 @@ export default function Relatorio() {
         </table>
         <H1 n="—">Índice</H1>
         <ol className="space-y-1.5 text-[12.5px]">
-          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor'].map((t, i) => (
+          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
             <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire">{i + 1}</span>{t}</li>
           ))}
         </ol>
@@ -420,6 +421,51 @@ export default function Relatorio() {
           </div>
         </div>
       </Sheet>
+
+      {/* ------------------------------ ANEXOS ----------------------------- */}
+      <Sheet className="page-break">
+        <H1 n={String(sec + 3)}>Anexos</H1>
+        <H2 n="A">Lista de revisões e alterações</H2>
+        <table className="tbl mb-6"><thead><tr><th className="w-24">Versão</th><th className="w-36">Data</th><th>Descrição</th></tr></thead>
+          <tbody>{(p.revisoes?.length ? p.revisoes : [{ versao: p.versao, data: p.data, descricao: 'Emissão' }]).map((r, i) => (
+            <tr key={i}><td className="num">{r.versao}</td><td>{r.data ? new Date(r.data + 'T00:00').toLocaleDateString('pt-PT') : '—'}</td><td>{r.descricao || '—'}</td></tr>
+          ))}</tbody></table>
+        <H2 n="B">Lista de distribuição de exemplares</H2>
+        {p.distribuicao?.length ? (
+          <table className="tbl mb-6"><thead><tr><th className="w-24">Exemplar</th><th>Entidade / destinatário</th><th className="w-32">Suporte</th></tr></thead>
+            <tbody>{p.distribuicao.map((d, i) => <tr key={i}><td className="num">{d.exemplar}</td><td>{d.entidade || '—'}</td><td>{d.suporte}</td></tr>)}</tbody></table>
+        ) : <P>Sem lista de distribuição definida.</P>}
+        <H2 n="C">Glossário — definições do RJ-SCIE (art. 2.º)</H2>
+        <table className="tbl mb-6"><tbody>{GLOSSARIO.map((g) => (
+          <tr key={g.al} className="avoid-break"><td className="w-[30%] font-semibold">{g.termo}<span className="block font-mono text-[9.5px] font-normal text-ink-3">art. 2.º {g.al})</span></td><td className="text-[11px] leading-relaxed">{g.def.charAt(0).toUpperCase() + g.def.slice(1)}.</td></tr>
+        ))}</tbody></table>
+        <H2 n="D">Lista de abreviaturas</H2>
+        <table className="tbl"><tbody>{ABREVIATURAS.map(([a, d]) => <tr key={a}><td className="w-28 font-mono font-semibold">{a}</td><td className="text-[11.5px]">{d}</td></tr>)}</tbody></table>
+      </Sheet>
     </div>
   );
 }
+
+const ABREVIATURAS: [string, string][] = [
+  ['ANEPC', 'Autoridade Nacional de Emergência e Proteção Civil'],
+  ['RJ-SCIE', 'Regime Jurídico de Segurança Contra Incêndio em Edifícios (DL 220/2008, red. Lei 123/2019)'],
+  ['RT-SCIE', 'Regulamento Técnico de Segurança Contra Incêndio em Edifícios (Portaria 1532/2008, red. Portaria 135/2020)'],
+  ['SCIE', 'Segurança contra incêndio em edifícios'],
+  ['UT', 'Utilização-tipo'],
+  ['MAP', 'Medidas de autoproteção'],
+  ['PEI', 'Plano de emergência interno'],
+  ['RS', 'Responsável de segurança'],
+  ['SSI', 'Serviço de segurança contra incêndio'],
+  ['SADI', 'Sistema automático de deteção de incêndio'],
+  ['CCF', 'Câmara corta-fogo'],
+  ['UP', 'Unidade de passagem'],
+  ['PR', 'Plano de referência'],
+  ['R / E / I', 'Capacidade de suporte de carga / estanquidade / isolamento térmico (resistência ao fogo)'],
+  ['C', 'Fecho automático (portas resistentes ao fogo)'],
+  ['Qs / qs', 'Carga de incêndio modificada (MJ) / densidade de carga de incêndio modificada (MJ/m²)'],
+  ['Hi', 'Poder calorífico inferior (MJ/kg)'],
+  ['Ci', 'Coeficiente de combustibilidade'],
+  ['Rai', 'Coeficiente de ativação'],
+  ['qsi / qvi', 'Valor estatístico da densidade de carga de incêndio (MJ/m²) / por unidade de volume (MJ/m³)'],
+  ['FDS', 'Ficha de dados de segurança'],
+];
