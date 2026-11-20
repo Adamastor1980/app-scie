@@ -199,6 +199,8 @@ export interface UT {
   verificacao?: Record<string, Verificacao>;
   /** levantamento no local: fotografias e desenhos de apoio (uso interno, não entram nos cálculos) */
   levantamento?: Anexo[];
+  /** factos do local que decidem a aplicabilidade das medidas (Sim/Não); ausente = por responder */
+  factos?: Record<string, boolean>;
 }
 
 export interface Anexo {

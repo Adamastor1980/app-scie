@@ -3,7 +3,7 @@ import { useP } from '../ProjetoShell';
 import { Camera, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { UTProps } from '../UTPage';
-import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida } from '../../engine/medidas';
+import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida, factosVisiveis } from '../../engine/medidas';
 import { Note } from '../../ui/primitives';
 import type { Conformidade, UT, Verificacao } from '../../data/types';
 import { opcoesPrazo, progresso, verDe } from '../../engine/verificacao';
@@ -39,8 +39,40 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
           <div className="border-t border-ink px-5 pt-6"><UTEfetivo ed={ed} ut={ut} upU={upU} /></div>
         </details>
       )}
+      {(() => {
+        const fs = factosVisiveis(contexto(ed, ut));
+        const falta = fs.filter((f) => ut.factos?.[f.id] === undefined).length;
+        return (
+          <details open={falta > 0} className="mb-6 border border-ink bg-white">
+            <summary className="flex cursor-pointer select-none flex-wrap items-baseline gap-x-3 px-5 py-4">
+              <span className="font-display text-[16px] font-bold">Características do local</span>
+              <span className={`text-[12.5px] ${falta ? 'font-semibold text-fire' : 'text-ok'}`}>{falta ? `${falta} por responder` : 'todas respondidas'}</span>
+              <span className="text-[12px] text-ink-3">— decidem quais as medidas que se aplicam (o regulamento só as exige se existirem)</span>
+            </summary>
+            <div className="border-t border-ink">
+              {fs.map((f) => {
+                const v = ut.factos?.[f.id];
+                const set = (x: boolean | undefined) => upU((u) => { u.factos ??= {}; if (x === undefined) delete u.factos[f.id]; else u.factos[f.id] = x; });
+                return (
+                  <div key={f.id} className="flex flex-wrap items-center gap-3 border-b border-paper-3 px-5 py-2.5 last:border-0">
+                    <div className="min-w-[220px] flex-1">
+                      <p className="text-[13.5px]">{f.pergunta}</p>
+                      <p className="ref">{f.base}</p>
+                    </div>
+                    <div className="flex">
+                      {([[true, 'Sim'], [false, 'Não']] as const).map(([b, l]) => (
+                        <button key={l} onClick={() => set(v === b ? undefined : b)} className={`-ml-px h-10 min-w-[64px] border px-3 text-[13px] font-semibold first:ml-0 ${v === b ? (b ? 'border-ink bg-ink text-white' : 'border-ink-3 bg-ink-3 text-white') : 'border-paper-3 bg-white text-ink-3 hover:border-ink'}`}>{l}</button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })()}
       <div className="mb-6 grid gap-px border border-ink bg-ink md:grid-cols-4">
-        {([['todas', M.length, 'Total'], ['aplica', r.aplica, 'Aplicáveis'], ['verificar', r.verificar, 'A verificar no projeto'], ['nao', r.nao, 'Não aplicáveis (com motivo)']] as const).map(([k, n, l]) => (
+        {([['todas', M.length, 'Total'], ['aplica', r.aplica, 'Aplicáveis'], ['verificar', r.verificar, 'Por decidir (responder acima)'], ['nao', r.nao, 'Não aplicáveis (com motivo)']] as const).map(([k, n, l]) => (
           <button key={k} onClick={() => setFiltro(k)} className={`flex items-baseline justify-between p-4 text-left ${filtro === k ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`}>
             <span className="text-[12.5px] font-semibold">{l}</span>
             <span className="font-display text-[30px] font-extrabold num">{n}</span>

@@ -94,7 +94,48 @@ export function contexto(ed: Edificio, ut: UT): Contexto {
 
 const sim = (cond: boolean): Estado => (cond ? 'aplica' : 'nao');
 
-export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
+/**
+ * Factos do local que decidem se uma medida se aplica (o regulamento exige-a «se existir»).
+ * Resposta Sim → aplica; Não → não aplicável; sem resposta → fica «a verificar» até ser respondida.
+ */
+export interface Facto { id: string; pergunta: string; base: string; mostrar?: (c: Contexto) => boolean }
+export const FACTOS: Facto[] = [
+  { id: 'elevadores', pergunta: 'Existem elevadores ou ascensores?', base: 'RT-SCIE, arts. 28.º e 101.º a 103.º' },
+  { id: 'camarasCF', pergunta: 'Existem câmaras corta-fogo?', base: 'RT-SCIE, arts. 35.º, 40.º e 63.º', mostrar: (c) => !camarasExigidas(c) },
+  { id: 'servEletricos', pergunta: 'Existem transformadores, grupos geradores, baterias > 1000 VAh ou UPS > 40 kVA?', base: 'RT-SCIE, arts. 70.º, 71.º, 74.º e 75.º' },
+  { id: 'fonteCentral', pergunta: 'Existem instalações de segurança cuja alimentação não seja assegurada por fontes locais de emergência (ex.: bombas de incêndio, desenfumagem mecânica)?', base: 'RT-SCIE, art. 72.º n.º 2', mostrar: (c) => c.cls.cat <= 2 },
+  { id: 'centralTermica', pergunta: 'Existem aparelhos de aquecimento a fluidos combustíveis com potência útil total > 40 kW?', base: 'RT-SCIE, art. 80.º' },
+  { id: 'aquecimento', pergunta: 'Existem aparelhos de aquecimento autónomos nos espaços?', base: 'RT-SCIE, arts. 85.º a 87.º' },
+  { id: 'combustao', pergunta: 'Existem aparelhos de combustão com condutas de evacuação de efluentes?', base: 'RT-SCIE, arts. 92.º e 93.º' },
+  { id: 'cozinha', pergunta: 'Existem cozinhas, locais de confeção ou instalações de frio?', base: 'RT-SCIE, arts. 88.º a 91.º' },
+  { id: 'confecaoPotente', pergunta: 'Os aparelhos de confeção excedem 250 kW (elétricos) ou 70 kW (a gás)?', base: 'RT-SCIE, art. 175.º n.º 2', mostrar: (c) => c.ut.factos?.cozinha === true || !!c.ut.temCozinhaC },
+  { id: 'avac', pergunta: 'Existem instalações de ventilação ou climatização (AVAC)?', base: 'RT-SCIE, arts. 94.º a 99.º' },
+  { id: 'liquidosGases', pergunta: 'Existem líquidos ou gases combustíveis (armazenados ou em utilização)?', base: 'RT-SCIE, arts. 106.º e 107.º', mostrar: (c) => !((c.ut.liquidosInflamaveisL ?? 0) > 0 || c.ut.temGas) },
+  { id: 'guardas', pergunta: 'Existem vias de evacuação elevadas ou terraços acessíveis?', base: 'RT-SCIE, art. 67.º' },
+  { id: 'lugaresFixos', pergunta: 'Existem lugares fixos para espectadores?', base: 'RT-SCIE, art. 53.º', mostrar: (c) => c.ut.tipo === 6 || c.ut.tipo === 9 },
+  { id: 'patio20', pergunta: 'Existem pátios interiores cobertos com altura superior a 20 m?', base: 'RT-SCIE, art. 173.º n.º 1 e)', mostrar: (c) => !c.ut.arLivre },
+  { id: 'descargas', pergunta: 'As descargas atmosféricas constituem risco significativo de incêndio para o edifício?', base: 'RT-SCIE, art. 191.º', mostrar: (c) => !c.ut.arLivre },
+  { id: 'dominante', pergunta: 'O edifício tem posição dominante na volumetria urbana ou natural envolvente?', base: 'RT-SCIE, art. 192.º', mostrar: (c) => (c.ed.altura || c.ut.altura) > 28 },
+  { id: 'polucaoVIII', pergunta: 'Existem espaços cobertos de embarque/estacionamento de pesados de passageiros ou plataformas cobertas com locomotivas a gasóleo?', base: 'RT-SCIE, art. 181.º b)', mostrar: (c) => c.ut.tipo === 8 },
+];
+export const factosVisiveis = (c: Contexto) => FACTOS.filter((f) => !f.mostrar || f.mostrar(c));
+
+function camarasExigidas(c: Contexto) {
+  const H = c.ed.altura || c.ut.altura;
+  return H > 28 || c.ut.pisosAbaixo > 0 || c.ut.espacos.some((e) => e.local === 'Cag');
+}
+
+/** estado e motivo de uma medida que depende de um facto */
+function porFacto(ut: UT, id: string, nega: string): { estado: Estado; motivo?: string } {
+  const v = ut.factos?.[id];
+  const f = FACTOS.find((x) => x.id === id)!;
+  if (v === true) return { estado: 'aplica' };
+  if (v === false) return { estado: 'nao', motivo: nega };
+  return { estado: 'verificar', motivo: `Por responder: «${f.pergunta}» (separador Medidas, características do local).` };
+}
+
+export function gerarMedidas(ctx: Contexto): Medida[] {
+  const { ed, ut, cls, ef } = ctx;
   const M: Medida[] = [];
   const cat: Cat = cls.cat;
   const t = ut.tipo;
@@ -133,10 +174,10 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     tema: '0', titulo: 'Inspeções regulares',
     exigencia: `Inspeção regular no prazo máximo de ${INSPECOES[cat]} anos, a pedido do responsável de segurança, pela ${cat === 1 ? 'câmara municipal' : 'ANEPC ou entidade por ela credenciada'}.`,
     base: 'RJ-SCIE, art. 19.º n.os 1, 2 e 4',
-    estado: cat === 1 && t !== 4 && t !== 5 ? 'nao' : t === 1 && cat === 2 ? 'verificar' : 'aplica',
+    estado: (cat === 1 && t !== 4 && t !== 5) || (t === 1 && cat === 2 && ed.uts.length === 1) ? 'nao' : 'aplica',
     motivo: cat === 1 && t !== 4 && t !== 5
       ? `Excetuadas as UT I, II, III, VI, VII, VIII, IX, X, XI e XII da 1.ª categoria (art. 19.º n.º 5).`
-      : t === 1 && cat === 2 ? 'Excetuados os edifícios de utilização exclusiva da UT I da 2.ª categoria (art. 19.º n.º 5).' : undefined,
+      : t === 1 && cat === 2 && ed.uts.length === 1 ? 'Edifício de utilização exclusiva da UT I da 2.ª categoria (art. 19.º n.º 5).' : undefined,
   });
   add({
     tema: '0', titulo: 'Vistoria com representante da ANEPC',
@@ -187,8 +228,8 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'II.3', titulo: 'Limitação da propagação pelo exterior',
     exigencia: 'Elementos de fachada entre vãos sobrepostos, paredes de empena, coberturas, revestimentos exteriores e ETICS nas condições dos arts. 7.º a 11.º e quadros II a VI (por classe de altura do edifício).',
-    base: 'RT-SCIE, arts. 7.º a 11.º', estado: ut.arLivre ? 'nao' : 'verificar',
-    motivo: ut.arLivre ? 'Recinto ao ar livre.' : 'Depende da geometria das fachadas e coberturas: verificar no projeto de arquitetura.',
+    base: 'RT-SCIE, arts. 7.º a 11.º', estado: ut.arLivre ? 'nao' : 'aplica',
+    motivo: ut.arLivre ? 'Recinto ao ar livre.' : undefined,
   });
 
   /* --------------- Resistência ao fogo e compartimentação -------------- */
@@ -210,22 +251,23 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     base: 'RT-SCIE, art. 17.º n.º 2, quadros X e XI', estado: ed.uts.length > 1 ? 'aplica' : 'nao',
     motivo: ed.uts.length > 1 ? undefined : 'Edifício de utilização exclusiva.',
   });
+  // art. 17.º: categorias das outras UT do edifício calculadas (sem pedir confirmação)
+  const outrasUT = ed.uts.filter((u) => u.id !== ut.id).map((u) => ({ u, cat: classificar(u).cat }));
   if (ed.uts.length > 1 && ed.comunicacoesComuns) {
-    const outrasTipos = ed.uts.filter((u) => u.id !== ut.id).map((u) => u.tipo);
-    const conflito = (t === 1 && cat >= 2 && outrasTipos.some((x) => x === 5 || x >= 7)) || ((t === 5 || t >= 7) && outrasTipos.includes(1));
+    const conflito = (t === 1 && cat >= 2 && outrasUT.some((o) => o.u.tipo === 5 || o.u.tipo >= 7))
+      || ((t === 5 || t >= 7) && outrasUT.some((o) => o.u.tipo === 1 && o.cat >= 2));
     if (conflito) add({
       tema: 'III.2', titulo: 'Comunicações interiores comuns com a UT I',
-      exigencia: 'Não são permitidas comunicações interiores comuns da UT I das 2.ª, 3.ª ou 4.ª categorias com as UT V e VII a XII, de qualquer categoria (exceto turismo no espaço rural, de natureza e de habitação com UT I da 1.ª categoria).',
-      base: 'RT-SCIE, art. 17.º n.º 2 e) e f)', estado: 'verificar', motivo: 'Edifício misto com comunicações interiores comuns: confirmar a categoria da UT I.',
+      exigencia: 'Não são permitidas comunicações interiores comuns da UT I das 2.ª, 3.ª ou 4.ª categorias com as UT V e VII a XII, de qualquer categoria.',
+      base: 'RT-SCIE, art. 17.º n.º 2 e)', estado: 'aplica',
     });
   }
   if (t === 12 && cat >= 3) {
-    const outras = ed.uts.filter((u) => u.id !== ut.id && u.tipo !== 2 && u.tipo !== 8);
-    add({
+    const proibidas = outrasUT.filter((o) => o.cat >= 2 && o.u.tipo !== 2 && o.u.tipo !== 8);
+    if (proibidas.length) add({
       tema: 'III.2', titulo: 'Coexistência com outras UT',
-      exigencia: 'Não é admitida a coexistência no mesmo edifício de UT XII das 3.ª/4.ª categorias com outras UT das 2.ª à 4.ª categorias, exceto UT II e VIII e UT I da 1.ª categoria destinada a proprietários ou funcionários.',
-      base: 'RT-SCIE, art. 17.º n.º 1', estado: outras.length ? 'verificar' : 'nao',
-      motivo: outras.length ? 'Existem outras UT no edifício: confirmar a categoria de cada uma.' : 'Sem outras UT no edifício.',
+      exigencia: `Não é admitida a coexistência no mesmo edifício de UT XII das 3.ª/4.ª categorias com outras UT das 2.ª à 4.ª categorias (exceto UT II e VIII e UT I da 1.ª categoria destinada a proprietários ou funcionários). Neste edifício: ${proibidas.map((o) => `UT ${ROMANO[o.u.tipo]} (${o.cat}.ª categoria)`).join(', ')}.`,
+      base: 'RT-SCIE, art. 17.º n.º 1', estado: 'aplica',
     });
   }
   if (t === 12) {
@@ -245,13 +287,6 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
       base: 'RT-SCIE, art. 18.º n.os 1, 2, 6 e 7, quadro XII', estado: isento ? 'nao' : 'aplica',
       motivo: isento ? 'Espaços da UT I da 1.ª categoria (art. 18.º n.º 3).' : undefined,
     });
-    if ([3, 4, 5, 7, 8].includes(t) && H <= 9) {
-      add({
-        tema: 'III.3', titulo: 'Três pisos num só compartimento (pequena altura)',
-        exigencia: 'Admite-se que três pisos constituam um só compartimento corta-fogo se a área útil total não ultrapassar o quadro XII, nenhum piso exceder 800 m² e nenhum se situar mais de um piso abaixo do plano de referência' + (t === 4 || t === 5 ? '; locais D apenas no piso do plano de referência.' : '.'),
-        base: 'RT-SCIE, art. 18.º n.º 4', estado: 'verificar', motivo: 'Opção de projeto.',
-      });
-    }
   }
   add({
     tema: 'III.5e', titulo: 'Atravessamentos e condutas',
@@ -318,13 +353,12 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'III.5d', titulo: 'Caixas dos elevadores',
     exigencia: `${H > 28 || ut.pisosAbaixo > 1 ? 'Paredes EI/REI 60 e portas de patamar E 30 C (servem mais de um piso abaixo do plano de referência ou H > 28 m).' : `Paredes ${q22.paredes} / ${q22.suporte} e portas ${q22.portas} (quadro XXII).`} Portas de patamar de funcionamento automático.${t === 2 && abaixo ? ' UT II abaixo do plano de referência: acesso aos elevadores por câmara corta-fogo.' : ''}${H > 28 ? ' Elevador prioritário de bombeiros servido por câmara corta-fogo.' : ''}`,
-    base: 'RT-SCIE, art. 28.º', estado: 'verificar', motivo: 'Aplicável se existirem elevadores.',
+    base: 'RT-SCIE, art. 28.º', ...porFacto(ut, 'elevadores', 'Não existem elevadores.'),
   });
   add({
     tema: 'III.5b', titulo: 'Câmaras corta-fogo',
     exigencia: 'Envolvente EI 60 / REI 60, portas E 30 C; área ≥ 3 m² (≥ 6 m² se utilizáveis por mais de 50 pessoas); distância entre portas ≥ 1,2 m; pé-direito ≥ 2 m; dimensão linear ≥ 1,40 m; controlo de fumo.',
-    base: 'RT-SCIE, arts. 35.º e 63.º', estado: H > 28 || abaixo || temCag ? 'aplica' : 'verificar',
-    motivo: H > 28 || abaixo || temCag ? undefined : 'Só se previstas no projeto.',
+    base: 'RT-SCIE, arts. 35.º e 63.º', ...(camarasExigidas(ctx) ? { estado: 'aplica' as Estado } : porFacto(ut, 'camarasCF', 'Não são exigidas nem existem câmaras corta-fogo.')),
   });
   add({
     tema: 'III.5a', titulo: 'Portas resistentes ao fogo',
@@ -349,14 +383,14 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'IV.1c', titulo: 'Revestimentos de câmaras corta-fogo',
     exigencia: `${q24.faixa}: paredes e tetos ${q24.paredes}; pavimentos ${q24.pavimentos}.`,
-    base: 'RT-SCIE, art. 40.º, quadro XXIV', estado: H > 28 || abaixo || temCag ? 'aplica' : 'verificar', motivo: H > 28 || abaixo || temCag ? undefined : 'Só se existirem câmaras corta-fogo.',
+    base: 'RT-SCIE, art. 40.º, quadro XXIV', ...(camarasExigidas(ctx) ? { estado: 'aplica' as Estado } : porFacto(ut, 'camarasCF', 'Não existem câmaras corta-fogo.')),
   });
   const locaisRF = [...locais].map((l) => (l === 'Cag' ? 'C' : l));
   const linhasRF = [...new Set(locaisRF)].sort().map((l) => `local ${l}: paredes e tetos ${QUADRO_XXV[l].paredes}, pavimentos ${QUADRO_XXV[l].pavimentos}`);
   add({
     tema: 'IV.2', titulo: 'Revestimentos de locais de risco',
     exigencia: linhasRF.length ? linhasRF.join('; ') + '.' : 'Classes do quadro XXV em função do local de risco.',
-    base: 'RT-SCIE, art. 41.º, quadro XXV', estado: isentoRF && !linhasRF.length ? 'verificar' : 'aplica',
+    base: 'RT-SCIE, art. 41.º, quadro XXV', estado: isentoRF && !linhasRF.length ? 'nao' : 'aplica',
     motivo: isentoRF ? 'Espaços não comuns da UT I isentos (art. 38.º n.º 2).' : undefined,
   });
   add({
@@ -388,8 +422,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
       exigencia: `Efetivo ${c.valor}${e.mobilidadeReduzida ? ` × 1,3 = ${ev} para dimensionamento` : ''}: mínimo ${s.n} saída(s) [${s.texto}] e ${upMin} UP [${up.texto}]${extras.length ? '; ' + extras.join('; ') : ''}.`
         + (verif ? ` Existente: ${e.saidasExistentes ?? '—'} saída(s), ${e.upExistentes ?? '—'} UP → ${conforme ? 'CONFORME' : 'NÃO CONFORME'}.` : ''),
       base: `RT-SCIE, arts. 54.º e 56.º, quadros ${ut.arLivre ? 'XXX e XXXII' : 'XXIX e XXXI'}${e.mobilidadeReduzida ? '; art. 51.º n.º 5' + (t === 5 ? ' e art. 232.º' : '') : ''}`,
-      estado: verif && !conforme ? 'verificar' : 'aplica',
-      motivo: verif && !conforme ? 'Saídas ou largura existentes inferiores ao mínimo regulamentar.' : undefined,
+      estado: 'aplica',
     });
   }
   if (t === 12) {
@@ -419,8 +452,8 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'V.3', titulo: 'Vias verticais de evacuação',
     exigencia: `${H > 28 ? 'Pelo menos duas vias verticais (H > 28 m), com acessos afastados ≥ 10 m. ' : ''}Largura útil ≥ 1 UP por 70 utilizadores, considerando a maior soma dos efetivos de dois pisos consecutivos${maxDois ? `: ${maxDois} → ${upV} UP (verificar a ordem dos pisos)` : ''}${H > 28 ? ', mínimo 2 UP' : ''}. Barras antipânico nos acessos utilizáveis por mais de 50 pessoas. Vias abaixo do plano de referência não comunicam diretamente com as de cima (exceto 1.ª/2.ª categoria com ≤ 3 pisos).`,
-    base: 'RT-SCIE, art. 64.º n.os 2, 3, 6, 7, 11 e 12; art. 62.º n.º 7 b)', estado: t === 1 || t === 2 ? 'verificar' : 'aplica',
-    motivo: t === 1 || t === 2 ? 'Nas vias que servem exclusivamente UT I e II não se aplica o n.º 11 (1 UP/70).' : undefined,
+    base: 'RT-SCIE, art. 64.º n.os 2, 3, 6, 7, 11 e 12; art. 62.º n.º 7 b)', estado: 'aplica',
+    motivo: t === 1 || t === 2 ? 'Vias que servem exclusivamente UT I e II: não se aplica a regra de 1 UP por 70 utilizadores (n.º 11).' : undefined,
   });
   add({
     tema: 'V.3', titulo: 'Escadas e rampas',
@@ -431,7 +464,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     add({
       tema: 'V.1b', titulo: 'Lugares destinados ao público',
       exigencia: 'Filas com ≤ 16 cadeiras entre coxias (8 entre coxia e parede); espaçamento ≥ 0,4 m; bancadas com ≤ 40 lugares entre coxias (20 junto a parede); 3.ª/4.ª categoria: coxias transversais de 2 UP, uma por 1 000 pessoas.',
-      base: 'RT-SCIE, art. 53.º' + (t === 9 ? '; art. 284.º' : ''), estado: 'verificar', motivo: 'Aplicável se existirem lugares fixos para espectadores.',
+      base: 'RT-SCIE, art. 53.º' + (t === 9 ? '; art. 284.º' : ''), ...porFacto(ut, 'lugaresFixos', 'Não existem lugares fixos para espectadores.'),
     });
     if (ef.total > (ut.arLivre ? 15000 : 1000)) {
       add({ tema: 'V.1b', titulo: 'Lugares para espectadores com mobilidade condicionada', exigencia: 'Locais reservados servidos por caminhos de evacuação de locais D, com lugar para acompanhante.', base: 'RT-SCIE, art. 60.º n.º 3', estado: 'aplica' });
@@ -494,8 +527,9 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     base: 'RT-SCIE, arts. 117.º a 123.º e 132.º', estado: config ? 'aplica' : 'nao', motivo: config ? undefined : 'Sem exigência de alarme.',
   });
   if (t === 5 && temD) add({ tema: 'VII.3', titulo: 'Alarme em locais de risco D (UT V)', exigencia: 'Difusão do alarme não reconhecível pelo público, destinada ao pessoal; na 2.ª categoria ou superior, posto não acessível a público com comunicação oral com o posto de segurança.', base: 'RT-SCIE, art. 236.º', estado: 'aplica' });
-  if (ut.temGas || temC) {
-    add({ tema: 'VII.9', titulo: 'Deteção automática de gás combustível', exigencia: 'Em locais de risco C com aparelhos de queima de gás ou armazenamento do quadro XXXV, e em ductos com canalizações de gás (2.ª categoria ou superior).', base: 'RT-SCIE, art. 184.º', estado: ut.temGas ? 'aplica' : 'verificar', motivo: ut.temGas ? undefined : 'Confirmar se existem aparelhos a gás ou ductos de gás.' });
+  {
+    const gas = ut.temGas || (ut.liquidosInflamaveisL ?? 0) > 0 ? { estado: 'aplica' as Estado } : porFacto(ut, 'liquidosGases', 'Não existem gases nem líquidos combustíveis.');
+    add({ tema: 'VII.9', titulo: 'Deteção automática de gás combustível', exigencia: 'Em locais de risco C com aparelhos de queima de gás ou armazenamento do quadro XXXV, e em ductos com canalizações de gás (2.ª categoria ou superior).', base: 'RT-SCIE, art. 184.º', ...gas });
   }
 
   /* ---------------------------- Controlo de fumo ----------------------- */
@@ -526,8 +560,8 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'VII.5', titulo: 'Extintores portáteis',
     exigencia: `Distância ≤ 15 m de qualquer saída de local de risco até ao extintor mais próximo; manípulo ≤ 1,2 m; em todos os locais C e F.${extPisos.length ? ' Dimensionamento por piso — ' + extPisos.join('; ') + '.' : ' Por piso: 1 extintor por 200 m² ou fração (mínimo 2) e 18 L de agente extintor padrão por 500 m² ou fração.'}${temC ? ' Cozinhas e laboratórios C: manta ignífuga; extintor 25F com óleos ou gorduras.' : ''}`,
-    base: 'RT-SCIE, art. 163.º', estado: extIsento ? 'nao' : ut.arLivre ? 'verificar' : 'aplica',
-    motivo: extIsento ? 'UT I das 1.ª e 2.ª categorias (art. 163.º n.º 1).' : ut.arLivre ? 'Ao ar livre, apenas em locais de risco C (art. 163.º n.º 8).' : undefined,
+    base: 'RT-SCIE, art. 163.º', estado: extIsento || (ut.arLivre && !temC) ? 'nao' : 'aplica',
+    motivo: extIsento ? 'UT I das 1.ª e 2.ª categorias (art. 163.º n.º 1).' : ut.arLivre && !temC ? 'Ao ar livre só são exigidos em locais de risco C (art. 163.º n.º 8): não existem.' : undefined,
   });
   const carretelCond =
     ([2, 3, 4, 5, 6, 7, 8, 11, 12].includes(t) && cat >= 2) ||
@@ -560,7 +594,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   }
 
   /* ------------------ Sistemas fixos de extinção ----------------------- */
-  const sprCond = (t === 2 && cat >= 3 && abaixo) || ([3, 6, 7, 8, 12].includes(t) && cat >= 3 && !ut.arLivre) || (t === 2 && ut.parqueAutomatico);
+  const sprCond = (t === 2 && cat >= 3 && abaixo) || ([3, 6, 7, 8, 12].includes(t) && cat >= 3 && !ut.arLivre) || (t === 2 && ut.parqueAutomatico) || ut.factos?.patio20 === true;
   const q37 = t === 2 ? QUADRO_XXXVII.II : t === 12 ? QUADRO_XXXVII.XII : QUADRO_XXXVII['III, VI, VII, VIII'];
   add({
     tema: 'VII.6', titulo: 'Sistema de extinção automática por água (sprinklers)',
@@ -569,11 +603,11 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     estado: sprCond ? 'aplica' : 'nao',
     motivo: sprCond ? undefined : 'Não exigido pelo art. 173.º n.º 1 b) e c) para esta UT/categoria. Exigível ainda em locais adjacentes a pátios interiores com altura > 20 m e em locais de difícil acesso com elevada carga de incêndio (n.º 1 e) e f)); pode ser medida compensatória (n.º 2) ou duplicar áreas de compartimentação (art. 18.º n.º 6).',
   });
-  if (ut.temCozinhaC) add({ tema: 'VII.6', titulo: 'Extinção automática em blocos de confeção', exigencia: 'Sistemas fixos de extinção por agente diferente da água nos blocos de confeção quando a potência total instalada o exija.', base: 'RT-SCIE, art. 175.º n.º 2', estado: 'verificar', motivo: 'Confirmar a potência instalada nos aparelhos de confeção.' });
+  if (ut.temCozinhaC || ut.factos?.cozinha) add({ tema: 'VII.6', titulo: 'Extinção automática em blocos de confeção', exigencia: 'Sistemas fixos de extinção por agente diferente da água nos blocos de confeção cuja potência total instalada seja superior a 250 kW (elétricos) ou a 70 kW (a gás).', base: 'RT-SCIE, art. 175.º n.º 2', ...porFacto(ut, 'confecaoPotente', 'Potência dos aparelhos de confeção não excede 250 kW (elétricos) nem 70 kW (gás).') });
   if (t === 12 && (ut.pinturaArea ?? 0) > 30) add({ tema: 'VII.6', titulo: 'Extinção automática em zonas de pintura', exigencia: 'Zonas de pintura ou aplicação de vernizes, colas ou solventes com ponto de inflamação < 55 °C com área > 30 m²: instalação fixa de extinção automática por água.', base: 'RT-SCIE, art. 308.º n.º 1', estado: 'aplica' });
   if (t === 12 && (ut.liquidosInflamaveisL ?? 0) > 750) add({ tema: 'VII.6', titulo: 'Extinção automática por agente diferente da água', exigencia: 'Armazenagem > 750 l (ou manuseamento > 50 l) de produtos combustíveis: instalação fixa por agente apropriado diferente da água.', base: 'RT-SCIE, art. 308.º n.º 2', estado: 'aplica' });
   if (ut.patrimonio && (t === 10 || t === 11)) add({ tema: 'VII.6', titulo: 'Proteção de bens patrimoniais', exigencia: 'Sistemas automáticos de extinção com agentes adequados à preservação nos locais de arquivo, conservação e restauro e nas casas-fortes.', base: t === 10 ? 'RT-SCIE, art. 294.º' : 'RT-SCIE, art. 298.º', estado: 'aplica' });
-  add({ tema: 'VII.10', titulo: 'Drenagem de águas residuais da extinção', exigencia: 'Sistemas de drenagem das águas da extinção nos termos dos arts. 186.º a 189.º' + (t === 2 ? ' e 227.º' : t === 12 ? ' e 309.º' : '') + '.', base: 'RT-SCIE, capítulo X do título VI', estado: 'verificar', motivo: 'Depende da existência de sistemas de extinção por água e da UT.' });
+  add({ tema: 'VII.10', titulo: 'Drenagem de águas residuais da extinção', exigencia: 'Pisos enterrados: caleiras e ralos ligados aos coletores (caudal das redes automáticas + 500 l/min)' + (t === 2 ? ', 1 ralo por 40 veículos' : '') + '; ressaltos nas rampas e escadas; fossas de retenção de líquidos inflamáveis e sua limpeza' + (t === 2 ? ' (ver também art. 227.º)' : t === 12 ? ' (ver também art. 309.º)' : '') + '.', base: 'RT-SCIE, arts. 186.º a 189.º', estado: sim(abaixo), motivo: abaixo ? undefined : 'Exigida apenas em pisos enterrados (art. 186.º n.º 1).' });
 
   /* --------------------------- Posto de segurança ---------------------- */
   const psCond = (t === 1 && cat >= 3) || (t >= 2 && cat >= 2) || (cat === 1 && temD) || (t === 9 && ut.designacao.toLowerCase().includes('campismo'));
@@ -618,8 +652,8 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'MAP', titulo: 'Formação em SCIE',
     exigencia: 'Sensibilização de todos os funcionários e colaboradores no prazo de 60 dias após a entrada ao serviço; formação específica para quem trabalha em locais C, D ou F e para os elementos com atribuições em emergência.' + (t === 1 ? ' Ocupantes dos fogos da UT I das 3.ª/4.ª categorias.' : t === 4 ? ' Alunos que permaneçam mais de 30 dias, no primeiro período do ano escolar.' : t === 9 ? ' Frequentadores que permaneçam mais de 30 dias.' : ''),
-    base: 'RT-SCIE, art. 206.º', estado: map?.includes('formacao') ? 'aplica' : 'verificar',
-    motivo: map?.includes('formacao') ? undefined : 'Não consta do quadro XXXIX nesta categoria; aplica-se o art. 206.º n.º 1 aos destinatários aí indicados.',
+    base: 'RT-SCIE, art. 206.º', estado: sim(!!map?.includes('formacao')),
+    motivo: map?.includes('formacao') ? undefined : 'Não exigida pelo quadro XXXIX para esta UT e categoria (art. 198.º).',
   });
 
   /* ------------- Complementos do anexo IV (III.1, V, VI e VII) ------------- */
@@ -637,7 +671,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'V.3', titulo: 'Guardas das vias elevadas e terraços',
     exigencia: 'Altura mínima das guardas: 1,0 m para diferenças de cota até 6 m; 1,2 m acima de 6 m (quadro XXXIII).',
-    base: 'RT-SCIE, art. 67.º, quadro XXXIII', estado: 'verificar', motivo: 'Aplicável se existirem vias elevadas ou terraços acessíveis.',
+    base: 'RT-SCIE, art. 67.º, quadro XXXIII', ...porFacto(ut, 'guardas', 'Não existem vias elevadas nem terraços acessíveis.'),
   });
   const refugio = H > 50 || (cat === 4 && H > 28) || (t === 3 && cat === 3 && H > 28);
   add({
@@ -651,8 +685,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'VI.1', titulo: 'a) Fontes centrais de energia de emergência',
     exigencia: 'Grupo gerador ou baterias com arranque automático em ≤ 15 s; autonomia ≥ à maior resistência ao fogo exigida aos elementos de construção, com o mínimo de 1 hora; alimentam apenas as instalações de segurança do art. 72.º n.º 4 (iluminação de emergência, controlo de fumo, pressurização de água, ascensores de bombeiros, SADI, etc.); equipamentos alimentados com IP X5.',
-    base: 'RT-SCIE, art. 72.º', estado: cat >= 3 ? 'aplica' : 'verificar',
-    motivo: cat >= 3 ? undefined : 'Nas 1.ª e 2.ª categorias só se existirem instalações de segurança não apoiadas por fontes locais (art. 72.º n.º 2).',
+    base: 'RT-SCIE, art. 72.º', ...(cat >= 3 ? { estado: 'aplica' as Estado } : porFacto(ut, 'fonteCentral', 'Todas as instalações de segurança são apoiadas por fontes locais (art. 72.º n.º 2).')),
   });
   add({
     tema: 'VI.1', titulo: 'b) Fontes locais de energia de emergência',
@@ -662,7 +695,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'VI.1', titulo: 'c) Locais de serviços elétricos, grupos geradores e UPS',
     exigencia: 'Transformadores, grupos geradores, baterias > 1000 VAh e UPS > 40 kVA em locais isolados como locais de risco C (art. 21.º e 41.º), acesso reservado e sinalizado; grupos geradores não abaixo do piso imediatamente inferior ao plano de referência nem acima de 28 m, com limites de combustível e bacia de retenção; UPS sinalizadas e com botoneira de corte.',
-    base: 'RT-SCIE, arts. 70.º, 71.º, 74.º e 75.º', estado: 'verificar', motivo: 'Depende dos equipamentos elétricos existentes.',
+    base: 'RT-SCIE, arts. 70.º, 71.º, 74.º e 75.º', ...porFacto(ut, 'servEletricos', 'Não existem transformadores, grupos geradores, baterias > 1000 VAh nem UPS > 40 kVA.'),
   });
   add({
     tema: 'VI.1', titulo: 'd) Quadros elétricos e cortes de emergência',
@@ -672,33 +705,32 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'VI.2', titulo: 'a) Centrais térmicas',
     exigencia: 'Aparelhos a fluidos combustíveis com potência útil total > 40 kW em central térmica: reação ao fogo de local C; isolamento do quadro XIV (≤ 70 kW) ou XV (70 a 2000 kW); > 2000 kW interdito no interior de edifícios (exceto UT XII exclusiva); ventilação permanente; cortes de emergência de energia e combustível no exterior da central (e no posto de segurança).',
-    base: 'RT-SCIE, arts. 80.º a 84.º', estado: 'verificar', motivo: 'Depende da existência e potência de centrais térmicas.',
+    base: 'RT-SCIE, arts. 80.º a 84.º', ...porFacto(ut, 'centralTermica', 'Sem aparelhos a fluidos combustíveis com potência útil total > 40 kW.'),
   });
   add({
     tema: 'VI.2', titulo: 'b) Aparelhagem de aquecimento',
     exigencia: 'Aparelhos autónomos só em habitações, locais A e locais B com efetivo < 500 (nos restantes, só elétricos sem resistências expostas e ≤ 25 kW); aparelhos de combustão com proteção, corte automático de combustível e afastamentos a materiais combustíveis; combustíveis sólidos só em habitações (exceto quartos), locais A e B ≤ 200 pessoas.',
-    base: 'RT-SCIE, arts. 85.º a 87.º', estado: 'verificar', motivo: 'Depende dos aparelhos de aquecimento existentes.',
+    base: 'RT-SCIE, arts. 85.º a 87.º', ...porFacto(ut, 'aquecimento', 'Não existem aparelhos de aquecimento autónomos.'),
   });
   add({
     tema: 'VI.3', titulo: 'Cozinhas e instalações de frio',
     exigencia: 'Aparelhos de confeção > 20 kW em cozinha isolada como local C (art. 21.º n.os 1 e 2); admissão de ar e extração de fumos e vapores com apanha-fumos A1 e filtro de gorduras; dispositivos de corte manual de combustível/energia e de comando do controlo de fumo junto ao acesso principal; instalações de frio > 70 kW em compartimento isolado (quadro XIV); em bares, aparelhos fixos (exceto < 4 kW).',
-    base: 'RT-SCIE, arts. 88.º a 91.º', estado: ut.temCozinhaC || locais.has('C') ? 'aplica' : 'verificar',
-    motivo: ut.temCozinhaC || locais.has('C') ? undefined : 'Aplicável se existirem cozinhas, locais de confeção ou instalações de frio.',
+    base: 'RT-SCIE, arts. 88.º a 91.º', ...(ut.temCozinhaC ? { estado: 'aplica' as Estado } : porFacto(ut, 'cozinha', 'Não existem cozinhas, locais de confeção nem instalações de frio.')),
   });
   add({
     tema: 'VI.4', titulo: 'Condutas e aberturas de efluentes de combustão',
     exigencia: 'Condutas A1, de baixa permeabilidade, sem percursos em locais de risco B, D, E, F ou de armazenamento de combustíveis; aberturas de escape ≥ 0,5 m acima da cobertura e afastadas de obstáculos mais altos (até 10 m); acessíveis para limpeza.',
-    base: 'RT-SCIE, arts. 92.º e 93.º', estado: 'verificar', motivo: 'Aplicável se existirem aparelhos de combustão.',
+    base: 'RT-SCIE, arts. 92.º e 93.º', ...porFacto(ut, 'combustao', 'Não existem aparelhos de combustão com condutas de efluentes.'),
   });
   add({
     tema: 'VI.5', titulo: 'Ventilação e condicionamento de ar',
     exigencia: 'Dispositivo central de segurança que pare ventiladores e aquecimento com ar na conduta > 120 °C (com comando manual); condutas e materiais interiores A1, isolamento exterior BL-s2, d0; filtros de centrais > 10 000 m³/h com caixas A1 e detetores de fumo a jusante; condutas de locais B, D, E ou F não servem locais C; bocas acessíveis ao público com grelha ≤ 10 mm.',
-    base: 'RT-SCIE, arts. 94.º a 99.º', estado: 'verificar', motivo: 'Aplicável se existirem instalações de ventilação ou climatização.',
+    base: 'RT-SCIE, arts. 94.º a 99.º', ...porFacto(ut, 'avac', 'Não existem instalações de ventilação nem de climatização.'),
   });
   add({
     tema: 'VI.6', titulo: 'a) Ascensores — condições gerais',
     exigencia: 'Casas de máquinas (carga > 100 kg) isoladas com EI/REI 60 e portas E 30 C; sinal «Não utilizar o ascensor em caso de incêndio»; dispositivo de chamada em caso de incêndio (chave no piso do plano de referência e comando automático pelo SADI) que envia as cabinas ao plano de referência.',
-    base: 'RT-SCIE, arts. 101.º a 103.º', estado: 'verificar', motivo: 'Aplicável se existirem ascensores.',
+    base: 'RT-SCIE, arts. 101.º a 103.º', ...porFacto(ut, 'elevadores', 'Não existem ascensores.'),
   });
   const bomb = H > 28 || ut.pisosAbaixo > 2;
   add({
@@ -711,36 +743,43 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   add({
     tema: 'VI.7', titulo: 'Líquidos e gases combustíveis',
     exigencia: 'Classificação dos espaços pelo quadro XXXV (utilização vs. armazenamento: líquidos PI < 21 °C > 20 l, 21–55 °C > 100 l, ≥ 55 °C > 500 l; gases > 106 dm³ → armazenamento, sujeito às condições da UT XII); interditos em vias de evacuação e locais D; locais com reservatórios de líquidos ou equipamentos a gás > 40 kW são locais C; válvulas de corte de emergência sinalizadas; uma só família de gás por UT.',
-    base: 'RT-SCIE, arts. 106.º e 107.º, quadro XXXV', estado: liq ? 'aplica' : 'verificar', motivo: liq ? undefined : 'Aplicável se existirem líquidos ou gases combustíveis.',
+    base: 'RT-SCIE, arts. 106.º e 107.º, quadro XXXV', ...(liq ? { estado: 'aplica' as Estado } : porFacto(ut, 'liquidosGases', 'Não existem líquidos nem gases combustíveis.')),
   });
 
   // VII — sistemas não cobertos acima
   add({
     tema: 'VII.7', titulo: 'Sistemas de cortina de água',
     exigencia: 'Obrigatórios em fachadas-cortina envidraçadas nas condições do art. 8.º n.º 5 e nas situações específicas das UT II, VI e VIII; complementam (não substituem) elementos resistentes ao fogo; podem ser medida compensatória em edifícios existentes.',
-    base: 'RT-SCIE, arts. 177.º e 178.º', estado: [2, 6, 8].includes(t) ? 'verificar' : 'nao',
-    motivo: [2, 6, 8].includes(t) ? 'Ver as condições específicas da UT e a existência de fachadas-cortina.' : 'Só exigidos em fachadas-cortina envidraçadas (art. 8.º n.º 5) ou nas UT II, VI e VIII.',
+    base: 'RT-SCIE, arts. 177.º e 178.º', estado: sim([2, 6, 8].includes(t)),
+    motivo: [2, 6, 8].includes(t) ? 'Nas situações das condições específicas da UT (título VIII).' : 'Exigidos apenas nas situações específicas das UT II, VI e VIII (art. 178.º n.º 1); noutros casos são opção ou medida compensatória.',
   });
   const polu = t === 2 && !ut.arLivre;
   add({
     tema: 'VII.8', titulo: 'Controlo de poluição de ar',
     exigencia: 'Deteção automática de CO a 1,5 m do pavimento (≤ 400 m² por detetor); alarme ótico e acústico «Atmosfera Saturada-CO» a 200 ppm; CO ≤ 50 ppm (média de 8 h); ventilação comandada pela deteção; fonte local de energia ≥ 60 min.',
-    base: 'RT-SCIE, arts. 179.º a 183.º', estado: polu ? 'aplica' : t === 8 ? 'verificar' : 'nao',
-    motivo: polu ? undefined : t === 8 ? 'Só em espaços de embarque/estacionamento de pesados ou plataformas com locomotivas a gasóleo (art. 181.º b)).' : 'Exigido em espaços cobertos fechados da UT II e em certos espaços da UT VIII (art. 181.º).',
+    base: 'RT-SCIE, arts. 179.º a 183.º', ...(polu ? { estado: 'aplica' as Estado } : t === 8 ? porFacto(ut, 'polucaoVIII', 'Sem espaços de pesados de passageiros nem plataformas com locomotivas a gasóleo.') : { estado: 'nao' as Estado, motivo: 'Exigido em espaços cobertos fechados da UT II e em certos espaços da UT VIII (art. 181.º).' }),
   });
   add({
-    tema: 'VII.12', titulo: 'Para-raios e sinalização ótica para a aviação',
-    exigencia: `Instalação de para-raios quando as descargas atmosféricas constituam risco significativo de incêndio.${H > 28 ? ' Edifício com H > 28 m: sinalização ótica para a aviação se tiver posição dominante na envolvente.' : ''}`,
-    base: 'RT-SCIE, arts. 191.º e 192.º', estado: 'verificar', motivo: 'Depende da avaliação do risco de descargas atmosféricas e da implantação.',
+    tema: 'VII.12', titulo: 'Instalação de para-raios',
+    exigencia: 'Edifícios em relação aos quais as descargas atmosféricas constituem um risco significativo de incêndio: instalação de para-raios, de acordo com os critérios técnicos aplicáveis.',
+    base: 'RT-SCIE, art. 191.º', ...(ut.arLivre ? { estado: 'nao' as Estado, motivo: 'Recinto ao ar livre.' } : porFacto(ut, 'descargas', 'As descargas atmosféricas não constituem risco significativo de incêndio.')),
+  });
+  if (H > 28) add({
+    tema: 'VII.12', titulo: 'Sinalização ótica para a aviação',
+    exigencia: 'Edifício com altura > 28 m com posição dominante na volumetria urbana ou natural envolvente: instalação de sinalização ótica para a aviação.',
+    base: 'RT-SCIE, art. 192.º', ...porFacto(ut, 'dominante', 'Sem posição dominante na envolvente.'),
   });
 
   /* --------------------------- Condições específicas ------------------ */
   if (t === 12) {
     add({ tema: 'II.3', titulo: 'Distâncias entre edifícios (UT XII)', exigencia: `Paredes exteriores EI/REI 60 e vãos E 30 / E 30 C quando confrontem com edifícios a menos de ${quadroXLIX(cat, H)} m; se a menos de metade: EI/REI 90 e vãos E 45 / E 45 C; +4 m para equipamentos ao ar livre.`, base: 'RT-SCIE, art. 300.º, quadro XLIX', estado: 'aplica' });
   }
-  for (const a of ESPECIFICAS[t] ?? []) {
-    add({ tema: 'ESP', titulo: `Art. ${a.art} — ${a.titulo}`, exigencia: `Condição específica da UT ${R}: verificar o cumprimento do art. ${a.art} do RT-SCIE no projeto.`, base: `RT-SCIE, título VIII, art. ${a.art}`, estado: 'verificar', motivo: 'Depende de elementos do projeto.' });
-  }
+  const esp = ESPECIFICAS[t] ?? [];
+  if (esp.length) add({
+    tema: 'ESP', titulo: `Condições específicas da UT ${R}`,
+    exigencia: `Cumprimento das condições específicas da UT ${R} (título VIII do RT-SCIE), aplicáveis às situações existentes: ${esp.map((a) => `art. ${a.art} — ${a.titulo}`).join('; ')}.`,
+    base: `RT-SCIE, título VIII, arts. ${esp[0].art} a ${esp[esp.length - 1].art}`, estado: 'aplica',
+  });
 
   return M;
 }

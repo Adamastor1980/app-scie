@@ -37,7 +37,7 @@ const P = ({ children }: { children: ReactNode }) => <p className="mb-2.5 text-[
 export default function Relatorio() {
   const { p } = useP();
   const [incluirNao, setIncluirNao] = useState(false);
-  const [incluirVerif, setIncluirVerif] = useState(true);
+  const [incluirVerif, setIncluirVerif] = useState(false);
   // no telemóvel/tablet a folha A4 (210 mm ≈ 794 px) é reduzida para caber no ecrã; na impressão volta a 100 %
   const escala = () => Math.min(1, (window.innerWidth - 16) / 800);
   const [zoom, setZoom] = useState(escala);
@@ -112,7 +112,7 @@ export default function Relatorio() {
             <p className="label">Relatório técnico</p>
             <p className="font-display text-[17px] font-bold">{p.nome}</p>
           </div>
-          <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas «a verificar»" /></div>
+          <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas por decidir" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
           <button className="btn h-11 w-full justify-center px-4 sm:w-auto" disabled={!!aGerar} onClick={async () => {
             const raiz = document.getElementById('relatorio-folhas');
@@ -124,6 +124,10 @@ export default function Relatorio() {
           }}><FileDown size={16} /> Word</button>
           <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir} disabled={!!aGerar}>{aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}</button>
         </div>
+        {(() => {
+          const n = todas.reduce((s2, u) => s2 + u.medidas.filter((m) => m.estado === 'verificar').length, 0);
+          return n > 0 ? <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-fire sm:px-6">{n} medida(s) por decidir: responda às «Características do local» no passo Medidas de cada UT. Só as medidas aplicáveis entram no relatório.</p> : null;
+        })()}
         <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">{usarPdfDireto() ? 'No telemóvel/tablet o PDF é gerado diretamente; no iPhone escolha «Guardar em Ficheiros». Para a versão final (texto pesquisável, máxima qualidade) gere-o no computador.' : <>No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</>}</p>
       </div>
 

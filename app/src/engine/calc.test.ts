@@ -210,3 +210,31 @@ describe('Rastreabilidade da categoria (RJ-SCIE, art. 13.º)', () => {
     expect(j).toContain('3.ª categoria (RJ-SCIE, art. 13.º n.º 2; quadro III do anexo III do RJ-SCIE)');
   });
 });
+
+describe('Medidas decididas por factos (sem «palha»)', () => {
+  it('elevadores: sem resposta → por decidir; Sim → aplica; Não → não aplicável', async () => {
+    const { novaUT, novoEdificio } = await import('../store');
+    const { contexto, gerarMedidas } = await import('./medidas');
+    const ed = novoEdificio(1);
+    const ut = novaUT(3);
+    ed.uts = [ut];
+    const est = () => gerarMedidas(contexto(ed, ut)).filter((m) => m.titulo.startsWith('Caixas dos elevadores') || m.titulo.startsWith('a) Ascensores')).map((m) => m.estado);
+    expect(est()).toEqual(['verificar', 'verificar']);
+    ut.factos = { elevadores: true };
+    expect(est()).toEqual(['aplica', 'aplica']);
+    ut.factos = { elevadores: false };
+    expect(est()).toEqual(['nao', 'nao']);
+  });
+  it('drenagem só com pisos enterrados; condições específicas numa só medida', async () => {
+    const { novaUT, novoEdificio } = await import('../store');
+    const { contexto, gerarMedidas } = await import('./medidas');
+    const ed = novoEdificio(1);
+    const ut = novaUT(3);
+    ed.uts = [ut];
+    const m = gerarMedidas(contexto(ed, ut));
+    expect(m.find((x) => x.titulo.startsWith('Drenagem'))?.estado).toBe('nao');
+    expect(m.filter((x) => x.tema === 'ESP').length).toBeLessThanOrEqual(1);
+    ut.pisosAbaixo = 1;
+    expect(gerarMedidas(contexto(ed, ut)).find((x) => x.titulo.startsWith('Drenagem'))?.estado).toBe('aplica');
+  });
+});
