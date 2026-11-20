@@ -1,6 +1,6 @@
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, ShieldCheck, X } from 'lucide-react';
+import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, Sheet, ShieldCheck, X } from 'lucide-react';
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
@@ -144,6 +144,9 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
             <NavItem to="/autoprotecao" icon={<ShieldCheck size={15} />} active={rel === '/autoprotecao'}>Autoproteção</NavItem>
             <NavItem to="/map" icon={<FileText size={15} />} active={rel === '/map'}>Documento MAP</NavItem>
             <NavItem to="/relatorio" icon={<FileText size={15} />} active={isReport}>Relatório</NavItem>
+            <button onClick={() => import('../exportarExcel').then((m) => m.exportarExcel(p)).catch((e) => alert('Não foi possível exportar: ' + (e as Error).message))} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
+              <Sheet size={15} /> Exportar Excel (plano de ação)
+            </button>
             <button onClick={() => exportarJSON(p)} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
               <Download size={15} /> Exportar projeto (JSON)
             </button>

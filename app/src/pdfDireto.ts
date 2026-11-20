@@ -96,9 +96,16 @@ export async function gerarPdfDireto(raiz: HTMLElement, nomeFicheiro: string, ro
 
   progresso?.('A guardar…');
   const blob = pdf.output('blob');
-  const file = new File([blob], nomeFicheiro, { type: 'application/pdf' });
+  await entregarFicheiro(blob, nomeFicheiro, 'application/pdf');
+}
+
+/** Entrega um ficheiro ao utilizador: folha de partilha no telemóvel (iPhone: «Guardar em Ficheiros»), descarga no computador */
+export async function entregarFicheiro(blob: Blob, nome: string, tipo: string) {
+  // nomes só com ASCII: alguns browsers ignoram o nome se tiver acentos ou travessões
+  const nomeFicheiro = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[—–]/g, '-').replace(/[^\w.\- ]+/g, '_').replace(/\s+/g, ' ').trim();
+  const file = new File([blob], nomeFicheiro, { type: tipo });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (nav.canShare?.({ files: [file] })) {
+  if (usarPdfDireto() && nav.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: nomeFicheiro });
       return;
