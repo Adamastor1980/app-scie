@@ -3,6 +3,7 @@ import type { UTProps } from '../UTPage';
 import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida } from '../../engine/medidas';
 import { Note } from '../../ui/primitives';
 import UTComplementares from './UTComplementares';
+import UTEfetivo from './UTEfetivo';
 
 const ESTADO: Record<Estado, { l: string; c: string }> = {
   aplica: { l: 'Aplicável', c: 'bg-ink text-white' },
@@ -24,6 +25,12 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
         <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Dados para concretizar as medidas e a memória descritiva <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria de risco)</span></summary>
         <div className="border-t border-ink px-5 pt-6"><UTComplementares ed={ed} ut={ut} upU={upU} /></div>
       </details>
+      {ut.tipo === 12 && (
+        <details className="mb-8 border border-ink bg-white">
+          <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Espaços e locais de risco <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria da UT XII; concretizam isolamento, reação ao fogo e evacuação)</span></summary>
+          <div className="border-t border-ink px-5 pt-6"><UTEfetivo ed={ed} ut={ut} upU={upU} /></div>
+        </details>
+      )}
       <div className="mb-6 grid gap-px border border-ink bg-ink md:grid-cols-4">
         {([['todas', M.length, 'Total'], ['aplica', r.aplica, 'Aplicáveis'], ['verificar', r.verificar, 'A verificar no projeto'], ['nao', r.nao, 'Não aplicáveis (com motivo)']] as const).map(([k, n, l]) => (
           <button key={k} onClick={() => setFiltro(k)} className={`flex items-baseline justify-between p-4 text-left ${filtro === k ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`}>
