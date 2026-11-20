@@ -414,5 +414,23 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
   return { cat, fatores: f, determinantes, quadro, notas, falta };
 }
 
+/**
+ * Justificação legal da categoria, com valores e limites (rastreabilidade).
+ * Ex.: «Altura da UT III: 29 m — excede o limite da 2.ª categoria (≤ 28 m). 3.ª categoria (RJ-SCIE, art. 13.º n.º 2; quadro III do anexo III).»
+ */
+export function justificacaoCategoria(c: Classificacao): string {
+  const quadro = `${c.quadro.replace('Quadro', 'quadro')} do anexo III do RJ-SCIE`;
+  if (c.cat === 1) return `Todos os fatores satisfazem os critérios da 1.ª categoria (RJ-SCIE, art. 13.º n.º 1; ${quadro}).`;
+  const det = c.fatores.filter((x) => x.cat === c.cat);
+  const partes = det.map((x) => {
+    const lim = x.limites[c.cat - 2];
+    const v = typeof x.valor === 'number' ? `${fmt(x.valor)}${x.unidade ? ' ' + x.unidade : ''}` : x.valor;
+    return typeof x.valor === 'number' && lim
+      ? `${x.rotulo}: ${v} — excede o limite da ${c.cat - 1}.ª categoria (${lim})`
+      : `${x.rotulo}: ${v} — não satisfaz o critério da ${c.cat - 1}.ª categoria${lim ? ` (${lim})` : ''}`;
+  });
+  return `${partes.join('; ')}. Classificação na ${c.cat}.ª categoria (RJ-SCIE, art. 13.º n.º 2; ${quadro}).`;
+}
+
 export const CAT_NOME: Record<Cat, string> = { 1: '1.ª categoria', 2: '2.ª categoria', 3: '3.ª categoria', 4: '4.ª categoria' };
 export const CAT_RISCO: Record<Cat, string> = { 1: 'Risco reduzido', 2: 'Risco moderado', 3: 'Risco elevado', 4: 'Risco muito elevado' };

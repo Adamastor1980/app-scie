@@ -1,5 +1,5 @@
 import type { UTProps } from '../UTPage';
-import { classificar, efetivoUT, cargaUT, CAT_NOME, CAT_RISCO, fmt } from '../../engine/calc';
+import { classificar, efetivoUT, cargaUT, CAT_NOME, CAT_RISCO, fmt, justificacaoCategoria } from '../../engine/calc';
 import { INSPECOES, NOTA_PISOS_TECNICOS, ROMANO, utInfo } from '../../data/rjscie';
 import { MAP_INFO, quadroXLI, quadroXXXIX } from '../../data/rtscie';
 import { CAT_COR, Note, Section } from '../../ui/primitives';
@@ -28,12 +28,7 @@ export default function UTCategoria({ ut }: UTProps) {
         </div>
         <div className="bg-white p-6">
           <p className="label mb-2">Justificação</p>
-          <p className="text-[14px] leading-relaxed">
-            Nos termos do art. 13.º n.º 1 do RJ-SCIE, a categoria de risco é a mais baixa que satisfaz integralmente os critérios do {info.quadro} do anexo III.
-            {c.cat === 1
-              ? ' Todos os fatores de risco cumprem os limites da 1.ª categoria.'
-              : ` O(s) fator(es) ${c.determinantes.map((d) => `«${d}»`).join(', ')} excede(m) os limites da ${c.cat - 1}.ª categoria, pelo que é atribuída a ${c.cat}.ª categoria (art. 13.º n.º 2).`}
-          </p>
+          <p className="text-[14px] leading-relaxed">{justificacaoCategoria(c)}</p>
           {c.notas.map((n) => <p key={n} className="mt-2 text-[12.5px] text-ink-3">{n}</p>)}
           {c.falta.length > 0 && <div className="mt-3"><Note tone="warn">Dados em falta: {c.falta.join('; ')}. A categoria apresentada assume o valor zero para esses fatores.</Note></div>}
           <div className={`mt-5 grid gap-px border border-ink bg-ink ${['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3', 'sm:grid-cols-4'][Math.min(c.fatores.length, 4)]}`}>

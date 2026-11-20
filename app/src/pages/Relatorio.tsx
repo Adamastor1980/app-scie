@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -244,7 +244,7 @@ export default function Relatorio() {
             </div>
             <QuadroAnexo c={cls} titulo={`${cls.quadro} do anexo III`} />
             <p className="mt-2 text-[11.5px] leading-relaxed text-ink-2">
-              {cls.cat === 1 ? 'Todos os fatores cumprem os limites da 1.ª categoria.' : `Fator(es) determinante(s): ${cls.determinantes.join('; ')}. Categoria atribuída nos termos do art. 13.º n.º 2.`} {cls.notas.join(' ')} {CAT_RISCO[cls.cat]}.
+              {justificacaoCategoria(cls)} {cls.notas.join(' ')} {CAT_RISCO[cls.cat]}.
             </p>
           </div>
         ))}

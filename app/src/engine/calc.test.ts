@@ -198,3 +198,15 @@ describe('Medidas', () => {
     }
   });
 });
+
+describe('Rastreabilidade da categoria (RJ-SCIE, art. 13.º)', () => {
+  it('indica valor, limite excedido e quadro', async () => {
+    const { novaUT } = await import('../store');
+    const { classificar, justificacaoCategoria } = await import('./calc');
+    const ut = novaUT(3);
+    ut.altura = 29;
+    const j = justificacaoCategoria(classificar(ut));
+    expect(j).toContain('29 m — excede o limite da 2.ª categoria (≤ 28 m)');
+    expect(j).toContain('3.ª categoria (RJ-SCIE, art. 13.º n.º 2; quadro III do anexo III do RJ-SCIE)');
+  });
+});
