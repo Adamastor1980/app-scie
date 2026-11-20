@@ -3,41 +3,52 @@ import { MAP_INFO, quadroXLI, quadroXXXIX, type MAP } from '../data/rtscie';
 import { INSPECOES } from '../data/rjscie';
 import { contexto } from './medidas';
 
+/** Registos de segurança — art. 201.º n.º 1 do RT-SCIE (texto republicado pela Portaria 135/2020), alíneas a) a g) */
 export const TIPOS_REGISTO: Record<TipoRegisto, { nome: string; base: string; ajuda: string }> = {
+  relatorio: {
+    nome: 'Vistorias e inspeções',
+    base: 'art. 201.º n.º 1 a) RT-SCIE · art. 19.º RJ-SCIE',
+    ajuda: 'Relatórios de vistoria e de inspeção ou fiscalização de condições de segurança realizadas por entidades externas, nomeadamente pelas autoridades competentes.',
+  },
+  anomalia: {
+    nome: 'Anomalias',
+    base: 'art. 201.º n.º 1 b) RT-SCIE',
+    ajuda: 'Anomalias observadas nas operações de verificação, conservação ou manutenção das instalações técnicas, dos sistemas e dos equipamentos de segurança: descrição, impacte, data de deteção e duração da reparação.',
+  },
   manutencao: {
     nome: 'Manutenção',
     base: 'art. 201.º n.º 1 c) RT-SCIE',
-    ajuda: 'Ações de manutenção em instalações técnicas, equipamentos e sistemas de segurança: elemento intervencionado, tipo e motivo da ação, data e responsável.',
+    ajuda: 'Ações de manutenção em instalações técnicas, equipamentos e sistemas de segurança, com indicação do elemento intervencionado, tipo e motivo de ação efetuada, data e responsável.',
   },
   modificacao: {
     nome: 'Modificações e trabalhos perigosos',
-    base: 'art. 201.º n.º 1 d) RT-SCIE',
-    ajuda: 'Descrição sumária das modificações, alterações e trabalhos perigosos, com as datas de início e de finalização.',
+    base: 'art. 201.º n.º 1 d) e art. 197.º RT-SCIE',
+    ajuda: 'Descrição sumária das modificações, alterações e trabalhos perigosos, com as datas de início e de finalização. Trabalhos com risco de incêndio ou explosão carecem de autorização expressa do RS (art. 197.º n.os 3 e 4).',
   },
   ocorrencia: {
     nome: 'Ocorrências',
     base: 'art. 201.º n.º 1 e) RT-SCIE',
-    ajuda: 'Ocorrências relacionadas com SCIE: alarmes intempestivos ou falsos, princípios de incêndio, atuação das equipas de intervenção.',
+    ajuda: 'Relatórios de ocorrências relacionadas com a SCIE, nomeadamente alarmes intempestivos ou falsos, princípios de incêndio ou atuação de equipas de intervenção.',
+  },
+  bombeiros: {
+    nome: 'Intervenção dos bombeiros',
+    base: 'art. 201.º n.º 1 f) RT-SCIE',
+    ajuda: 'Cópia dos relatórios de intervenção dos bombeiros, em incêndios ou outras emergências na entidade (junte fotografia/digitalização do relatório).',
   },
   formacao: {
-    nome: 'Sensibilização e formação',
-    base: 'art. 206.º RT-SCIE',
-    ajuda: 'Ações de sensibilização e formação em SCIE. A sensibilização de quem entra ao serviço deve ocorrer no prazo máximo de 60 dias (art. 206.º n.º 3).',
+    nome: 'Formação',
+    base: 'art. 201.º n.º 1 g) e art. 206.º RT-SCIE',
+    ajuda: 'Relatório sucinto da ação de formação, com menção dos aspetos mais relevantes. A sensibilização de quem entra ao serviço deve ocorrer no prazo máximo de 60 dias (art. 206.º n.º 3).',
   },
   simulacro: {
     nome: 'Simulacros',
-    base: 'art. 207.º RT-SCIE',
-    ajuda: 'Os exercícios devem ser planeados, executados e avaliados (art. 207.º n.º 2 c)). Período máximo entre simulacros: quadro XLI.',
-  },
-  relatorio: {
-    nome: 'Relatórios e inspeções',
-    base: 'art. 201.º n.º 1 RT-SCIE · art. 19.º RJ-SCIE',
-    ajuda: 'Guarda de relatórios relacionados com a SCIE: inspeções regulares e extraordinárias, vistorias, auditorias.',
+    base: 'art. 201.º n.º 1 g) e art. 207.º RT-SCIE',
+    ajuda: 'Relatório sucinto do simulacro, com menção dos aspetos mais relevantes. Os exercícios devem ser planeados, executados e avaliados, acompanhados por observadores, com informação prévia aos ocupantes (art. 207.º n.º 2 c) a e)).',
   },
 };
 
 export const TIPOS_OCORRENCIA = ['Alarme intempestivo', 'Alarme falso', 'Princípio de incêndio', 'Atuação da equipa de intervenção', 'Outra'];
-export const TIPOS_RELATORIO = ['Inspeção regular (art. 19.º RJ-SCIE)', 'Inspeção extraordinária (art. 19.º RJ-SCIE)', 'Vistoria', 'Auditoria', 'Outro'];
+export const TIPOS_RELATORIO = ['Inspeção regular (art. 19.º RJ-SCIE)', 'Inspeção extraordinária (art. 19.º RJ-SCIE)', 'Vistoria', 'Fiscalização', 'Outro'];
 export const INSPECAO_REGULAR = TIPOS_RELATORIO[0];
 
 /** RJ-SCIE art. 19.º n.os 4 e 5: periodicidade máxima das inspeções regulares (anos) ou null se excecionada */

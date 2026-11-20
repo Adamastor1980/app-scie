@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, CalendarClock, Camera, CheckCircle2, Clock, Plus, Printer, Trash2, X } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Camera, CheckCircle2, Clock, FileText, Plus, Printer, Trash2, X } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { novaAutoprotecao, uid } from '../store';
 import type { Autoprotecao as AP, Pessoa, Registo, TipoRegisto } from '../data/types';
@@ -35,6 +35,7 @@ export default function Autoprotecao() {
         <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8">
           <p className="label !text-fire">Medidas de autoproteção</p>
           <h1 className="h-display mb-1 mt-2 text-[40px]">Autoproteção</h1>
+          <a href={`#/p/${p.id}/map`} className="btn-primary float-right ml-4 mt-1"><FileText size={15} /> Documento MAP</a>
           <p className="mb-4 max-w-3xl text-[13px] text-ink-3">Organização da segurança, registos de segurança e prazos (RT-SCIE, título VII; RJ-SCIE, arts. 19.º e 21.º). Os registos devem ser arquivados durante pelo menos 10 anos (art. 201.º n.º 2) e as medidas são auditáveis a qualquer momento (art. 198.º n.º 3).</p>
         </div>
         <nav className="mx-auto flex max-w-[1240px] gap-px overflow-x-auto px-4 sm:px-8">
@@ -110,13 +111,13 @@ function PessoaForm({ v, on }: { v: Pessoa; on: (fn: (x: Pessoa) => void) => voi
 function Organizacao({ ap, upA }: { ap: AP; upA: (fn: (a: AP) => void) => void }) {
   return (
     <>
-      <Section n="01" title="Responsável de segurança (RS)" sub="Entidade responsável pela manutenção das condições de SCIE e pela aplicação das medidas de autoproteção (RJ-SCIE, art. 6.º).">
+      <Section n="01" title="Responsável de segurança (RS)" sub="Pessoa individual ou coletiva definida no quadro XXXVIII (RT-SCIE, art. 194.º; RJ-SCIE, art. 6.º n.os 3 e 4): proprietário, entidade exploradora, administração do condomínio ou entidade gestora dos espaços comuns.">
         <div className="border border-ink bg-white p-4"><PessoaForm v={ap.rs} on={(fn) => upA((a) => fn(a.rs))} /></div>
       </Section>
       <Section n="02" title="Delegado de segurança" sub="Executa as medidas de autoproteção em nome do RS (RT-SCIE, arts. 196.º e 200.º).">
         <div className="border border-ink bg-white p-4"><PessoaForm v={ap.delegado} on={(fn) => upA((a) => fn(a.delegado))} /></div>
       </Section>
-      <Section n="03" title="Equipa de segurança" sub="Dimensionada de acordo com as características de exploração (art. 200.º n.º 3). O quadro XL foi revogado: não existe fórmula legal — o dimensionamento deve ser fundamentado e aceite pela ANEPC (art. 200.º n.º 4).">
+      <Section n="03" title="Equipa de segurança" sub="Dimensionada de acordo com as características de exploração (art. 200.º n.º 3). O quadro XL foi revogado: não existe fórmula legal — o dimensionamento deve ser fundamentado e aceite pela ANEPC (art. 200.º n.º 4). A organização é estabelecida pelo RS, que designa o delegado de segurança (arts. 194.º n.º 2 e 200.º n.º 1).">
         <div className="flex flex-col gap-2">
           {ap.equipa.map((e, i) => (
             <div key={e.id} className="grid items-end gap-2 border border-ink bg-white p-3 md:grid-cols-[1.4fr_1.4fr_0.8fr_1fr_auto]">
@@ -137,6 +138,7 @@ function Organizacao({ ap, upA }: { ap: AP; upA: (fn: (a: AP) => void) => void }
         <div className="grid gap-3 border border-ink bg-white p-4 sm:grid-cols-2">
           <Field label="Períodos de funcionamento"><Text value={ap.horario} placeholder="ex.: 2.ª a 6.ª, 08h00–20h00 (3 turnos)" onChange={(t) => upA((a) => { a.horario = t; })} /></Field>
           <Field label="Posto de segurança" legal="art. 200.º n.º 5"><Text value={ap.postoSeguranca} placeholder="ex.: portaria principal, piso 0" onChange={(t) => upA((a) => { a.postoSeguranca = t; })} /></Field>
+          <Field label="Data de entrada em funcionamento" legal="art. 203.º n.º 1 a) ii)"><input type="date" className="input" value={ap.dataFuncionamento ?? ''} onChange={(e) => upA((a) => { a.dataFuncionamento = e.target.value || undefined; })} /></Field>
         </div>
       </Section>
       <Section n="05" title="Contactos de emergência">
@@ -232,12 +234,14 @@ function EditorRegisto({ r: r0, uts, onGuardar, onFechar }: { r: Registo; uts: {
   const set = (fn: (x: Registo) => void) => setR((x) => { const y = JSON.parse(JSON.stringify(x)) as Registo; fn(y); return y; });
   const info = TIPOS_REGISTO[r.tipo];
   const rotulos: Record<TipoRegisto, { elemento: string; tipoAcao?: string; motivo?: string }> = {
+    relatorio: { elemento: 'Entidade', tipoAcao: 'Tipo' },
+    anomalia: { elemento: 'Instalação / sistema / equipamento', tipoAcao: 'Impacte', motivo: 'Duração da reparação' },
     manutencao: { elemento: 'Elemento intervencionado', tipoAcao: 'Tipo de ação', motivo: 'Motivo da ação' },
-    modificacao: { elemento: 'Modificação / trabalho', motivo: 'Medidas de segurança adotadas' },
+    modificacao: { elemento: 'Local e natureza dos trabalhos', tipoAcao: 'Autorização do RS (art. 197.º n.º 3)', motivo: 'Meios de segurança compensatórios / suplementares' },
     ocorrencia: { elemento: 'Local', tipoAcao: 'Tipo de ocorrência' },
+    bombeiros: { elemento: 'Corpo de bombeiros', tipoAcao: 'Tipo de emergência' },
     formacao: { elemento: 'Ação de sensibilização / formação', motivo: 'Destinatários' },
-    simulacro: { elemento: 'Cenário', motivo: 'Entidades externas envolvidas (bombeiros, proteção civil)' },
-    relatorio: { elemento: 'Entidade / assunto', tipoAcao: 'Tipo' },
+    simulacro: { elemento: 'Cenário', motivo: 'Entidades externas e observadores (art. 207.º n.º 2 c) e d))' },
   };
   const rot = rotulos[r.tipo];
 

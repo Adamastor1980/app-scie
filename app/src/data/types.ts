@@ -267,7 +267,7 @@ export interface Contacto {
   telefone: string;
 }
 
-export type TipoRegisto = 'manutencao' | 'modificacao' | 'ocorrencia' | 'formacao' | 'simulacro' | 'relatorio';
+export type TipoRegisto = 'relatorio' | 'anomalia' | 'manutencao' | 'modificacao' | 'ocorrencia' | 'bombeiros' | 'formacao' | 'simulacro';
 
 export interface Registo {
   id: string;
@@ -293,4 +293,8 @@ export interface Autoprotecao {
   horario: string;
   contactos: Contacto[];
   registos: Registo[];
+  /** data de entrada em funcionamento (art. 203.º n.º 1 a) ii)) */
+  dataFuncionamento?: string;
+  /** textos do documento MAP escritos pelo autor, por secção (chave = artigo/alínea) */
+  textos?: Record<string, string>;
 }
