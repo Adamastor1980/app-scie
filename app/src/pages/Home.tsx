@@ -85,10 +85,18 @@ export default function Home() {
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
                     {max && <CatBadge cat={max} size="sm" />}
                   </div>
-                  <button onClick={() => go(`/p/${p.id}`)} className="text-left">
-                    <h3 className="font-display text-[21px] font-bold leading-tight tracking-tight group-hover:text-fire">{p.nome}</h3>
+                  <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
+                    {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
+                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden border border-paper-3 bg-white">
+                      {p.clienteLogo
+                        ? <img src={p.clienteLogo} alt="" className="h-full w-full object-contain p-1" />
+                        : <span className="font-display text-[17px] font-extrabold tracking-tight text-ink-4">{iniciais(p.cliente || p.nome)}</span>}
+                    </span>
+                    <span className="min-w-0">
+                      <h3 className="font-display text-[21px] font-bold leading-tight tracking-tight group-hover:text-fire">{p.nome}</h3>
+                      <p className="mt-1 text-[12.5px] text-ink-3">{[p.cliente, p.concelho].filter(Boolean).join(' · ') || '—'}</p>
+                    </span>
                   </button>
-                  <p className="mt-1 text-[12.5px] text-ink-3">{[p.cliente, p.concelho].filter(Boolean).join(' · ') || '—'}</p>
                   <div className="mt-3 flex flex-wrap gap-1">
                     {uts.map((u) => (
                       <span key={u.id} className="chip border-ink-4 font-mono text-ink-2">UT {ROMANO[u.tipo]}</span>
@@ -113,4 +121,9 @@ export default function Home() {
       )}
     </main>
   );
+}
+
+function iniciais(t: string) {
+  const w = t.replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter((x) => x.length > 2 || /^\d+$/.test(x));
+  return (w.length ? w : t.split(/\s+/)).slice(0, 2).map((x) => x[0]?.toUpperCase() ?? '').join('') || '—';
 }
