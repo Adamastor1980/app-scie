@@ -121,7 +121,12 @@ export const useStore = create<State>()(
       duplicar: (id) => {
         const o = getS().projetos.find((p) => p.id === id);
         if (!o) return id;
-        const n = { ...clone(o), id: uid(), nome: o.nome + ' (cópia)', criadoEm: Date.now(), atualizadoEm: Date.now() };
+        // não acumula «(cópia) (cópia)…»: usa o nome base e numera (cópia 2, cópia 3…)
+        const base = o.nome.replace(/(\s*\(cópia(?: \d+)?\))+$/, '');
+        const nomes = new Set(getS().projetos.map((p) => p.nome));
+        let nome = `${base} (cópia)`;
+        for (let k = 2; nomes.has(nome); k++) nome = `${base} (cópia ${k})`;
+        const n = { ...clone(o), id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },
