@@ -86,7 +86,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                     <div className="ml-auto flex items-baseline gap-3">
                       <span className="ref">{c.formula} =</span>
                       <span className="font-display text-[26px] font-extrabold num">{fmt(c.valor)}</span>
-                      {e.mobilidadeReduzida && <span className="ref">evac. {c.evacuacao}</span>}
+                      {e.mobilidadeReduzida && <span className="ref" title="Efetivo para dimensionar saídas e vias de evacuação (art. 51.º n.º 5)">para saídas: ×1,3 = {c.evacuacao}</span>}
                     </div>
                   </div>
                   <div className="flex justify-between gap-3 border-t border-paper-3 px-4 py-2 text-[11px] text-ink-3">
