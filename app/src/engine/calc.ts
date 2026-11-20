@@ -434,3 +434,18 @@ export function justificacaoCategoria(c: Classificacao): string {
 
 export const CAT_NOME: Record<Cat, string> = { 1: '1.ª categoria', 2: '2.ª categoria', 3: '3.ª categoria', 4: '4.ª categoria' };
 export const CAT_RISCO: Record<Cat, string> = { 1: 'Risco reduzido', 2: 'Risco moderado', 3: 'Risco elevado', 4: 'Risco muito elevado' };
+
+/**
+ * Coerência do local de risco com o RJ-SCIE, art. 10.º (aplicada sempre que o espaço muda):
+ * - crianças ≤ 3 anos / pessoas limitadas ⇒ local D (n.º 1 d)); e o local D implica o fator 1,3 (RT-SCIE, art. 51.º n.º 5);
+ * - local A com efetivo > 100 ou público > 50 ⇒ local B (n.º 1 a) e b)).
+ * Não passa B a A: o n.º 2 admite B para um conjunto de locais A no mesmo compartimento corta-fogo.
+ */
+export function normalizarLocal(e: Espaco, antes?: Espaco) {
+  const mudouLocal = antes && antes.local !== e.local;
+  const mudouLimitadas = antes && !!antes.mobilidadeReduzida !== !!e.mobilidadeReduzida;
+  if (mudouLocal && e.local === 'D') e.mobilidadeReduzida = true;
+  else if (mudouLocal && antes!.local === 'D' && (e.local === 'A' || e.local === 'B' || e.local === 'E')) e.mobilidadeReduzida = false;
+  if (mudouLimitadas && e.mobilidadeReduzida && (e.local === 'A' || e.local === 'B' || e.local === 'E')) e.local = 'D';
+  if (e.local === 'A' && (efetivoEspaco(e).valor > 100 || (e.efetivoPublico ?? 0) > 50)) e.local = 'B';
+}

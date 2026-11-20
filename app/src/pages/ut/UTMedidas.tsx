@@ -33,9 +33,9 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
         <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Dados para concretizar as medidas e a memória descritiva <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria de risco)</span></summary>
         <div className="border-t border-ink px-5 pt-6"><UTComplementares ed={ed} ut={ut} upU={upU} /></div>
       </details>
-      {ut.tipo === 12 && (
+      {[1, 2, 12].includes(ut.tipo) && (
         <details className="mb-8 border border-ink bg-white">
-          <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Espaços e locais de risco <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria da UT XII; concretizam isolamento, reação ao fogo e evacuação)</span></summary>
+          <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Espaços e locais de risco <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria da UT {ut.tipo === 12 ? 'XII' : ut.tipo === 2 ? 'II' : 'I'}; registe aqui locais C, D, E ou F, ex.: central térmica, posto de transformação){ut.tipo === 1 ? ' · os espaços interiores dos fogos não são classificados (art. 10.º n.º 1)' : ''}</span></summary>
           <div className="border-t border-ink px-5 pt-6"><UTEfetivo ed={ed} ut={ut} upU={upU} /></div>
         </details>
       )}

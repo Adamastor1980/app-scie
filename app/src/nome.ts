@@ -51,8 +51,14 @@ export function justificacaoLocal(e: Espaco, efetivo: number): string {
   const pub = e.efetivoPublico ?? 0;
   const c = e.subtipoC ? SUBTIPOS_C.find((s) => s.id === e.subtipoC)?.txt : undefined;
   switch (e.local) {
-    case 'A': return `Efetivo ${efetivo} ≤ 100${pub ? ` e público ${pub} ≤ 50` : ''}, sem riscos agravados — art. 10.º n.º 1 a)`;
-    case 'B': return `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: efetivo > 100 ou público > 50 — art. 10.º n.º 1 b)`;
+    case 'A':
+      return efetivo > 100 || pub > 50
+        ? `INCOERENTE: efetivo ${efetivo}${pub ? `, público ${pub}` : ''} excede os limites do local A — deve ser local B (art. 10.º n.º 1 b))`
+        : `Efetivo ${efetivo} ≤ 100${pub ? ` e público ${pub} ≤ 50` : ''}, sem riscos agravados — art. 10.º n.º 1 a)`;
+    case 'B':
+      return efetivo > 100 || pub > 50
+        ? `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: ${efetivo > 100 ? 'efetivo > 100' : 'público > 50'} — art. 10.º n.º 1 b)`
+        : `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: conjunto de locais A no mesmo compartimento corta-fogo acima dos limites — art. 10.º n.º 2`;
     case 'C': return c ? `Art. 10.º n.º 3 ${c}` : 'Riscos agravados de eclosão e desenvolvimento de incêndio — art. 10.º n.º 1 c)';
     case 'Cag': return `Local C nas condições do art. 11.º n.º 3 (C agravado)${c ? `; ${c}` : ''}`;
     case 'D': return 'Pessoas acamadas, crianças ≤ 3 anos ou limitadas na mobilidade/perceção — art. 10.º n.º 1 d)';

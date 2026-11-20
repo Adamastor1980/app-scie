@@ -5,7 +5,7 @@ import { precisaEfetivo } from '../UTPage';
 import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
 import { LOCAIS, SUBTIPOS_C } from '../../data/rjscie';
-import { efetivoEspaco, efetivoUT, fmt } from '../../engine/calc';
+import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/calc';
 import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
@@ -33,7 +33,12 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
   const [showQ, setShowQ] = useState(false);
   const crits0 = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
   const crits = ut.tipo === 12 ? [...crits0.filter((c) => c.v === 'declarado'), ...crits0.filter((c) => c.v !== 'declarado')] : crits0;
-  const setE = (i: number, fn: (e: Espaco) => void) => upU((u) => fn(u.espacos[i]));
+  // cada alteração passa pela coerência com o art. 10.º do RJ-SCIE (local D, A→B)
+  const setE = (i: number, fn: (e: Espaco) => void) => upU((u) => {
+    const antes = JSON.parse(JSON.stringify(u.espacos[i])) as Espaco;
+    fn(u.espacos[i]);
+    normalizarLocal(u.espacos[i], antes);
+  });
 
   return (
     <div>
@@ -81,7 +86,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                     {ut.tipo !== 12 && <Field label="Efetivo de público" hint="Distingue local A de B (art. 10.º n.º 1)."><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-paper-3 px-4 py-3">
-                    <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas (×1,3 na evacuação — art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
+                    <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas na mobilidade/perceção → local D (art. 10.º n.º 1 d)); ×1,3 para saídas (art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.naoSimultaneo} onChange={(ev) => setE(i, (x) => { x.naoSimultaneo = ev.target.checked; })} /> Ocupado pelas mesmas pessoas noutro horário — não somar (art. 51.º n.º 9)</label>
                     <div className="ml-auto flex items-baseline gap-3">
                       <span className="ref">{c.formula} =</span>

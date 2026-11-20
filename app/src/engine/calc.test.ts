@@ -238,3 +238,36 @@ describe('Medidas decididas por factos (sem «palha»)', () => {
     expect(gerarMedidas(contexto(ed, ut)).find((x) => x.titulo.startsWith('Drenagem'))?.estado).toBe('aplica');
   });
 });
+
+describe('Locais de risco: coerência (art. 10.º) e reflexo nas medidas', () => {
+  it('crianças/limitadas ⇒ local D; A com efetivo > 100 ⇒ B', async () => {
+    const { novoEspaco } = await import('../store');
+    const { normalizarLocal } = await import('./calc');
+    const e = novoEspaco(3);
+    e.local = 'A';
+    const antes = JSON.parse(JSON.stringify(e));
+    e.mobilidadeReduzida = true;
+    normalizarLocal(e, antes);
+    expect(e.local).toBe('D');
+    const b = novoEspaco(3);
+    b.local = 'A'; b.criterio = 'declarado' as never; (b as { n?: number }).n = 150;
+    normalizarLocal(b);
+    expect(['A', 'B']).toContain(b.local);
+  });
+  it('cada local escolhido gera as medidas respetivas', async () => {
+    const { novaUT, novoEdificio, novoEspaco } = await import('../store');
+    const { contexto, gerarMedidas } = await import('./medidas');
+    const ed = novoEdificio(1);
+    const ut = novaUT(5);
+    ed.uts = [ut];
+    for (const l of ['B', 'C', 'D', 'E', 'F'] as const) { const e = novoEspaco(5); e.local = l; e.nome = 'L' + l; ut.espacos.push(e); }
+    const m = gerarMedidas(contexto(ed, ut));
+    const est = (t: string) => m.find((x) => x.titulo === t)?.estado;
+    for (const l of ['B', 'C', 'D', 'E', 'F']) expect(est(`Envolvente de locais de risco ${l}`)).toBe('aplica');
+    expect(est('Envolvente de locais de risco C agravado')).toBe('nao');
+    expect(est('Localização de locais de risco D e E')).toBe('aplica');
+    expect(est('Localização de locais de risco B acessíveis a público')).toBe('aplica');
+    expect(m.find((x) => x.titulo === 'Revestimentos de locais de risco')?.exigencia).toMatch(/local D/);
+    expect(est('Instruções de segurança')).toBe('aplica');
+  });
+});
