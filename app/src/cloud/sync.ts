@@ -19,9 +19,11 @@ interface NuvemState {
   estado: EstadoNuvem;
   user: { uid: string; nome: string; email: string; foto?: string } | null;
   erro?: string;
+  /** a sessão Google já foi verificada (evita mostrar o ecrã de entrada por instantes) */
+  verificado: boolean;
 }
 
-export const useNuvem = create<NuvemState>(() => ({ estado: 'local', user: null }));
+export const useNuvem = create<NuvemState>(() => ({ estado: 'local', user: null, verificado: false }));
 
 const limpo = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 

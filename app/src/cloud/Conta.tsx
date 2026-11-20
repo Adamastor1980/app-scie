@@ -6,9 +6,10 @@ import { iniciarSincronizacao, terminarSessao, useNuvem } from './sync';
 /** Liga a sessão Google à sincronização (chamado uma vez na raiz da app) */
 export function useLigacaoNuvem() {
   useEffect(() => {
-    if (!nuvemDisponivel()) return;
+    if (!nuvemDisponivel()) { useNuvem.setState({ verificado: true }); return; }
     return aoMudarUtilizador((u) => {
       if (u) iniciarSincronizacao(u);
+      useNuvem.setState({ verificado: true });
     });
   }, []);
 }
@@ -47,6 +48,7 @@ export default function Conta() {
           if (!confirm('Terminar sessão? Os projetos ficam guardados na nuvem e são removidos deste computador.')) return;
           await terminarSessao();
           await sair();
+          location.hash = '#/';
         }}
       >
         <LogOut size={14} /> <span className="hidden sm:inline">Sair</span>

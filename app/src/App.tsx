@@ -7,6 +7,9 @@ import ProjetoShell from './pages/ProjetoShell';
 import Tabelas from './pages/Tabelas';
 import Perfil from './pages/Perfil';
 import Conta, { useLigacaoNuvem } from './cloud/Conta';
+import { useNuvem } from './cloud/sync';
+import { nuvemDisponivel } from './cloud/firebase';
+import Entrar from './pages/Entrar';
 
 function Logo() {
   return (
@@ -35,6 +38,13 @@ export default function App() {
   const pm = match('/p/:pid', path) || matchPrefix(path);
   const isTabelas = path.startsWith('/tabelas');
   const isPerfil = path.startsWith('/empresa');
+  const { user, verificado } = useNuvem();
+
+  // sem sessão iniciada só se mostra o ecrã de entrada (nenhum dado visível)
+  if (nuvemDisponivel()) {
+    if (!verificado) return <div className="grid min-h-[100dvh] place-items-center bg-ink"><span className="h-2 w-16 animate-pulse bg-fire" /></div>;
+    if (!user) return <Entrar />;
+  }
 
   return (
     <div className="min-h-full">
