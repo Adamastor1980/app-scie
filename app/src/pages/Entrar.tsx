@@ -90,9 +90,14 @@ export default function Entrar() {
             </div>
           ))}
         </div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/30">
-          DL 220/2008 · Lei 123/2019 · Portaria 135/2020 · Despacho 8954/2020
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/30">
+            DL 220/2008 · Lei 123/2019 · Portaria 135/2020 · Despacho 8954/2020
+          </p>
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/50">
+            Autor <span className="text-fire">■</span> <span className="text-white/80">Fernando Adamastor</span>
+          </p>
+        </div>
       </footer>
     </div>
   );
