@@ -8,6 +8,7 @@ const A4_W = 210;
 const A4_H = 297;
 const MARGEM_TOPO_CONT = 14; // mm, páginas de continuação
 const MARGEM_BAIXO = 16; // mm (rodapé)
+const ESCALA = 1.75;
 
 export const usarPdfDireto = () => window.matchMedia('(pointer: coarse)').matches;
 
@@ -42,12 +43,16 @@ export async function gerarPdfDireto(raiz: HTMLElement, nomeFicheiro: string, ro
     const pxW = s.getBoundingClientRect().width; // largura em px da folha (210 mm)
     const pxPorMm = pxW / A4_W;
     const quebras = pontosQuebra(s);
-    const canvas = await html2canvas(s, { scale: 1.75, backgroundColor: '#ffffff', useCORS: true, logging: false });
-    const k = canvas.width / pxW; // px do canvas por px do ecrã
-    const alturaTotal = s.getBoundingClientRect().height;
+    const r0 = s.getBoundingClientRect();
+    const alturaTotal = r0.height;
+    // cada página é capturada separadamente: o iPhone devolve em branco imagens (canvas) muito grandes
+    const capturar = (y: number, h: number) =>
+      html2canvas(s, { scale: ESCALA, backgroundColor: '#ffffff', useCORS: true, logging: false, x: 0, y, // deslocamento relativo à própria folha
+        width: pxW, height: Math.ceil(h) });
 
     // folha que cabe (quase) numa página: vai inteira, ajustada à altura A4 — evita sobras de poucos milímetros
     if (alturaTotal <= A4_H * pxPorMm * 1.04) {
+      const canvas = await capturar(0, alturaTotal);
       const hMm = alturaTotal / pxPorMm;
       const f = Math.min(1, A4_H / hMm);
       if (!primeira) pdf.addPage();
@@ -58,7 +63,9 @@ export async function gerarPdfDireto(raiz: HTMLElement, nomeFicheiro: string, ro
 
     let y = 0; // px do ecrã
     let cont = false;
+    let parte = 1;
     while (y < alturaTotal - 12 * pxPorMm) {
+      progresso?.(`A preparar página ${i + 1} de ${sheets.length} (parte ${parte++})…`);
       const topoMm = cont ? MARGEM_TOPO_CONT : 0;
       const maxPx = (A4_H - MARGEM_BAIXO - topoMm) * pxPorMm;
       let fim = y + maxPx;
@@ -67,16 +74,11 @@ export async function gerarPdfDireto(raiz: HTMLElement, nomeFicheiro: string, ro
         if (ok.length) fim = ok[ok.length - 1];
       } else fim = alturaTotal;
       const h = fim - y;
-      const fatia = document.createElement('canvas');
-      fatia.width = canvas.width;
-      fatia.height = Math.max(1, Math.round(h * k));
-      const ctx = fatia.getContext('2d')!;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, fatia.width, fatia.height);
-      ctx.drawImage(canvas, 0, Math.round(y * k), canvas.width, fatia.height, 0, 0, fatia.width, fatia.height);
+      const canvas = await capturar(y, h);
       if (!primeira) pdf.addPage();
       primeira = false;
-      pdf.addImage(fatia.toDataURL('image/jpeg', 0.82), 'JPEG', 0, topoMm, A4_W, h / pxPorMm);
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.82), 'JPEG', 0, topoMm, A4_W, h / pxPorMm);
+      canvas.width = 0; // liberta memória (importante no iPhone)
       y = fim;
       cont = true;
     }
