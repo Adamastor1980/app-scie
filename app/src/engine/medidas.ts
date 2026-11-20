@@ -11,6 +11,8 @@ export type Estado = 'aplica' | 'verificar' | 'nao';
 
 export interface Medida {
   id: string;
+  /** chave estável para guardar a verificação (secção + título) */
+  key: string;
   tema: string;
   titulo: string;
   exigencia: string;
@@ -107,7 +109,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   const temCag = locais.has('Cag');
   const temF = locais.has('F');
   const abaixo = ut.pisosAbaixo > 0;
-  const add = (m: Omit<Medida, 'id'>) => M.push({ id: `${M.length + 1}`.padStart(3, '0'), ...m });
+  const add = (m: Omit<Medida, 'id' | 'key'>) => M.push({ id: `${M.length + 1}`.padStart(3, '0'), key: `${m.tema}|${m.titulo}`, ...m });
 
   /* ------------------- Enquadramento e procedimento ------------------- */
   add({

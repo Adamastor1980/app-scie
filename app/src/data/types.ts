@@ -142,6 +142,28 @@ export interface Compartimento {
   raiDet?: number;
 }
 
+export type Conformidade = 'cumpre' | 'nao_cumpre' | 'na';
+
+/** Verificação de uma exigência no local (avaliação de edifício existente) */
+export interface Verificacao {
+  estado?: Conformidade;
+  obs?: string;
+  corretiva?: string;
+  prazo?: string; // ex.: 'Imediato', '2027 · 1.º S'
+}
+
+export interface Revisao {
+  versao: string;
+  data: string;
+  descricao: string;
+}
+
+export interface Distribuicao {
+  exemplar: string;
+  entidade: string;
+  suporte: string;
+}
+
 export interface UT {
   id: string;
   tipo: UTNum;
@@ -169,6 +191,8 @@ export interface UT {
   pinturaArea?: number;
   casoXII?: 1 | 2 | 3 | 4;
   observacoes: string;
+  /** chave da medida (secção + título) → verificação */
+  verificacao?: Record<string, Verificacao>;
 }
 
 export interface Edificio {
@@ -201,6 +225,9 @@ export interface Projeto {
   edificios: Edificio[];
   plantas: Planta[];
   conclusoes: string;
+  clienteLogo?: string;
+  revisoes?: Revisao[];
+  distribuicao?: Distribuicao[];
   criadoEm: number;
   atualizadoEm: number;
 }

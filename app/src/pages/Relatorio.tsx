@@ -1,11 +1,12 @@
 import { nomeUT, tituloUT } from '../nome';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, LOCAIS, ROMANO, SUBTIPOS_C, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
 import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
+import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
 import { CAT_COR, Toggle } from '../ui/primitives';
 import type { Cat, LocalRisco } from '../data/types';
@@ -127,7 +128,7 @@ export default function Relatorio() {
         </table>
         <H1 n="—">Índice</H1>
         <ol className="space-y-1.5 text-[12.5px]">
-          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor'].map((t, i) => (
+          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor'].map((t, i) => (
             <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire">{i + 1}</span>{t}</li>
           ))}
         </ol>
@@ -280,6 +281,75 @@ export default function Relatorio() {
             })}
           </div>
         ))}
+
+        <H1 n={S()}>Análise regulamentar e medidas corretivas</H1>
+        {todas.every(({ ut, medidas }) => progresso(ut, medidas).marcadas === 0) ? (
+          <P>Não foi registada verificação no local das exigências identificadas no capítulo anterior. A análise de conformidade (cumpre / não cumpre / não aplicável) é feita no passo «Medidas» de cada utilização-tipo.</P>
+        ) : (
+          <>
+            <P>Verificação no local das exigências do capítulo anterior, organizada pelos capítulos II a VII do anexo IV do RJ-SCIE. «Sim» indica pelo menos uma desconformidade na secção; «Não», todas as exigências verificadas cumprem; «N.A.», a secção não se aplica; «—», verificação incompleta. Cada desconformidade remete para o artigo do RJ-SCIE ou do RT-SCIE que não é cumprido.</P>
+            {todas.map(({ ut, ed, medidas }, ui) => {
+              const pg = progresso(ut, medidas);
+              const ds = desconformidades(ut, medidas);
+              const secs = SECOES.filter((x) => /^(II|III|IV|V|VI|VII)\./.test(x.c) && medidas.some((m) => m.tema === x.c));
+              return (
+                <div key={ut.id} className="mb-8">
+                  <p className="keep-next avoid-break mb-2 border-b-2 border-ink pb-1 text-[13.5px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)}</p>
+                  <p className="mb-2 text-[11.5px] text-ink-3">{pg.marcadas} de {pg.total} exigências verificadas · cumpre {pg.cumpre} · não cumpre {pg.naoCumpre} · não aplicável {pg.na}</p>
+                  <table className="tbl mb-4">
+                    <thead><tr><th>Exigência regulamentar (anexo IV)</th><th className="w-14 text-center">Sim</th><th className="w-14 text-center">Não</th><th className="w-14 text-center">N.A.</th><th className="w-24">Notas</th></tr></thead>
+                    <tbody>
+                      {GRUPOS.filter((g) => secs.some((x) => x.g === g)).map((g) => (
+                        <Fragment key={g}>
+                          <tr><td colSpan={5} className="bg-paper font-display text-[11.5px] font-bold">{g}</td></tr>
+                          {secs.filter((x) => x.g === g).map((x) => {
+                            const e = estadoSeccao(ut, medidas, x.c);
+                            const notas = ds.filter((d) => d.sec === x.c).map((d) => d.letra + ')').join(' ');
+                            return (
+                              <tr key={x.c}>
+                                <td className="text-[11px]">{secRotulo(x.c)}</td>
+                                <td className="text-center font-bold text-fire">{e === 'sim' ? '■' : ''}</td>
+                                <td className="text-center">{e === 'nao' ? '■' : ''}</td>
+                                <td className="text-center text-ink-3">{e === 'na' ? '■' : ''}</td>
+                                <td className="font-mono text-[11px]">{e === 'pendente' ? '—' : notas}</td>
+                              </tr>
+                            );
+                          })}
+                        </Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                  {ds.length > 0 && (
+                    <>
+                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Desconformidades registadas</p>
+                      <table className="tbl mb-4"><tbody>{ds.map((d) => (
+                        <tr key={d.medida.key}><td className="w-8 font-mono font-bold">{d.letra})</td><td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-ink-3">Exigência: {d.medida.exigencia}</span></td><td className="w-[22%] text-[10px] text-ink-3">{d.medida.base}</td></tr>
+                      ))}</tbody></table>
+                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Medidas corretivas / compensatórias</p>
+                      <table className="tbl"><thead><tr><th className="w-8">Ref.</th><th>Medida</th><th className="w-28">Prazo</th></tr></thead><tbody>{ds.map((d) => (
+                        <tr key={d.medida.key}><td className="font-mono font-bold">{d.letra})</td><td className="text-[11.5px]">{d.ver.corretiva || <span className="italic text-ink-3">Por definir</span>}</td><td className="text-[11.5px]">{d.ver.prazo || '—'}</td></tr>
+                      ))}</tbody></table>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+            {(() => {
+              const linhas = todas.flatMap(({ ut, medidas }) => desconformidades(ut, medidas).filter((d) => d.ver.corretiva).map((d) => ({ ut, d })));
+              if (!linhas.length) return null;
+              const prazos = opcoesPrazo().filter((p) => linhas.some((l) => l.d.ver.prazo === p));
+              return (
+                <div className="avoid-break mt-6">
+                  <p className="keep-next mb-1 font-display text-[13.5px] font-bold">Planificação das medidas corretivas / compensatórias</p>
+                  <table className="tbl"><thead><tr><th>Intervenção / medida a implementar</th><th className="w-24">UT</th>{prazos.map((p) => <th key={p} className="w-16 text-center text-[9px]">{p}</th>)}</tr></thead>
+                    <tbody>{linhas.map(({ ut, d }) => (
+                      <tr key={ut.id + d.medida.key}><td className="text-[11px]">{d.ver.corretiva}</td><td className="text-[10.5px]">{ROMANO[ut.tipo]} — {nomeUT(ut).nome}</td>{prazos.map((p) => <td key={p} className={`text-center ${d.ver.prazo === p ? 'bg-fire text-white' : ''}`}>{d.ver.prazo === p ? '■' : ''}</td>)}</tr>
+                    ))}</tbody></table>
+                </div>
+              );
+            })()}
+          </>
+        )}
 
         <H1 n={S()}>Medidas de autoproteção</H1>
         <P>RJ-SCIE, arts. 20.º a 22.º; RT-SCIE, título VII (arts. 193.º a 207.º). As medidas de autoproteção constituem documento autónomo, sujeito a parecer da entidade competente.</P>
