@@ -44,7 +44,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
       </div>
 
       <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
-        <button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Compartimento</button>
+        <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Outro compartimento corta-fogo</button>
       }>
         {ut.compartimentos.length === 0 && (
           <Empty title="Sem compartimentos." action={<button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(1)); })}><Plus size={15} /> Adicionar compartimento</button>}>
@@ -98,7 +98,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
     <div className="border border-ink bg-white">
       <div className="grid items-end gap-3 border-b border-ink p-4 md:grid-cols-[1.5fr_0.8fr_1.4fr_auto]">
         <Field label="Compartimento corta-fogo"><Text value={c.nome} onChange={(v) => set((x) => { x.nome = v; })} /></Field>
-        <Field label="Área útil S"><Num value={c.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
+        <Field label="Área útil S do compartimento" hint="Indicada uma única vez: divide a soma de todos os materiais/zonas."><Num value={c.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
         <div className="field">
           <span className="label">Método (n.º 2.º do Despacho)</span>
           <div className="grid grid-cols-2 border border-ink">
@@ -178,7 +178,8 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               })}
             </tbody>
           </table>
-          <button className="btn mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Material</button>
+          <button className="btn-fire mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Adicionar material a este compartimento</button>
+          <p className="mt-2 text-[11.5px] text-ink-3">Cada material leva só a massa: não tem área própria. Todos os materiais deste compartimento são somados e divididos pela área útil S indicada no topo.</p>
         </div>
       ) : (
         <div className="p-4">
@@ -215,8 +216,8 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </tbody>
           </table>
           <div className="mt-3 flex gap-2">
-            <button className="btn" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
-            <button className="btn" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
+            <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
+            <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
           </div>
           {c.armazens.some((z) => !z.altura) && <div className="mt-3"><Note tone="warn">Há zonas de armazenamento sem altura de armazenagem hi: a parcela dessa zona fica a zero até a preencher.</Note></div>}
           <p className="mt-3 text-[11.5px] text-ink-3"><b>Fabrico/reparação:</b> qsi (MJ/m²) × Si × Ci × Rai — sem altura. <b>Armazenamento:</b> qvi (MJ/m³) × hi × Si × Ci × Rai — a altura de armazenagem é obrigatória. Cada lista mostra apenas as atividades que têm valor na respetiva coluna do quadro II (ex.: «Alimentação, expedição» só tem valor de fabrico).</p>
