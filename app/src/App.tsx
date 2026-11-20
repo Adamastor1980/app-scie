@@ -24,7 +24,12 @@ function Logo() {
 export default function App() {
   const path = useHash();
   const [ready, setReady] = useState(useStore.persist.hasHydrated());
-  useEffect(() => useStore.persist.onFinishHydration(() => setReady(true)), []);
+  useEffect(() => {
+    const unsub = useStore.persist.onFinishHydration(() => setReady(true));
+    // a hidratação pode terminar antes de este efeito correr
+    if (useStore.persist.hasHydrated()) setReady(true);
+    return unsub;
+  }, []);
 
   useLigacaoNuvem();
   const pm = match('/p/:pid', path) || matchPrefix(path);
