@@ -20,8 +20,8 @@ export default function Overview() {
 
   const checks = [
     { ok: !!(p.nome && p.morada && p.cliente), t: 'Identificação do projeto (nome, cliente, morada)', to: '/dados' },
-    { ok: !!p.empresa.nome, t: 'Apresentação da empresa', to: '/dados' },
-    { ok: !!p.autor.nome, t: 'Autor técnico', to: '/dados' },
+    { ok: !!p.empresa.nome, t: 'Dados da empresa («A minha empresa»)', to: '#/empresa' },
+    { ok: !!p.autor.nome, t: 'Autor técnico («A minha empresa»)', to: '#/empresa' },
     { ok: linhas.length > 0, t: 'Pelo menos uma utilização-tipo', to: '' },
     { ok: linhas.length > 0 && linhas.every((l) => l.c.falta.length === 0), t: 'Fatores de risco completos em todas as UT', to: '' },
     { ok: p.plantas.length > 0, t: 'Peças desenhadas (plantas)', to: '/plantas' },
@@ -79,7 +79,7 @@ export default function Overview() {
         <h2 className="section-title mb-3">Estado do relatório</h2>
         <div className="grid gap-px border border-ink bg-ink md:grid-cols-2">
           {checks.map((c) => (
-            <button key={c.t} onClick={() => c.to !== undefined && go(`${base}${c.to}`)} className="flex items-center gap-3 bg-white p-3.5 text-left text-[13px] hover:bg-paper">
+            <button key={c.t} onClick={() => (c.to.startsWith('#') ? go(c.to.slice(1)) : go(`${base}${c.to}`))} className="flex items-center gap-3 bg-white p-3.5 text-left text-[13px] hover:bg-paper">
               {c.ok ? <CheckCircle2 size={18} className="text-ok" /> : <Circle size={18} className="text-ink-4" />}
               <span className={c.ok ? '' : 'text-ink-3'}>{c.t}</span>
             </button>

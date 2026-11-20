@@ -90,7 +90,7 @@ export default function Relatorio() {
       {/* ------------------------------ CAPA ------------------------------ */}
       <Sheet className="flex flex-col">
         <div className="flex items-start justify-between">
-          {p.empresa.logo ? <img src={p.empresa.logo} className="max-h-[70px] max-w-[220px] object-contain" /> : <span className="font-display text-[20px] font-extrabold">{p.empresa.nome || 'Empresa'}</span>}
+          {p.empresa.logo ? <img src={p.empresa.logo} className="h-[80px] w-[80px] object-contain" /> : <span className="font-display text-[20px] font-extrabold">{p.empresa.nome || 'Empresa'}</span>}
           <span className="text-right font-mono text-[10px] uppercase leading-relaxed tracking-wider text-ink-3">{p.referencia || 'S/ ref.'}<br />Versão {p.versao}<br />{dataPt}</span>
         </div>
         <div className="mt-[52mm]">
@@ -139,7 +139,7 @@ export default function Relatorio() {
         <div className="mb-6 grid grid-cols-[1fr_190px] gap-6">
           <div className="whitespace-pre-line text-[12px] leading-[1.65] text-ink-2">{p.empresa.apresentacao || 'Texto de apresentação da empresa por preencher em «Dados, empresa e autor».'}</div>
           <div className="border-l-[3px] border-fire pl-4 text-[11px] leading-relaxed">
-            {p.empresa.logo && <img src={p.empresa.logo} className="mb-3 max-h-[50px] object-contain" />}
+            {p.empresa.logo && <img src={p.empresa.logo} className="mb-3 h-[64px] w-[64px] object-contain" />}
             <p className="font-semibold">{p.empresa.nome}</p>
             <p className="text-ink-3">{p.empresa.morada}</p>
             {p.empresa.nif && <p>NIF {p.empresa.nif}</p>}

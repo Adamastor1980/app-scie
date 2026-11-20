@@ -86,6 +86,8 @@ interface State {
   apagar: (id: string) => void;
   atualizar: (id: string, fn: (p: Projeto) => void) => void;
   guardarPadrao: (p: Projeto) => void;
+  /** Perfil de quem faz os projetos (empresa e autor): aplicado a todos os projetos */
+  setPerfil: (fn: (e: Projeto['empresa'], a: Projeto['autor']) => void) => void;
 }
 
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
@@ -106,6 +108,13 @@ export const useStore = create<State>()(
       },
       importar: (p) => {
         const n = { ...clone(p), id: uid(), atualizadoEm: Date.now() };
+        const { empresaPadrao, autorPadrao } = getS();
+        if (empresaPadrao?.nome || autorPadrao?.nome) {
+          if (empresaPadrao) n.empresa = clone(empresaPadrao);
+          if (autorPadrao) n.autor = clone(autorPadrao);
+        } else if (n.empresa?.nome || n.autor?.nome) {
+          setS({ empresaPadrao: clone(n.empresa), autorPadrao: clone(n.autor) });
+        }
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },
@@ -128,7 +137,22 @@ export const useStore = create<State>()(
           }),
         })),
       guardarPadrao: (p) => setS({ empresaPadrao: clone(p.empresa), autorPadrao: clone(p.autor) }),
+      setPerfil: (fn) =>
+        setS((s) => {
+          const e = clone(s.empresaPadrao ?? novoProjeto().empresa);
+          const a = clone(s.autorPadrao ?? novoProjeto().autor);
+          fn(e, a);
+          return { empresaPadrao: e, autorPadrao: a, projetos: s.projetos.map((p) => ({ ...p, empresa: clone(e), autor: clone(a) })) };
+        }),
     }),
-    { name: 'scie-app-v1', storage: createJSONStorage(() => idbStorage) },
+    {
+      name: 'scie-app-v1',
+      storage: createJSONStorage(() => idbStorage),
+      onRehydrateStorage: () => (st) => {
+        if (!st || st.empresaPadrao?.nome || st.autorPadrao?.nome) return;
+        const fonte = [...st.projetos].sort((a, b) => b.atualizadoEm - a.atualizadoEm).find((p) => p.empresa?.nome || p.autor?.nome);
+        if (fonte) setTimeout(() => useStore.getState().setPerfil((e, a) => { Object.assign(e, fonte.empresa); Object.assign(a, fonte.autor); }), 0);
+      },
+    },
   ),
 );

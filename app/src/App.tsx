@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, FolderOpen } from 'lucide-react';
+import { BookOpen, Building, FolderOpen } from 'lucide-react';
 import { go, match, useHash } from './router';
 import { useStore } from './store';
 import Home from './pages/Home';
 import ProjetoShell from './pages/ProjetoShell';
 import Tabelas from './pages/Tabelas';
+import Perfil from './pages/Perfil';
 
 function Logo() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
 
   const pm = match('/p/:pid', path) || matchPrefix(path);
   const isTabelas = path.startsWith('/tabelas');
+  const isPerfil = path.startsWith('/empresa');
 
   return (
     <div className="min-h-full">
@@ -33,11 +35,14 @@ export default function App() {
         <div className="flex items-center gap-8">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex">
-            <a href="#/" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${!isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+            <a href="#/" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${!isTabelas && !isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
               <FolderOpen size={15} /> Projetos
             </a>
             <a href="#/tabelas" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
               <BookOpen size={15} /> Tabelas legais
+            </a>
+            <a href="#/empresa" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <Building size={15} /> A minha empresa
             </a>
           </nav>
         </div>
@@ -53,6 +58,8 @@ export default function App() {
         <div className="p-10 font-mono text-sm text-ink-3">A carregar…</div>
       ) : isTabelas ? (
         <Tabelas />
+      ) : isPerfil ? (
+        <Perfil />
       ) : pm ? (
         <ProjetoShell pid={pm.pid} path={path} />
       ) : (

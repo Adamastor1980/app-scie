@@ -11,6 +11,8 @@ import { exemploProjeto } from '../exemplo';
 export default function Home() {
   const { projetos, criar, apagar, duplicar, importar } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
+  const empresa = useStore((s) => s.empresaPadrao);
+  const autor = useStore((s) => s.autorPadrao);
 
   const onImport = async (f: File) => {
     try {
@@ -50,6 +52,18 @@ export default function Home() {
         </div>
       </div>
 
+      <a href="#/empresa" className="mb-10 flex items-center justify-between gap-4 border border-ink bg-white p-4 hover:bg-paper">
+        <div className="flex items-center gap-4">
+          {empresa?.logo ? <img src={empresa.logo} className="h-16 w-16 border border-paper-3 object-contain" /> : <div className="grid h-16 w-16 place-items-center border border-dashed border-ink-4 text-[10px] text-ink-4">logo</div>}
+          <div>
+            <p className="label">A minha empresa · aplicada a todos os projetos</p>
+            <p className="font-display text-[18px] font-bold">{empresa?.nome || 'Defina os dados da sua empresa e do autor'}</p>
+            <p className="text-[12.5px] text-ink-3">{[autor?.nome, autor?.qualificacao, empresa?.email].filter(Boolean).join(' · ') || 'Logótipo, contactos, apresentação e autor técnico'}</p>
+          </div>
+        </div>
+        <span className="btn">Editar</span>
+      </a>
+
       <div className="mb-4 flex items-end justify-between">
         <h2 className="section-title">Projetos <span className="font-mono text-[14px] text-ink-3">({projetos.length})</span></h2>
       </div>
@@ -59,13 +73,13 @@ export default function Home() {
           Crie um projeto novo ou abra o exemplo para ver o fluxo completo: projeto → edifícios → utilizações-tipo → cálculos → medidas → relatório.
         </Empty>
       ) : (
-        <div className="grid gap-px border border-ink bg-ink md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {projetos.map((p) => {
             const uts = p.edificios.flatMap((e) => e.uts);
             const cats = uts.map((u) => classificar(u).cat);
             const max = cats.length ? (Math.max(...cats) as 1 | 2 | 3 | 4) : null;
             return (
-              <article key={p.id} className="group flex min-h-[210px] flex-col justify-between bg-white p-5 transition-colors hover:bg-paper">
+              <article key={p.id} className="group flex min-h-[210px] flex-col justify-between border border-ink bg-white p-5 transition-colors hover:bg-paper">
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>

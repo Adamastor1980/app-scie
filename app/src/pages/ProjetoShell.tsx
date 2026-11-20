@@ -91,7 +91,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
           </div>
           <nav className="flex flex-col py-2">
             <NavItem to="" icon={<LayoutDashboard size={15} />} active={rel === '/'}>Painel</NavItem>
-            <NavItem to="/dados" icon={<Settings2 size={15} />} active={rel === '/dados'}>Dados, empresa e autor</NavItem>
+            <NavItem to="/dados" icon={<Settings2 size={15} />} active={rel === '/dados'}>Dados do projeto</NavItem>
           </nav>
           <div className="flex items-center justify-between px-4 pb-1 pt-3">
             <span className="label">Edifícios e UT</span>
