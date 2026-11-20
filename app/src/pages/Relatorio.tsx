@@ -69,7 +69,11 @@ export default function Relatorio() {
     return () => { st.remove(); };
   }, [p.empresa.nome, p.autor.nome, p.referencia, p.nome, p.versao]);
 
+  // iOS: na app instalada no ecrã principal (modo ecrã inteiro) o window.print() não faz nada
+  const iosApp = /iP(hone|ad|od)/.test(navigator.userAgent) && (navigator as unknown as { standalone?: boolean }).standalone === true;
+  const [avisoIOS, setAvisoIOS] = useState(false);
   const imprimir = () => {
+    if (iosApp) { setAvisoIOS(true); return; }
     const t = document.title;
     document.title = `${(p.referencia || p.nome).replace(/[^\w\-À-ú ]+/g, '_')} — Relatório SCIE v${p.versao}`;
     window.print();
@@ -95,6 +99,18 @@ export default function Relatorio() {
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
           <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir}><Printer size={16} /> Descarregar PDF</button>
         </div>
+        {avisoIOS && (
+          <div className="mx-auto mb-3 max-w-[1100px] px-4 sm:px-6">
+            <div className="border-l-[3px] border-fire bg-fire-soft px-3 py-3 text-[13px] leading-relaxed">
+              <p className="font-semibold">No iPhone/iPad, a app instalada não permite gerar PDF.</p>
+              <p className="mt-1">Abra este relatório no Safari (entre com a mesma conta Google, se pedir) e carregue lá em «Descarregar PDF». No ecrã de impressão, toque em <b>Partilhar ⬆︎ → Guardar em Ficheiros</b>.</p>
+              <div className="mt-2 flex gap-2">
+                <a className="btn-fire h-10 px-4" href={location.href} target="_blank" rel="noopener">Abrir no Safari</a>
+                <button className="btn h-10 px-4" onClick={() => setAvisoIOS(false)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
         <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</p>
       </div>
 
