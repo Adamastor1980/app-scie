@@ -1,7 +1,7 @@
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Loader2, Printer } from 'lucide-react';
+import { FileDown, Loader2, Printer } from 'lucide-react';
 import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
@@ -114,6 +114,14 @@ export default function Relatorio() {
           </div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas «a verificar»" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
+          <button className="btn h-11 w-full justify-center px-4 sm:w-auto" disabled={!!aGerar} onClick={async () => {
+            const raiz = document.getElementById('relatorio-folhas');
+            if (!raiz) return;
+            setAGerar('A gerar Word…'); setZoom(1);
+            try { await new Promise((r) => setTimeout(r, 150)); const { exportarDocx } = await import('../exportarDocx'); await exportarDocx(p, raiz, 'Relatorio SCIE'); }
+            catch (e) { alert('Não foi possível gerar o Word: ' + (e as Error).message); }
+            finally { setAGerar(''); setZoom(escala()); }
+          }}><FileDown size={16} /> Word</button>
           <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir} disabled={!!aGerar}>{aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}</button>
         </div>
         <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">{usarPdfDireto() ? 'No telemóvel/tablet o PDF é gerado diretamente; no iPhone escolha «Guardar em Ficheiros». Para a versão final (texto pesquisável, máxima qualidade) gere-o no computador.' : <>No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</>}</p>
