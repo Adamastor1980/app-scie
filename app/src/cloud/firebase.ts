@@ -8,12 +8,12 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
  * Enquanto estiver vazio, a app funciona só com armazenamento local (como até aqui).
  */
 export const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyATkciDyDlsMDtXxW-T9uTkjKQHhDUuzNk',
+  authDomain: 'scie-calc.firebaseapp.com',
+  projectId: 'scie-calc',
+  storageBucket: 'scie-calc.firebasestorage.app',
+  messagingSenderId: '428038753299',
+  appId: '1:428038753299:web:3e73fa21c3386777fc03e6',
 };
 
 export const nuvemDisponivel = () => !!FIREBASE_CONFIG.apiKey && !!FIREBASE_CONFIG.projectId;
