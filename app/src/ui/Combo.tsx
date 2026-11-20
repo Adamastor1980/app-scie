@@ -31,7 +31,7 @@ export default function Combo({ items, value, onPick, placeholder }: { items: Co
         <Search size={13} className="shrink-0 text-ink-4" />
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+2px)] z-30 min-w-[360px] border border-ink bg-white shadow-[6px_6px_0_rgba(15,15,14,0.15)]">
+        <div className="absolute left-0 right-0 top-[calc(100%+2px)] z-30 min-w-[min(360px,calc(100vw-2rem))] border border-ink bg-white shadow-[6px_6px_0_rgba(15,15,14,0.15)]">
           <input autoFocus className="input border-0 border-b border-ink" placeholder="Pesquisar…" value={q} onChange={(e) => setQ(e.target.value)} />
           <ul className="max-h-[300px] overflow-y-auto">
             {list.map((i) => (

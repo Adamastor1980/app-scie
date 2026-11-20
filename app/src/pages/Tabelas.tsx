@@ -73,7 +73,7 @@ const TABS = ['Anexo III — categorias', 'Efetivo', 'Carga de incêndio', 'Resi
 export default function Tabelas() {
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
   return (
-    <main className="mx-auto max-w-[1240px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <p className="label !text-fire">Biblioteca</p>
       <h1 className="h-display mb-6 mt-2 text-[48px]">Tabelas legais</h1>
       <div className="mb-8 flex flex-wrap gap-px border border-ink bg-ink">

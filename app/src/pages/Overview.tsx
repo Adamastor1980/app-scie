@@ -28,7 +28,7 @@ export default function Overview() {
   ];
 
   return (
-    <main className="mx-auto max-w-[1200px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b-2 border-ink pb-6">
         <div>
           <p className="label !text-fire">Painel do projeto</p>

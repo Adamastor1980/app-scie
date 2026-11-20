@@ -29,14 +29,14 @@ export default function Conta() {
   if (!user) {
     return (
       <button onClick={() => entrar().catch((x) => alert('Não foi possível entrar: ' + (x as Error).message))} className="flex h-9 items-center gap-2 bg-white px-3 text-[13px] font-semibold text-ink hover:bg-fire hover:text-white">
-        <LogIn size={15} /> Entrar com Google
+        <LogIn size={15} /> <span className="hidden sm:inline">Entrar com Google</span><span className="sm:hidden">Entrar</span>
       </button>
     );
   }
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       <span className={`flex items-center gap-1.5 text-[11.5px] ${e.c}`} title={erro}>
-        <e.I size={14} className={estado === 'a_sincronizar' || estado === 'a_ligar' ? 'animate-spin' : ''} /> {e.t}
+        <e.I size={14} className={estado === 'a_sincronizar' || estado === 'a_ligar' ? 'animate-spin' : ''} /> <span className="hidden md:inline">{e.t}</span>
       </span>
       {user.foto ? <img src={user.foto} className="h-7 w-7 rounded-full" referrerPolicy="no-referrer" /> : null}
       <span className="hidden text-[12px] text-white/80 xl:inline">{user.nome}</span>
@@ -49,7 +49,7 @@ export default function Conta() {
           await sair();
         }}
       >
-        <LogOut size={14} /> Sair
+        <LogOut size={14} /> <span className="hidden sm:inline">Sair</span>
       </button>
     </div>
   );

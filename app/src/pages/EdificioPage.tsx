@@ -14,7 +14,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
   const ue = (fn: (x: NonNullable<typeof e>) => void) => up((pp) => { const x = pp.edificios.find((y) => y.id === eid); if (x) fn(x); });
 
   return (
-    <main className="mx-auto max-w-[1100px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <div className="mb-8 flex items-end justify-between border-b-2 border-ink pb-5">
         <div>
           <p className="label !text-fire">Edifício / recinto</p>

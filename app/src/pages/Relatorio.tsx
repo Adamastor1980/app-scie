@@ -37,6 +37,14 @@ export default function Relatorio() {
   const { p } = useP();
   const [incluirNao, setIncluirNao] = useState(false);
   const [incluirVerif, setIncluirVerif] = useState(true);
+  // no telemóvel/tablet a folha A4 (210 mm ≈ 794 px) é reduzida para caber no ecrã; na impressão volta a 100 %
+  const escala = () => Math.min(1, (window.innerWidth - 16) / 800);
+  const [zoom, setZoom] = useState(escala);
+  useEffect(() => {
+    const f = () => setZoom(escala());
+    window.addEventListener('resize', f);
+    return () => window.removeEventListener('resize', f);
+  }, []);
 
   const dados = useMemo(() => p.edificios.map((ed) => ({
     ed,
@@ -76,18 +84,18 @@ export default function Relatorio() {
   const S = () => String(++sec);
 
   return (
-    <div className="bg-paper-3/60 pb-16 print:bg-white print:pb-0">
+    <div className="bg-paper-3/60 pb-16 print:bg-white print:pb-0" style={{ ['--rz' as string]: zoom }}>
       <div className="no-print sticky top-14 z-30 mb-8 border-b border-ink bg-white">
-        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-4 px-6 py-3">
+        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
           <div className="mr-auto">
             <p className="label">Relatório técnico</p>
             <p className="font-display text-[17px] font-bold">{p.nome}</p>
           </div>
-          <div className="w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas «a verificar»" /></div>
-          <div className="w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
-          <button className="btn-fire h-11 px-5" onClick={imprimir}><Printer size={16} /> Descarregar PDF</button>
+          <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas «a verificar»" /></div>
+          <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
+          <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir}><Printer size={16} /> Descarregar PDF</button>
         </div>
-        <p className="mx-auto max-w-[1100px] px-6 pb-2 text-[11.5px] text-ink-3">No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</p>
+        <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</p>
       </div>
 
       {/* ------------------------------ CAPA ------------------------------ */}

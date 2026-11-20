@@ -20,7 +20,7 @@ export default function DadosProjeto() {
   const perfilA = useStore((s) => s.autorPadrao);
 
   return (
-    <main className="mx-auto max-w-[1100px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <h1 className="h-display mb-8 text-[40px]">Dados do projeto</h1>
 
       <Section n="01" title="Identificação do projeto" sub="Anexo IV do RJ-SCIE, art. 2.º, I — Introdução: objetivo e localização.">

@@ -61,7 +61,7 @@ export default function Plantas() {
   };
 
   return (
-    <main className="mx-auto max-w-[1100px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <p className="label !text-fire">Peças desenhadas</p>
       <h1 className="h-display mb-3 mt-2 text-[40px]">Plantas e desenhos</h1>
       <p className="mb-6 max-w-3xl text-[13px] text-ink-3">
@@ -69,7 +69,7 @@ export default function Plantas() {
       </p>
 
       <div className="mb-8 flex flex-wrap items-end gap-3 border border-ink bg-white p-4">
-        <Field label="Tipo de peça" className="min-w-[320px] flex-1">
+        <Field label="Tipo de peça" className="w-full sm:min-w-[320px] sm:w-auto flex-1">
           <Select value={tipo} onChange={setTipo} options={TIPOS.map((t) => ({ v: t.v, l: t.l }))} />
         </Field>
         <button className="btn-fire h-9" disabled={busy} onClick={() => ref.current?.click()}><ImagePlus size={15} /> {busy ? 'A processar…' : 'Carregar imagens ou PDF'}</button>

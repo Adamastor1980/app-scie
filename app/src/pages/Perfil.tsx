@@ -26,7 +26,7 @@ export default function Perfil() {
   const setPerfil = useStore((s) => s.setPerfil);
   const logoRef = useRef<HTMLInputElement>(null);
   return (
-    <main className="mx-auto max-w-[1100px] px-8 pb-24 pt-8">
+    <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <p className="label !text-fire">Quem faz os projetos</p>
       <h1 className="h-display mb-3 mt-2 text-[44px]">A minha empresa</h1>
       <p className="mb-8 max-w-3xl text-[13px] text-ink-3">Estes dados são usados em todos os projetos e relatórios (capa, cabeçalhos, apresentação da empresa e termo do autor). Uma alteração aqui atualiza todos os projetos. Ao exportar um projeto em JSON, estes dados vão junto; ao importar noutro computador sem perfil, são adotados automaticamente.</p>

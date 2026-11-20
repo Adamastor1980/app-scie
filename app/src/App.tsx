@@ -14,7 +14,7 @@ function Logo() {
       <span className="grid h-8 w-8 place-items-center bg-fire">
         <svg viewBox="0 0 32 32" className="h-5 w-5"><path d="M16 4c1 5 7 7 7 14a7 7 0 0 1-14 0c0-3 1.5-5 3-6.5 0 2.5 1 4 2.5 4.5C13 11 15 8 16 4z" fill="#fff" /></svg>
       </span>
-      <span className="font-display text-[17px] font-extrabold tracking-tight text-white">
+      <span className="hidden font-display text-[17px] font-extrabold tracking-tight text-white sm:inline">
         SCIE<span className="text-fire">/</span>CALC
       </span>
     </button>
@@ -38,22 +38,22 @@ export default function App() {
 
   return (
     <div className="min-h-full">
-      <header className="no-print sticky top-0 z-40 flex h-14 items-center justify-between border-b border-black bg-ink px-5">
-        <div className="flex items-center gap-8">
+      <header className="no-print sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-black bg-ink px-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-8">
           <Logo />
-          <nav className="hidden items-center gap-1 md:flex">
-            <a href="#/" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${!isTabelas && !isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
-              <FolderOpen size={15} /> Projetos
+          <nav className="flex items-center">
+            <a href="#/" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${!isTabelas && !isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <FolderOpen size={15} /> <span className="hidden md:inline">Projetos</span>
             </a>
-            <a href="#/tabelas" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
-              <BookOpen size={15} /> Tabelas legais
+            <a href="#/tabelas" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <BookOpen size={15} /> <span className="hidden md:inline">Tabelas legais</span>
             </a>
-            <a href="#/empresa" className={`flex h-14 items-center gap-2 border-b-2 px-3 text-[13px] font-semibold ${isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
-              <Building size={15} /> A minha empresa
+            <a href="#/empresa" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <Building size={15} /> <span className="hidden md:inline">A minha empresa</span>
             </a>
           </nav>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex shrink-0 items-center gap-6">
         <Conta />
         <div className="hidden items-center gap-3 font-mono text-[10.5px] uppercase tracking-wider text-white/50 2xl:flex">
           <span>DL 220/2008 · Lei 123/2019</span>

@@ -56,21 +56,21 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
   return (
     <main className="pb-24">
       <div className="border-b border-ink bg-white">
-        <div className="mx-auto flex max-w-[1240px] items-stretch gap-6 px-8 pt-6">
-          <div className={`flex w-[92px] shrink-0 flex-col items-center justify-center self-stretch ${CAT_COR[cls.cat]} text-white`}>
-            <span className="font-display text-[44px] font-extrabold leading-none">{cls.cat}.ª</span>
+        <div className="mx-auto flex max-w-[1240px] items-stretch gap-3 sm:gap-6 px-4 pt-6 sm:px-8">
+          <div className={`flex w-[64px] shrink-0 flex-col items-center sm:w-[92px] justify-center self-stretch ${CAT_COR[cls.cat]} text-white`}>
+            <span className="font-display text-[30px] font-extrabold leading-none sm:text-[44px]">{cls.cat}.ª</span>
             <span className="mt-1 font-mono text-[9.5px] uppercase tracking-wider">categoria</span>
           </div>
           <div className="min-w-0 flex-1 pb-5">
             <p className="label">{ed.nome} · UT {ROMANO[ut.tipo]} · art. 8.º n.º 1 {info.alinea} RJ-SCIE</p>
             <input
-              className="mt-1 w-full bg-transparent font-display text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire"
+              className="mt-1 w-full bg-transparent font-display text-[22px] sm:text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire"
               value={ut.designacao === novaUT(ut.tipo).designacao ? '' : ut.designacao}
               placeholder={nomeUT(ut).temNome ? nomeUT(ut).nome : 'Nome desta UT (ex.: Escritórios piso 1)'}
               title="Clique para alterar o nome"
               onChange={(e) => upU((u) => { u.designacao = e.target.value || novaUT(u.tipo).designacao; })}
             />
-            <p className="mt-1 max-w-3xl text-[12.5px] leading-snug text-ink-3">{info.definicao}</p>
+            <p className="mt-1 hidden max-w-3xl text-[12.5px] leading-snug text-ink-3 sm:block">{info.definicao}</p>
           </div>
           <div className="pb-5">
             <button className="btn-icon" title="Apagar UT" onClick={() => {
@@ -80,11 +80,11 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             }}><Trash2 size={16} /></button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-[1240px] gap-px overflow-x-auto px-8">
+        <nav className="mx-auto flex max-w-[1240px] gap-px overflow-x-auto px-4 sm:px-8">
           {steps.map((s) => {
             const a = step === s.k;
             return (
-              <a key={s.k} href={`#${base}/${s.k}`} className={`flex min-w-[170px] flex-1 flex-col border-t-[3px] px-3 py-2.5 ${a ? 'border-fire bg-paper' : 'border-transparent hover:bg-paper/60'}`}>
+              <a key={s.k} href={`#${base}/${s.k}`} className={`flex min-w-[130px] flex-1 flex-col sm:min-w-[170px] border-t-[3px] px-3 py-2.5 ${a ? 'border-fire bg-paper' : 'border-transparent hover:bg-paper/60'}`}>
                 <span className="flex items-baseline gap-2">
                   <span className={`font-mono text-[11px] font-semibold ${a ? 'text-fire' : 'text-ink-4'}`}>{s.n}</span>
                   <span className="text-[13.5px] font-bold">{s.t}</span>
@@ -96,7 +96,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
         </nav>
       </div>
 
-      <div className="mx-auto max-w-[1240px] px-8 pt-8">
+      <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8 sm:pt-8">
         {step === 'fatores' && <UTFatores {...props} />}
         {step === 'efetivo' && <UTEfetivo {...props} />}
         {step === 'carga' && <UTCarga {...props} />}

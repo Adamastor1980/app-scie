@@ -1,6 +1,6 @@
 import { nomeUT } from '../nome';
-import { createContext, useContext, useState } from 'react';
-import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Plus, Settings2 } from 'lucide-react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, X } from 'lucide-react';
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
@@ -36,6 +36,8 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   const p = useStore((s) => s.projetos.find((x) => x.id === pid));
   const atualizar = useStore((s) => s.atualizar);
   const [escolher, setEscolher] = useState<string | null>(null);
+  const [menuAberto, setMenuAberto] = useState(false);
+  useEffect(() => { setMenuAberto(false); }, [path]);
 
   if (!p) {
     return (
@@ -80,10 +82,8 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
     </a>
   );
 
-  return (
-    <PCtx.Provider value={{ p, up, pedirUT: setEscolher }}>
-      <div className="flex">
-        <aside className="no-print sticky top-14 hidden h-[calc(100vh-56px)] w-[272px] shrink-0 flex-col overflow-y-auto border-r border-ink bg-paper-2 lg:flex">
+  const menu = (
+    <>
           <div className="border-b border-ink-4/40 px-4 py-4">
             <p className="label mb-1">Projeto</p>
             <p className="font-display text-[16px] font-bold leading-tight">{p.nome}</p>
@@ -142,8 +142,34 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
               <Download size={15} /> Exportar projeto (JSON)
             </button>
           </nav>
+    </>
+  );
+
+  return (
+    <PCtx.Provider value={{ p, up, pedirUT: setEscolher }}>
+      <div className="flex">
+        <aside className="no-print sticky top-14 hidden h-[calc(100vh-56px)] w-[272px] shrink-0 flex-col overflow-y-auto border-r border-ink bg-paper-2 lg:flex">
+          {menu}
         </aside>
-        <div className="min-w-0 flex-1">{page}</div>
+        {menuAberto && (
+          <div className="no-print fixed inset-0 z-50 flex lg:hidden" onClick={() => setMenuAberto(false)}>
+            <div className="flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto border-r border-ink bg-paper-2 shadow-[8px_0_0_rgba(15,15,14,0.15)]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-ink-4/40 px-3 py-2">
+                <span className="label">Menu do projeto</span>
+                <button className="btn-icon" onClick={() => setMenuAberto(false)}><X size={18} /></button>
+              </div>
+              {menu}
+            </div>
+            <div className="flex-1 bg-ink/50" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="no-print sticky top-14 z-30 flex h-12 items-center gap-3 border-b border-ink bg-paper-2 px-3 lg:hidden">
+            <button className="btn h-9 px-3" onClick={() => setMenuAberto(true)}><Menu size={16} /> Menu</button>
+            <span className="truncate font-display text-[14px] font-bold">{p.nome}</span>
+          </div>
+          {page}
+        </div>
       </div>
       {escolher && <EscolherUT onClose={() => setEscolher(null)} onPick={(t, n) => adicionarUT(escolher, t, n)} />}
     </PCtx.Provider>

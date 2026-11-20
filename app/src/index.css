@@ -42,6 +42,18 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   .rule { @apply border-t border-ink; }
 }
 
+/* ---------------- Telemóvel / tablet ---------------- */
+@media screen and (max-width: 767px) {
+  /* iOS faz zoom ao focar campos com letra < 16px */
+  .input, .input-num, select.input, textarea.input { font-size: 16px; }
+  .h-display { font-size: min(var(--hd, 34px), 9vw) !important; }
+  /* tabelas largas deslizam na horizontal em vez de esmagar o texto */
+  .tbl:not(.report-page .tbl) { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .btn, .btn-primary, .btn-fire { min-height: 40px; }
+  .btn-icon { width: 40px; height: 40px; }
+}
+@media screen { .report-page { zoom: var(--rz, 1); } }
+
 /* scrollbars discretos */
 * { scrollbar-width: thin; scrollbar-color: #c9c6bc transparent; }
 
@@ -51,7 +63,7 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   html, body { background: #fff !important; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  .report-page { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; padding: 0 !important; border: 0 !important; }
+  .report-page { zoom: 1 !important; box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; padding: 0 !important; border: 0 !important; }
   .page-break { break-before: page; }
   .avoid-break { break-inside: avoid; }
   h1, h2, h3, .keep-next { break-after: avoid; }
