@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import type { Compartimento, Edificio, Espaco, Piso, Projeto, UT, UTNum } from './data/types';
+import type { Autoprotecao, Compartimento, Edificio, Espaco, Piso, Projeto, UT, UTNum } from './data/types';
 import { utInfo } from './data/rjscie';
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -52,6 +52,21 @@ export const novoPiso = (i: number): Piso => ({ id: uid(), nome: `Piso ${i}`, co
 
 export const novoCompartimento = (n: number): Compartimento => ({
   id: uid(), nome: `Compartimento corta-fogo ${n}`, area: 0, metodo: 'probabilistico', itens: [], atividades: [], armazens: [], regraRai: true,
+});
+
+export const novaAutoprotecao = (): Autoprotecao => ({
+  rs: { nome: '', cargo: '', telefone: '', email: '' },
+  delegado: { nome: '', cargo: '', telefone: '', email: '' },
+  equipa: [],
+  fundamentacaoEquipa: '',
+  postoSeguranca: '',
+  horario: '',
+  contactos: [
+    { id: uid(), entidade: 'Número Europeu de Emergência', telefone: '112' },
+    { id: uid(), entidade: 'Corpo de bombeiros da área', telefone: '' },
+    { id: uid(), entidade: 'Serviço municipal de proteção civil', telefone: '' },
+  ],
+  registos: [],
 });
 
 export const novoProjeto = (): Projeto => ({
@@ -129,6 +144,7 @@ export const useStore = create<State>()(
         const c = clone(o);
         c.plantas = c.plantas.map((pl) => ({ ...pl, id: uid() }));
         c.edificios.forEach((e) => e.uts.forEach((u) => { u.levantamento = u.levantamento?.map((a) => ({ ...a, id: uid() })); }));
+        c.autoprotecao?.registos.forEach((r) => { r.anexos = r.anexos?.map((a) => ({ ...a, id: uid() })); });
         const n = { ...c, id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;

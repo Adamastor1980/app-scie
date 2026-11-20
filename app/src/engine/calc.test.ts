@@ -173,6 +173,11 @@ describe('Autoproteção — quadros XXXIX e XLI', () => {
   });
   it('UT XII 2.ª sem simulacros exigidos no XXXIX', () => {
     expect(quadroXXXIX(12, 2, false)).not.toContain('simulacros');
+    // marcas do quadro XXXIX (Portaria 135/2020, pág. 38): UT I 3.ª e UT II 2.ª têm procedimentos de prevenção
+    expect(quadroXXXIX(1, 3, false)).toEqual(['registos', 'procPrevencao', 'procEmergencia', 'formacao']);
+    expect(quadroXXXIX(2, 2, false)).toEqual(['registos', 'procPrevencao', 'procEmergencia', 'formacao']);
+    expect(quadroXXXIX(3, 2, false)).toEqual(['registos', 'planoPrevencao', 'procEmergencia', 'formacao']);
+    expect(quadroXXXIX(2, 3, false)).toEqual(['registos', 'planoPrevencao', 'pei', 'formacao', 'simulacros']);
   });
 });
 

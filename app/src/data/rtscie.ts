@@ -224,11 +224,14 @@ export function quadroXXXIX(ut: UTNum, cat: Cat, temDE: boolean): MAP[] | null {
   const base: MAP[] = ['registos', 'procPrevencao'];
   const medio: MAP[] = ['registos', 'planoPrevencao', 'procEmergencia', 'formacao'];
   const alto: MAP[] = ['registos', 'planoPrevencao', 'pei', 'formacao', 'simulacros'];
+  // UT I (3.ª) e UT II (2.ª): procedimentos de prevenção (art. 202.º), não plano de prevenção — posição das marcas no quadro XXXIX
+  const medioProc: MAP[] = ['registos', 'procPrevencao', 'procEmergencia', 'formacao'];
   if (ut === 1) {
-    if (cat === 3) return medio;
+    if (cat === 3) return medioProc;
     if (cat === 4) return alto;
     return null; // art. 22.º n.º 1 do RJ-SCIE: UT I das 1.ª e 2.ª categorias excluídas
   }
+  if (ut === 2 && cat === 2) return medioProc;
   if (ut === 4 || ut === 5 || ut === 7) {
     if (cat === 1 && !temDE) return base;
     if ((cat === 1 && temDE) || (cat === 2 && !temDE)) return medio;

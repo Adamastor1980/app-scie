@@ -1,6 +1,6 @@
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, X } from 'lucide-react';
+import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, ShieldCheck, X } from 'lucide-react';
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
@@ -13,6 +13,7 @@ import EdificioPage from './EdificioPage';
 import UTPage from './UTPage';
 import Plantas from './Plantas';
 import Relatorio from './Relatorio';
+import Autoprotecao from './Autoprotecao';
 import EscolherUT from './EscolherUT';
 
 interface Ctx {
@@ -70,6 +71,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   else if (rel === '/dados') page = <DadosProjeto />;
   else if (rel === '/plantas') page = <Plantas />;
   else if (rel === '/relatorio') page = <Relatorio />;
+  else if (rel === '/autoprotecao') page = <Autoprotecao />;
   else if (mU) page = <UTPage eid={mU.eid} uid={mU.uid} step={mU.step ?? 'fatores'} />;
   else if (mE) page = <EdificioPage eid={mE.eid} />;
   else page = <Overview />;
@@ -137,6 +139,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
           </div>
           <nav className="mt-auto flex flex-col border-t border-ink-4/40 py-2">
             <NavItem to="/plantas" icon={<Image size={15} />} active={rel === '/plantas'}>Peças desenhadas</NavItem>
+            <NavItem to="/autoprotecao" icon={<ShieldCheck size={15} />} active={rel === '/autoprotecao'}>Autoproteção</NavItem>
             <NavItem to="/relatorio" icon={<FileText size={15} />} active={isReport}>Relatório</NavItem>
             <button onClick={() => exportarJSON(p)} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
               <Download size={15} /> Exportar projeto (JSON)

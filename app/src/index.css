@@ -61,6 +61,7 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
 @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
 @media print {
   html, body { background: #fff !important; }
+  body.imprimir-folhas #root { display: none !important; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   .report-page { zoom: 1 !important; box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: auto !important; padding: 0 !important; border: 0 !important; }

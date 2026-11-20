@@ -238,6 +238,59 @@ export interface Projeto {
   clienteLogo?: string;
   revisoes?: Revisao[];
   distribuicao?: Distribuicao[];
+  /** medidas de autoproteção: organização da segurança e registos (RT-SCIE, título VII) */
+  autoprotecao?: Autoprotecao;
   criadoEm: number;
   atualizadoEm: number;
+}
+
+/* ------------------------- Autoproteção ---------------------------- */
+
+export interface Pessoa {
+  nome: string;
+  cargo: string;
+  telefone: string;
+  email: string;
+}
+
+export interface ElementoEquipa {
+  id: string;
+  nome: string;
+  funcao: string; // ex.: chefe de equipa, 1.ª intervenção, evacuação, alarme e alerta, corte de energia…
+  turno: string;
+  telefone: string;
+}
+
+export interface Contacto {
+  id: string;
+  entidade: string;
+  telefone: string;
+}
+
+export type TipoRegisto = 'manutencao' | 'modificacao' | 'ocorrencia' | 'formacao' | 'simulacro' | 'relatorio';
+
+export interface Registo {
+  id: string;
+  tipo: TipoRegisto;
+  data: string; // AAAA-MM-DD
+  dataFim?: string; // modificações / trabalhos perigosos: data de finalização
+  uts: string[]; // ids das UT abrangidas (vazio = todo o projeto)
+  elemento: string; // manutenção: elemento intervencionado; formação: ação; simulacro: cenário; relatório: entidade/assunto
+  tipoAcao: string; // manutenção: tipo de ação; ocorrência: tipo (alarme falso, princípio de incêndio…)
+  motivo: string;
+  descricao: string;
+  responsavel: string;
+  participantes?: number;
+  anexos?: Anexo[];
+}
+
+export interface Autoprotecao {
+  rs: Pessoa; // responsável de segurança (art. 6.º RJ-SCIE)
+  delegado: Pessoa; // delegado de segurança
+  equipa: ElementoEquipa[];
+  fundamentacaoEquipa: string; // art. 200.º n.os 3 e 4 RT-SCIE
+  postoSeguranca: string;
+  horario: string;
+  contactos: Contacto[];
+  registos: Registo[];
 }

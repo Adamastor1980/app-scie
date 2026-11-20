@@ -35,7 +35,7 @@ let perfilEnviado = '';
 let aplicarRemoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-/** imagens grandes (plantas e levantamento das UT) vão em documentos próprios; o projeto leva só a referência (id) */
+/** imagens grandes (plantas, levantamento das UT, fotografias dos registos) vão em documentos próprios; o projeto leva só a referência (id) */
 function comImagens(p: Projeto, img: (id: string, atual?: string) => string): Projeto {
   return {
     ...p,
@@ -44,12 +44,16 @@ function comImagens(p: Projeto, img: (id: string, atual?: string) => string): Pr
       ...e,
       uts: e.uts.map((u) => (u.levantamento?.length ? { ...u, levantamento: u.levantamento.map((a) => ({ ...a, imagem: img(a.id, a.imagem) })) } : u)),
     })),
+    ...(p.autoprotecao
+      ? { autoprotecao: { ...p.autoprotecao, registos: p.autoprotecao.registos.map((r) => (r.anexos?.length ? { ...r, anexos: r.anexos.map((a) => ({ ...a, imagem: img(a.id, a.imagem) })) } : r)) } }
+      : {}),
   };
 }
 function imagensDe(p: Projeto): { id: string; imagem: string }[] {
   return [
     ...p.plantas.map((pl) => ({ id: pl.id, imagem: pl.imagem })),
     ...p.edificios.flatMap((e) => e.uts.flatMap((u) => (u.levantamento ?? []).map((a) => ({ id: a.id, imagem: a.imagem })))),
+    ...(p.autoprotecao?.registos ?? []).flatMap((r) => (r.anexos ?? []).map((a) => ({ id: a.id, imagem: a.imagem }))),
   ];
 }
 const faltaImagem = (p: Projeto, imagens: Map<string, string>) => imagensDe(p).some((x) => !x.imagem && imagens.get(x.id));
