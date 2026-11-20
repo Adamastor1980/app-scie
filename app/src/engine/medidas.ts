@@ -158,14 +158,14 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     add({
       tema: 'II.1', titulo: 'Vias de acesso (edifício com altura ≤ 9 m)',
       exigencia: 'Estacionamento dos veículos de socorro a ≤ 30 m de pelo menos uma saída do edifício; largura útil 3,5 m; altura útil 4 m; raio de curvatura mínimo 11 m ao eixo; inclinação máxima 15 %; capacidade para veículo de 130 kN (40 kN eixo dianteiro, 90 kN eixo traseiro).'
-        + (cat === 1 && !temD ? '' : ' Vias em impasse: largura útil 7 m ou rotunda/entroncamento que evite mais de 30 m em marcha-atrás.'),
-      base: 'RT-SCIE, art. 4.º n.os 1, 3 e 4', estado: 'aplica',
+        + (cat === 1 && !temD ? '' : ' Vias em impasse: largura útil 7 m ou rotunda/entroncamento que evite mais de 30 m em marcha-atrás.') + ' Em centros urbanos antigos, admitem-se outras características devidamente fundamentadas.',
+      base: 'RT-SCIE, art. 4.º n.os 1, 3, 4 e 7', estado: 'aplica',
     });
   } else {
     add({
       tema: 'II.1', titulo: 'Vias de acesso (edifício com altura > 9 m)',
-      exigencia: 'Largura útil 6 m (10 m em impasse); altura útil 5 m; raio de curvatura 13 m; inclinação máxima 10 %; capacidade 260 kN (90 kN + 170 kN); marcha-atrás ≤ 20 m em impasse; faixa de operação com 7 m de largura, ≥ 15 m de comprimento, a 3–10 m da fachada, resistente ao punçoamento de 170 kN em Ø 20 cm e permanentemente livre.',
-      base: 'RT-SCIE, art. 5.º', estado: 'aplica',
+      exigencia: 'Largura útil 6 m (10 m em impasse); altura útil 5 m; raio de curvatura 13 m; inclinação máxima 10 %; capacidade 260 kN (90 kN + 170 kN); marcha-atrás ≤ 20 m em impasse; faixa de operação com 7 m de largura, ≥ 15 m de comprimento, a 3–10 m da fachada, resistente ao punçoamento de 170 kN em Ø 20 cm e permanentemente livre. Em centros urbanos antigos, admitem-se outras características devidamente fundamentadas.',
+      base: 'RT-SCIE, art. 5.º n.os 1 a 4', estado: 'aplica',
     });
     add({ tema: 'II.2', titulo: 'Fachada acessível', exigencia: 'Pelo menos uma fachada acessível aos veículos de socorro nas condições do art. 5.º.', base: 'RT-SCIE, art. 6.º n.º 6', estado: 'aplica' });
   }
@@ -180,8 +180,8 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     });
     add({
       tema: 'II.4', titulo: 'Hidrantes exteriores',
-      exigencia: 'Marcos de incêndio (preferencialmente) ou bocas de incêndio, segundo a EN 14384, a ≤ 30 m das saídas do edifício nas fachadas acessíveis e das bocas de alimentação das redes secas ou húmidas. Sem rede pública: depósito ≥ 60 m³ garantindo 20 l/s por marco (8 l/s DN 70; 4 l/s DN 50) a 150 kPa.',
-      base: 'RT-SCIE, art. 12.º n.os 1 a 5 e 7', estado: 'aplica',
+      exigencia: 'Marcos de incêndio (preferencialmente) ou bocas de incêndio, segundo a EN 14384, a ≤ 30 m das saídas do edifício nas fachadas acessíveis e das bocas de alimentação das redes secas ou húmidas. Sem rede pública: depósito ≥ 60 m³ garantindo 20 l/s por marco (8 l/s DN 70; 4 l/s DN 50) a 150 kPa.' + (cat === 1 ? ' Na 1.ª categoria, sem rede pública e sem possibilidade de cumprir o anterior, admite-se o abastecimento pelas reservas de água do edifício (poços, tanques, cisternas).' : ''),
+      base: 'RT-SCIE, art. 12.º n.os 1 a 5, 7' + (cat === 1 ? ' e 8' : ''), estado: 'aplica',
     });
   }
   add({
@@ -210,6 +210,15 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     base: 'RT-SCIE, art. 17.º n.º 2, quadros X e XI', estado: ed.uts.length > 1 ? 'aplica' : 'nao',
     motivo: ed.uts.length > 1 ? undefined : 'Edifício de utilização exclusiva.',
   });
+  if (ed.uts.length > 1 && ed.comunicacoesComuns) {
+    const outrasTipos = ed.uts.filter((u) => u.id !== ut.id).map((u) => u.tipo);
+    const conflito = (t === 1 && cat >= 2 && outrasTipos.some((x) => x === 5 || x >= 7)) || ((t === 5 || t >= 7) && outrasTipos.includes(1));
+    if (conflito) add({
+      tema: 'III.2', titulo: 'Comunicações interiores comuns com a UT I',
+      exigencia: 'Não são permitidas comunicações interiores comuns da UT I das 2.ª, 3.ª ou 4.ª categorias com as UT V e VII a XII, de qualquer categoria (exceto turismo no espaço rural, de natureza e de habitação com UT I da 1.ª categoria).',
+      base: 'RT-SCIE, art. 17.º n.º 2 e) e f)', estado: 'verificar', motivo: 'Edifício misto com comunicações interiores comuns: confirmar a categoria da UT I.',
+    });
+  }
   if (t === 12 && cat >= 3) {
     const outras = ed.uts.filter((u) => u.id !== ut.id && u.tipo !== 2 && u.tipo !== 8);
     add({
@@ -283,10 +292,11 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   const q19 = quadroXIX(H);
   const viasProt: string[] = [];
   if (cat >= 3) viasProt.push('vias integradas nas comunicações comuns (UT da 3.ª/4.ª categoria)');
-  viasProt.push('vias com comprimento > 30 m');
+  viasProt.push('vias integradas nas comunicações comuns com comprimento > 30 m');
   if (H > 28 || abaixo) viasProt.push('vias com comprimento > 10 m em pisos acima de 28 m ou abaixo do plano de referência');
   if (locais.has('B')) viasProt.push('caminhos de locais B sem vias alternativas');
   if (temD) viasProt.push('caminhos de locais de risco D');
+  viasProt.push('galerias fechadas de ligação entre edifícios independentes ou entre corpos do mesmo edifício');
   add({
     tema: 'III.5a', titulo: 'Proteção das vias horizontais de evacuação',
     exigencia: `Vias protegidas: ${viasProt.join('; ')}. Envolvente (altura ${classe.toLowerCase()}): paredes ${q19.paredes}, paredes de suporte ${q19.suporte}, portas ${q19.portas}. Vias com acesso direto a locais D ou E: a classe mais gravosa dos quadros XIV a XIX.`,
@@ -366,7 +376,9 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     const extras: string[] = [];
     if (!ut.arLivre && ev >= 200) { upMin = Math.max(upMin, 2); extras.push('saídas com ≥ 2 UP (efetivo ≥ 200, art. 56.º n.º 2 a))'); }
     if (ut.arLivre && ev >= 600) { upMin = Math.max(upMin, 2); extras.push('saídas com ≥ 2 UP (efetivo ≥ 600 ao ar livre, art. 56.º n.º 2 b))'); }
-    if (e.local === 'D') extras.push('saídas para vias protegidas ou exterior (art. 60.º); 2 UP onde se evacuem pessoas em camas (art. 56.º n.º 4 c))');
+    const pisoE = ut.pisos.find((p) => p.nome === e.piso);
+    if (!ut.arLivre && ev > 50 && pisoE && (pisoE.cota < 0 || (H > 28 && pisoE.cota > 0))) { upMin = Math.max(upMin, 2); extras.push(pisoE.cota < 0 ? 'saídas com ≥ 2 UP (efetivo > 50 abaixo do nível de saída, art. 56.º n.º 4 b))' : 'saídas com ≥ 2 UP (efetivo > 50 acima do plano de referência, H > 28 m, art. 56.º n.º 4 b))'); }
+    if (e.local === 'D') extras.push('saídas para vias protegidas ou exterior (art. 60.º); 2 UP onde se evacuem pessoas em camas, ou 1,1 m se forem menos de três (art. 56.º n.º 4 c))');
     if (ev > 200) extras.push('barras antipânico nas portas (art. 62.º n.º 7 a))');
     if (ev > 50) extras.push('portas a abrir no sentido da evacuação (art. 62.º n.º 1)');
     const conforme = (e.saidasExistentes === undefined || e.saidasExistentes >= s.n) && (e.upExistentes === undefined || e.upExistentes >= upMin);
@@ -386,7 +398,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
   } else {
     add({
       tema: 'V.1a', titulo: 'Distâncias máximas a percorrer nos locais',
-      exigencia: `≤ 15 m em impasse; ≤ 30 m com acesso a saídas distintas (+50 % em locais amplos > 800 m² no piso do plano de referência com saídas diretas ao exterior; dobro ao ar livre).${t === 1 && cat > 1 ? ' Na UT I das 2.ª a 4.ª categorias apenas nas circulações horizontais comuns.' : ''}`,
+      exigencia: `${t === 2 ? 'Impasse e saídas distintas: condições específicas da UT II (título VIII).' : `≤ 15 m em impasse; ${[8, 10].includes(t) ? 'com acesso a saídas distintas: condições específicas da UT ' + R + ' (título VIII)' : '≤ 30 m com acesso a saídas distintas (+50 % em locais amplos > 800 m² no piso do plano de referência com saídas diretas ao exterior)'}; dobro ao ar livre.`}${t === 1 && cat > 1 ? ' Na UT I das 2.ª a 4.ª categorias apenas nas circulações horizontais comuns.' : ''}`,
       base: 'RT-SCIE, art. 57.º', estado: t === 1 && cat === 1 ? 'nao' : 'aplica',
       motivo: t === 1 && cat === 1 ? 'Exceção da UT I da 1.ª categoria (art. 57.º n.º 2 a)).' : undefined,
     });
@@ -455,10 +467,10 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     config = cat === 1 ? 1 : 3; baseCfg = 'art. 128.º';
   } else {
     baseCfg = 'art. 129.º';
-    if (t === 7 && cat === 1) { config = 1; notaCfg = 'UT VII da 1.ª categoria (art. 129.º n.º 2 a)).'; }
-    else if (cat === 1 && !abaixo) { config = 2; notaCfg = '1.ª categoria exclusivamente acima do solo (art. 129.º n.º 2 b)).'; }
+    if (t === 7 && cat === 1) { config = 1; notaCfg = 'Admite-se a configuração 1 na UT VII da 1.ª categoria (art. 129.º n.º 2 a)).'; }
+    else if (cat === 1 && !abaixo) { config = 2; notaCfg = 'Admite-se a configuração 2 na 1.ª categoria exclusivamente acima do solo (art. 129.º n.º 2 b)).'; }
     else config = 3;
-    if (ut.turismoRural && cat === 1 && !abaixo && ef.emE <= 20) { config = 1; notaCfg = 'Turismo no espaço rural, de natureza e de habitação da 1.ª categoria, efetivo em locais E ≤ 20 (art. 129.º n.º 2 c)).'; }
+    if (ut.turismoRural && cat === 1 && !abaixo && ef.emE <= 20) { config = 1; notaCfg = 'Admite-se a configuração 1 em turismo no espaço rural, de natureza e de habitação da 1.ª categoria, exclusivamente acima do solo, com efetivo em locais E ≤ 20 (art. 129.º n.º 2 c)).'; }
   }
   if ((t === 6 || t === 9 || ut.arLivre) && ut.arLivre && t !== 2) { config = 0; notaCfg = 'Recintos ao ar livre isentos de alarme (art. 116.º n.º 2).'; }
   if (ed.uts.length > 1 && ed.comunicacoesComuns && cat >= 2 && t !== 1 && t !== 2) {
@@ -555,7 +567,7 @@ export function gerarMedidas({ ed, ut, cls, ef }: Contexto): Medida[] {
     exigencia: `Sistema húmido: densidade ${q37.densidade} L/min/m², área de operação ${q37.area} m², ${q37.n} aspersores em simultâneo, calibre ${q37.calibre} mm, ${q37.tempo} min; depósito privativo e central de bombagem; posto de comando acessível aos bombeiros.`,
     base: 'RT-SCIE, arts. 173.º e 174.º, quadro XXXVII' + (t === 8 ? ' (ver exceções do capítulo VI do título VIII)' : ''),
     estado: sprCond ? 'aplica' : 'nao',
-    motivo: sprCond ? undefined : 'Não exigido pelo art. 173.º n.º 1 para esta UT/categoria (pode ser medida compensatória, n.º 2, ou para duplicar áreas de compartimentação, art. 18.º n.º 6).',
+    motivo: sprCond ? undefined : 'Não exigido pelo art. 173.º n.º 1 b) e c) para esta UT/categoria. Exigível ainda em locais adjacentes a pátios interiores com altura > 20 m e em locais de difícil acesso com elevada carga de incêndio (n.º 1 e) e f)); pode ser medida compensatória (n.º 2) ou duplicar áreas de compartimentação (art. 18.º n.º 6).',
   });
   if (ut.temCozinhaC) add({ tema: 'VII.6', titulo: 'Extinção automática em blocos de confeção', exigencia: 'Sistemas fixos de extinção por agente diferente da água nos blocos de confeção quando a potência total instalada o exija.', base: 'RT-SCIE, art. 175.º n.º 2', estado: 'verificar', motivo: 'Confirmar a potência instalada nos aparelhos de confeção.' });
   if (t === 12 && (ut.pinturaArea ?? 0) > 30) add({ tema: 'VII.6', titulo: 'Extinção automática em zonas de pintura', exigencia: 'Zonas de pintura ou aplicação de vernizes, colas ou solventes com ponto de inflamação < 55 °C com área > 30 m²: instalação fixa de extinção automática por água.', base: 'RT-SCIE, art. 308.º n.º 1', estado: 'aplica' });
