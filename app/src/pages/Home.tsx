@@ -1,3 +1,4 @@
+import LogoPreto from '../ui/LogoPreto';
 import { useRef } from 'react';
 import { ArrowUpRight, Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
 import { exportarJSON } from './ProjetoShell';
@@ -89,7 +90,7 @@ export default function Home() {
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
                     <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden border border-paper-3 bg-white">
                       {p.clienteLogo
-                        ? <img src={p.clienteLogo} alt="" className="h-full w-full object-contain p-1" />
+                        ? <LogoPreto src={p.clienteLogo} className="h-full w-full object-contain p-1.5" />
                         : <span className="font-display text-[17px] font-extrabold tracking-tight text-ink-4">{iniciais(p.cliente || p.nome)}</span>}
                     </span>
                     <span className="min-w-0">
