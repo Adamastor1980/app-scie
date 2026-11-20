@@ -108,13 +108,13 @@ export const useStore = create<State>()(
       },
       importar: (p) => {
         const n = { ...clone(p), id: uid(), atualizadoEm: Date.now() };
+        // perfil «A minha empresa»: completa os campos em falta com os do projeto importado (ex.: logótipo) e aplica-o
         const { empresaPadrao, autorPadrao } = getS();
-        if (empresaPadrao?.nome || autorPadrao?.nome) {
-          if (empresaPadrao) n.empresa = clone(empresaPadrao);
-          if (autorPadrao) n.autor = clone(autorPadrao);
-        } else if (n.empresa?.nome || n.autor?.nome) {
-          setS({ empresaPadrao: clone(n.empresa), autorPadrao: clone(n.autor) });
-        }
+        const e = { ...(n.empresa ?? {}), ...Object.fromEntries(Object.entries(empresaPadrao ?? {}).filter(([, v]) => v)) } as Projeto['empresa'];
+        const a = { ...(n.autor ?? {}), ...Object.fromEntries(Object.entries(autorPadrao ?? {}).filter(([, v]) => v)) } as Projeto['autor'];
+        n.empresa = e;
+        n.autor = a;
+        if (e.nome || a.nome) setS((st) => ({ empresaPadrao: clone(e), autorPadrao: clone(a), projetos: st.projetos.map((p) => ({ ...p, empresa: clone(e), autor: clone(a) })) }));
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },

@@ -30,29 +30,25 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-[1280px] px-6 pb-24 pt-10">
-      <div className="mb-12 grid gap-8 border-b-2 border-ink pb-10 lg:grid-cols-[1.4fr_1fr]">
-        <div>
-          <p className="label mb-4 !text-fire">Segurança contra incêndio em edifícios</p>
-          <h1 className="h-display text-[56px] md:text-[76px]">
-            Classificar.<br />Calcular.<br /><span className="text-fire">Cumprir.</span>
-          </h1>
-        </div>
-        <div className="flex flex-col justify-end gap-5">
-          <p className="text-[14.5px] leading-relaxed text-ink-2">
-            Categoria de risco das 12 utilizações-tipo, efetivo, densidade de carga de incêndio modificada (método determinístico e probabilístico), medidas de segurança aplicáveis e relatório técnico, com base exclusiva no RJ-SCIE, no RT-SCIE e no Despacho n.º 2074/2009.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-fire h-11 px-5 text-[14px]" onClick={() => go(`/p/${criar()}`)}>
-              <FilePlus2 size={17} /> Novo projeto
-            </button>
-            <button className="btn h-11 px-4" onClick={() => fileRef.current?.click()}>
-              <Upload size={16} /> Importar projeto (JSON)
-            </button>
-            <button className="btn h-11 px-4" onClick={() => go(`/p/${importar(exemploProjeto())}`)}>
-              Abrir exemplo
-            </button>
-            <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
-          </div>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b-2 border-ink pb-6">
+        <h1 className="h-display text-[44px]">
+          Classificar. Calcular. <span className="text-fire">Cumprir.</span>
+        </h1>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><FilePlus2 size={16} /> Novo projeto</button>
+          <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
+          {projetos.length > 0 && (
+            <button className="btn h-10 px-3" onClick={() => {
+                const blob = new Blob([JSON.stringify(projetos, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `scie-calc-copia-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+              }}><Download size={15} /> Exportar todos (JSON)</button>
+          )}
+          <button className="btn h-10 px-3" onClick={() => go(`/p/${importar(exemploProjeto())}`)}>Abrir exemplo</button>
+          <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
         </div>
       </div>
 
@@ -70,16 +66,6 @@ export default function Home() {
 
       <div className="mb-4 flex items-end justify-between">
         <h2 className="section-title">Projetos <span className="font-mono text-[14px] text-ink-3">({projetos.length})</span></h2>
-        {projetos.length > 0 && (
-          <button className="btn" onClick={() => {
-            const blob = new Blob([JSON.stringify(projetos, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `scie-calc-copia-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-          }}><Download size={15} /> Exportar todos (cópia de segurança)</button>
-        )}
       </div>
 
       {projetos.length === 0 ? (

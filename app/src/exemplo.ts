@@ -15,10 +15,6 @@ export function exemploProjeto(): Projeto {
   p.concelho = 'Matosinhos';
   p.distrito = 'Porto';
   p.tipoIntervencao = 'Trabalho académico';
-  p.empresa.nome = 'Empresa de Engenharia de Segurança (exemplo)';
-  p.empresa.apresentacao = 'Texto de exemplo. Substituir pela apresentação real da empresa: áreas de atuação, certificações, equipa técnica e referências.';
-  p.autor.nome = 'Autor do exemplo';
-  p.autor.qualificacao = 'Técnico Superior de Segurança no Trabalho';
 
   const ed = p.edificios[0];
   ed.nome = 'Edifício A — produção e armazém';
