@@ -188,3 +188,9 @@ export async function caberNaNuvem(dataUrl: string, maxChars = 900_000): Promise
   }
   return d;
 }
+
+/** Logótipos: quadro até 500 px e no máximo ~200 kB, para caberem folgadamente no documento do projeto na nuvem */
+export async function logoLeve(dataUrl: string): Promise<string> {
+  if (dataUrl.length <= 200_000) return dataUrl;
+  return caberNaNuvem(await compressImage(dataUrl, 500, 0.9, true), 200_000);
+}

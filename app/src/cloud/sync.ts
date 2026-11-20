@@ -4,6 +4,7 @@ import type { User } from 'firebase/auth';
 import { fb } from './firebase';
 import { useStore } from '../store';
 import type { Projeto } from '../data/types';
+import { logoLeve } from '../ui/primitives';
 
 /**
  * Sincronização com o Firestore.
@@ -178,14 +179,27 @@ async function enviar(inicial: boolean) {
   const sPerfil = JSON.stringify(perfil);
   if (sPerfil !== perfilEnviado && (st.empresaPadrao || st.autorPadrao)) {
     perfilEnviado = sPerfil;
-    tarefas.push(setDoc(doc(db, 'users', u.uid), { perfil }, { merge: true }));
+    tarefas.push(setDoc(doc(db, 'users', u.uid), { perfil }, { merge: true }).catch((e) => { perfilEnviado = ''; throw e; }));
   }
 
   const ids = new Set(st.projetos.map((p) => p.id));
   for (const p of st.projetos) {
     if (enviados.get(p.id) === p.atualizadoEm) continue;
+    // logótipo do cliente demasiado grande (o documento do projeto tem o limite de 1 MiB): reduz primeiro e envia depois
+    if (p.clienteLogo && p.clienteLogo.length > 250_000) {
+      const original = p.clienteLogo;
+      logoLeve(original).then((d) => {
+        useStore.setState((s2) => ({ projetos: s2.projetos.map((x) => (x.id === p.id && x.clienteLogo === original ? { ...x, clienteLogo: d, atualizadoEm: Date.now() } : x)) }));
+      });
+      continue;
+    }
     enviados.set(p.id, p.atualizadoEm);
-    tarefas.push(setDoc(doc(db, 'users', u.uid, 'projetos', p.id), semPerfil(p)));
+    tarefas.push(
+      setDoc(doc(db, 'users', u.uid, 'projetos', p.id), semPerfil(p)).catch((e) => {
+        enviados.delete(p.id); // volta a tentar no próximo envio
+        throw e;
+      }),
+    );
     for (const pl of p.plantas) {
       if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
       imagensEnviadas.add(pl.id);

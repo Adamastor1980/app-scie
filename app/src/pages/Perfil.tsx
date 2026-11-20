@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { novoProjeto, useStore } from '../store';
-import { Area, Field, Section, Text, readFile } from '../ui/primitives';
+import { Area, Field, Section, Text, logoLeve, readFile } from '../ui/primitives';
 
 /** Enquadra a imagem num quadrado branco (sem cortar nem deformar o logótipo) */
 async function quadrado(dataUrl: string, lado = 600): Promise<string> {
@@ -41,7 +41,7 @@ export default function Perfil() {
             <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={async (ev) => {
               const f = ev.target.files?.[0];
               if (!f) return;
-              const d = await quadrado(await readFile(f));
+              const d = await logoLeve(await quadrado(await readFile(f)));
               setPerfil((ee) => { ee.logo = d; });
             }} />
           </div>

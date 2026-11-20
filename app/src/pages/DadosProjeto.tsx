@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { ImagePlus, Plus, Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { useStore } from '../store';
-import { Area, Field, Section, Text, compressImage, readFile } from '../ui/primitives';
+import { Area, Field, Section, Text, compressImage, logoLeve, readFile } from '../ui/primitives';
 
 const INTERVENCOES = [
   'Edifício existente — avaliação das condições de SCIE',
@@ -64,7 +64,7 @@ export default function DadosProjeto() {
             {p.clienteLogo ? <img src={p.clienteLogo} className="h-full w-full object-contain p-2" /> : <span className="flex flex-col items-center gap-1 text-[11px] text-ink-3"><ImagePlus size={20} /> Carregar</span>}
           </button>
           {p.clienteLogo && <button className="btn-ghost" onClick={() => up((x) => { x.clienteLogo = undefined; })}><Trash2 size={13} /> Remover</button>}
-          <input ref={cliRef} type="file" accept="image/*" className="hidden" onChange={async (ev) => { const f = ev.target.files?.[0]; if (!f) return; const d = await compressImage(await readFile(f), 600, 0.92); up((x) => { x.clienteLogo = d; }); }} />
+          <input ref={cliRef} type="file" accept="image/*" className="hidden" onChange={async (ev) => { const f = ev.target.files?.[0]; if (!f) return; const d = await logoLeve(await compressImage(await readFile(f), 600, 0.92)); up((x) => { x.clienteLogo = d; }); }} />
         </div>
       </Section>
 
