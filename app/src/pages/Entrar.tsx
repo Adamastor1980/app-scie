@@ -15,7 +15,7 @@ function Chama({ className = '' }: { className?: string }) {
 
 function Google() {
   return (
-    <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden>
+    <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden>
       <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
       <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
       <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
@@ -70,11 +70,11 @@ export default function Entrar() {
           <button
             onClick={go}
             disabled={busy}
-            className="group mt-10 flex h-14 w-full items-center gap-3 bg-white pl-5 pr-4 text-[15px] font-semibold text-ink transition-colors hover:bg-fire hover:text-white disabled:opacity-70 sm:w-auto"
+            className="group mt-10 inline-flex h-11 items-center gap-3 border border-white/25 bg-white/[0.03] pl-3.5 pr-4 text-[13.5px] font-medium text-white backdrop-blur-sm transition-colors hover:border-fire hover:bg-fire disabled:opacity-60"
           >
-            {busy ? <Loader2 size={20} className="animate-spin" /> : <span className="grid h-7 w-7 place-items-center bg-white"><Google /></span>}
-            <span className="flex-1 text-left sm:mr-8">{busy ? 'A entrar…' : 'Entrar com Google'}</span>
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Google />}
+            <span className="mr-2">{busy ? 'A entrar…' : 'Entrar com Google'}</span>
+            <ArrowRight size={15} className="text-white/50 transition-all group-hover:translate-x-0.5 group-hover:text-white" />
           </button>
           {erro && <p className="mt-3 text-[13px] text-red-400">{erro}</p>}
         </div>
