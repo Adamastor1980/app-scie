@@ -41,7 +41,8 @@ export default function App() {
   const { user, verificado } = useNuvem();
 
   // sem sessão iniciada só se mostra o ecrã de entrada (nenhum dado visível)
-  if (nuvemDisponivel()) {
+  // VITE_SEM_LOGIN: só para testes automáticos locais (nunca definido na publicação)
+  if (nuvemDisponivel() && !import.meta.env.VITE_SEM_LOGIN) {
     if (!verificado) return <div className="grid min-h-[100dvh] place-items-center bg-ink"><span className="h-2 w-16 animate-pulse bg-fire" /></div>;
     if (!user) return <Entrar />;
   }

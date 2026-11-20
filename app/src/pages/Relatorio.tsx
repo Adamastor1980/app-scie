@@ -1,7 +1,8 @@
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Printer } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
+import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
@@ -69,13 +70,29 @@ export default function Relatorio() {
     return () => { st.remove(); };
   }, [p.empresa.nome, p.autor.nome, p.referencia, p.nome, p.versao]);
 
-  // iOS: na app instalada no ecrã principal (modo ecrã inteiro) o window.print() não faz nada
-  const iosApp = /iP(hone|ad|od)/.test(navigator.userAgent) && (navigator as unknown as { standalone?: boolean }).standalone === true;
-  const [avisoIOS, setAvisoIOS] = useState(false);
-  const imprimir = () => {
-    if (iosApp) { setAvisoIOS(true); return; }
+  // Telemóvel/tablet: gera o ficheiro PDF diretamente (o diálogo de impressão não funciona na app instalada no iPhone).
+  // Computador: impressão do browser («Guardar como PDF»), com texto vetorial.
+  const [aGerar, setAGerar] = useState('');
+  const nomeFich = `${(p.referencia || p.nome).replace(/[^\w\-À-ú ]+/g, '_')} — Relatório SCIE v${p.versao}`;
+  const imprimir = async () => {
+    if (usarPdfDireto()) {
+      const raiz = document.getElementById('relatorio-folhas');
+      if (!raiz || aGerar) return;
+      setAGerar('A preparar…');
+      setZoom(1);
+      try {
+        await new Promise((r) => setTimeout(r, 150));
+        await gerarPdfDireto(raiz, nomeFich + '.pdf', `Realizado por: ${p.autor.nome || p.empresa.nome || ''} · ${p.nome}`, setAGerar);
+      } catch (e) {
+        alert('Não foi possível gerar o PDF: ' + (e as Error).message);
+      } finally {
+        setAGerar('');
+        setZoom(escala());
+      }
+      return;
+    }
     const t = document.title;
-    document.title = `${(p.referencia || p.nome).replace(/[^\w\-À-ú ]+/g, '_')} — Relatório SCIE v${p.versao}`;
+    document.title = nomeFich;
     window.print();
     setTimeout(() => { document.title = t; }, 500);
   };
@@ -88,7 +105,7 @@ export default function Relatorio() {
   const S = () => String(++sec);
 
   return (
-    <div className="bg-paper-3/60 pb-16 print:bg-white print:pb-0" style={{ ['--rz' as string]: zoom }}>
+    <div id="relatorio-folhas" className="bg-paper-3/60 pb-16 print:bg-white print:pb-0" style={{ ['--rz' as string]: zoom }}>
       <div className="no-print sticky top-14 z-30 mb-8 border-b border-ink bg-white">
         <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
           <div className="mr-auto">
@@ -97,21 +114,9 @@ export default function Relatorio() {
           </div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas «a verificar»" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
-          <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir}><Printer size={16} /> Descarregar PDF</button>
+          <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir} disabled={!!aGerar}>{aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}</button>
         </div>
-        {avisoIOS && (
-          <div className="mx-auto mb-3 max-w-[1100px] px-4 sm:px-6">
-            <div className="border-l-[3px] border-fire bg-fire-soft px-3 py-3 text-[13px] leading-relaxed">
-              <p className="font-semibold">No iPhone/iPad, a app instalada não permite gerar PDF.</p>
-              <p className="mt-1">Abra este relatório no Safari (entre com a mesma conta Google, se pedir) e carregue lá em «Descarregar PDF». No ecrã de impressão, toque em <b>Partilhar ⬆︎ → Guardar em Ficheiros</b>.</p>
-              <div className="mt-2 flex gap-2">
-                <a className="btn-fire h-10 px-4" href={location.href} target="_blank" rel="noopener">Abrir no Safari</a>
-                <button className="btn h-10 px-4" onClick={() => setAvisoIOS(false)}>Fechar</button>
-              </div>
-            </div>
-          </div>
-        )}
-        <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</p>
+        <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">{usarPdfDireto() ? 'No telemóvel/tablet o PDF é gerado diretamente; no iPhone escolha «Guardar em Ficheiros». Para a versão final (texto pesquisável, máxima qualidade) gere-o no computador.' : <>No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</>}</p>
       </div>
 
       {/* ------------------------------ CAPA ------------------------------ */}
