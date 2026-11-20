@@ -12,6 +12,7 @@ import UTEfetivo from './ut/UTEfetivo';
 import UTCarga from './ut/UTCarga';
 import UTCategoria from './ut/UTCategoria';
 import UTMedidas from './ut/UTMedidas';
+import UTLevantamento from './ut/UTLevantamento';
 
 export interface UTProps {
   ed: Edificio;
@@ -40,7 +41,9 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
   const info = utInfo(ut.tipo);
   const base = `/p/${p.id}/e/${eid}/u/${uid}`;
 
+  const nLev = ut.levantamento?.length ?? 0;
   const todos = [
+    { k: 'levantamento', t: 'Levantamento', s: nLev ? `${nLev} ${nLev === 1 ? 'imagem' : 'imagens'}` : 'fotos e desenhos' },
     { k: 'fatores', t: 'Fatores de risco', s: info.quadro },
     ...(precisaEfetivo(ut.tipo)
       ? [{ k: 'efetivo', t: 'Efetivo', s: `${fmt(ef.total)} pessoas` }]
@@ -97,6 +100,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       </div>
 
       <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8 sm:pt-8">
+        {step === 'levantamento' && <UTLevantamento {...props} />}
         {step === 'fatores' && <UTFatores {...props} />}
         {step === 'efetivo' && <UTEfetivo {...props} />}
         {step === 'carga' && <UTCarga {...props} />}

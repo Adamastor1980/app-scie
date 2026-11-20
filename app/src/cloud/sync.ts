@@ -35,10 +35,29 @@ let perfilEnviado = '';
 let aplicarRemoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
+/** imagens grandes (plantas e levantamento das UT) vão em documentos próprios; o projeto leva só a referência (id) */
+function comImagens(p: Projeto, img: (id: string, atual?: string) => string): Projeto {
+  return {
+    ...p,
+    plantas: (p.plantas ?? []).map((pl) => ({ ...pl, imagem: img(pl.id, pl.imagem) })),
+    edificios: (p.edificios ?? []).map((e) => ({
+      ...e,
+      uts: e.uts.map((u) => (u.levantamento?.length ? { ...u, levantamento: u.levantamento.map((a) => ({ ...a, imagem: img(a.id, a.imagem) })) } : u)),
+    })),
+  };
+}
+function imagensDe(p: Projeto): { id: string; imagem: string }[] {
+  return [
+    ...p.plantas.map((pl) => ({ id: pl.id, imagem: pl.imagem })),
+    ...p.edificios.flatMap((e) => e.uts.flatMap((u) => (u.levantamento ?? []).map((a) => ({ id: a.id, imagem: a.imagem })))),
+  ];
+}
+const faltaImagem = (p: Projeto, imagens: Map<string, string>) => imagensDe(p).some((x) => !x.imagem && imagens.get(x.id));
+
 function semPerfil(p: Projeto) {
-  const { empresa: _e, autor: _a, ...resto } = p;
+  const { empresa: _e, autor: _a, ...resto } = comImagens(p, () => '');
   void _e; void _a;
-  return limpo({ ...resto, plantas: p.plantas.map((pl) => ({ ...pl, imagem: '' })) });
+  return limpo(resto);
 }
 
 export async function iniciarSincronizacao(user: User) {
@@ -70,7 +89,7 @@ export async function iniciarSincronizacao(user: User) {
     const remotos = new Map<string, Projeto>();
     sp.forEach((d) => {
       const r = d.data() as Projeto;
-      remotos.set(d.id, { ...r, empresa, autor, plantas: (r.plantas ?? []).map((pl) => ({ ...pl, imagem: imagens.get(pl.id) ?? '' })) });
+      remotos.set(d.id, comImagens({ ...r, empresa, autor }, (id) => imagens.get(id) ?? ''));
     });
 
     const juntos = new Map<string, Projeto>();
@@ -97,9 +116,9 @@ export async function iniciarSincronizacao(user: User) {
       });
       // completa imagens que chegaram depois do projeto
       const st = useStore.getState();
-      if (st.projetos.some((p) => p.plantas.some((pl) => !pl.imagem && imagens.get(pl.id)))) {
+      if (st.projetos.some((p) => faltaImagem(p, imagens))) {
         aplicarRemoto = true;
-        useStore.setState({ projetos: st.projetos.map((p) => ({ ...p, plantas: p.plantas.map((pl) => (pl.imagem ? pl : { ...pl, imagem: imagens.get(pl.id) ?? '' })) })) });
+        useStore.setState({ projetos: st.projetos.map((p) => (faltaImagem(p, imagens) ? comImagens(p, (id, atual) => atual || (imagens.get(id) ?? '')) : p)) });
         aplicarRemoto = false;
       }
     }));
@@ -120,7 +139,8 @@ export async function iniciarSincronizacao(user: User) {
         const r = c.doc.data() as Projeto;
         const l = projetos.find((p) => p.id === c.doc.id);
         if (l && (l.atualizadoEm ?? 0) >= (r.atualizadoEm ?? 0)) return;
-        const novo: Projeto = { ...r, empresa: st.empresaPadrao ?? r.empresa, autor: st.autorPadrao ?? r.autor, plantas: (r.plantas ?? []).map((pl) => ({ ...pl, imagem: imagens.get(pl.id) ?? l?.plantas.find((x) => x.id === pl.id)?.imagem ?? '' })) };
+        const locais = new Map(l ? imagensDe(l).map((x) => [x.id, x.imagem]) : []);
+        const novo: Projeto = comImagens({ ...r, empresa: st.empresaPadrao ?? r.empresa, autor: st.autorPadrao ?? r.autor }, (id) => imagens.get(id) ?? locais.get(id) ?? '');
         enviados.set(r.id, r.atualizadoEm);
         projetos = l ? projetos.map((p) => (p.id === r.id ? novo : p)) : [novo, ...projetos];
         mudou = true;
@@ -200,10 +220,10 @@ async function enviar(inicial: boolean) {
         throw e;
       }),
     );
-    for (const pl of p.plantas) {
+    for (const pl of imagensDe(p)) {
       if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
       imagensEnviadas.add(pl.id);
-      tarefas.push(setDoc(doc(db, 'users', u.uid, 'plantas', pl.id), { pid: p.id, imagem: pl.imagem }));
+      tarefas.push(setDoc(doc(db, 'users', u.uid, 'plantas', pl.id), { pid: p.id, imagem: pl.imagem }).catch((e) => { imagensEnviadas.delete(pl.id); throw e; }));
     }
   }
   if (!inicial) {
@@ -213,7 +233,7 @@ async function enviar(inicial: boolean) {
       tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'projetos', pid)));
     }
     // imagens de plantas apagadas
-    const vivas = new Set(st.projetos.flatMap((p) => p.plantas.map((pl) => pl.id)));
+    const vivas = new Set(st.projetos.flatMap((p) => imagensDe(p).map((pl) => pl.id)));
     for (const id of [...imagensEnviadas]) {
       if (vivas.has(id)) continue;
       imagensEnviadas.delete(id);

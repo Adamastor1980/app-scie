@@ -193,6 +193,16 @@ export interface UT {
   observacoes: string;
   /** chave da medida (secção + título) → verificação */
   verificacao?: Record<string, Verificacao>;
+  /** levantamento no local: fotografias e desenhos de apoio (uso interno, não entram nos cálculos) */
+  levantamento?: Anexo[];
+}
+
+export interface Anexo {
+  id: string;
+  tipo: 'foto' | 'desenho';
+  imagem: string; // data URL (na nuvem é guardada à parte, como as plantas)
+  legenda: string;
+  data: number;
 }
 
 export interface Edificio {

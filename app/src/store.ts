@@ -126,7 +126,10 @@ export const useStore = create<State>()(
         const nomes = new Set(getS().projetos.map((p) => p.nome));
         let nome = `${base} (cópia)`;
         for (let k = 2; nomes.has(nome); k++) nome = `${base} (cópia ${k})`;
-        const n = { ...clone(o), id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
+        const c = clone(o);
+        c.plantas = c.plantas.map((pl) => ({ ...pl, id: uid() }));
+        c.edificios.forEach((e) => e.uts.forEach((u) => { u.levantamento = u.levantamento?.map((a) => ({ ...a, id: uid() })); }));
+        const n = { ...c, id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },
