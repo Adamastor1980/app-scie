@@ -150,6 +150,10 @@ export interface Verificacao {
   obs?: string;
   corretiva?: string;
   prazo?: string; // ex.: 'Imediato', '2027 · 1.º S'
+  /** evidências: fotografias (ids de anexos do levantamento da UT) */
+  fotos?: string[];
+  /** localização na planta (coordenadas relativas 0–1) */
+  ponto?: { plantaId: string; x: number; y: number };
 }
 
 export interface Revisao {

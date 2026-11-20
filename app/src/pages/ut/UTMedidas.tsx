@@ -1,3 +1,6 @@
+import NovaNC from './NovaNC';
+import { useP } from '../ProjetoShell';
+import { Camera, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { UTProps } from '../UTPage';
 import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida } from '../../engine/medidas';
@@ -18,11 +21,14 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
   const r = resumoMedidas(M);
   const [filtro, setFiltro] = useState<'todas' | Estado>('aplica');
   const [q, setQ] = useState('');
+  const [ncKey, setNcKey] = useState<string | null>(null);
+  const { p } = useP();
   const list = M.filter((m) => (filtro === 'todas' || m.estado === filtro) && (!q || (m.titulo + m.exigencia + m.base).toLowerCase().includes(q.toLowerCase())));
   const porTema = GRUPOS.map((g) => ({ t: g, secs: SECOES.filter((x) => x.g === g).map((x) => ({ x, m: list.filter((y) => y.tema === x.c) })).filter((z) => z.m.length) })).filter((g) => g.secs.length);
 
   return (
     <div>
+      {ncKey && <NovaNC ed={ed} ut={ut} plantas={p.plantas} upU={upU} medidaKey={ncKey} onClose={() => setNcKey(null)} />}
       <details className="mb-8 border border-ink bg-white">
         <summary className="cursor-pointer select-none px-5 py-4 font-display text-[16px] font-bold">Dados para concretizar as medidas e a memória descritiva <span className="ml-2 font-sans text-[12px] font-normal text-ink-3">(opcional — não entram na categoria de risco)</span></summary>
         <div className="border-t border-ink px-5 pt-6"><UTComplementares ed={ed} ut={ut} upU={upU} /></div>
@@ -69,7 +75,7 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
               <div key={x.c} className="mb-3">
                 {x.c !== '0' && x.c !== 'MAP' && x.c !== 'ESP' && <p className="mb-1 mt-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-fire">{secRotulo(x.c)}</p>}
                 <div className="border-x border-t border-ink bg-white">
-                  {m.map((y) => <Linha key={y.id} m={y} ut={ut} setV={(fn) => upU((u) => { u.verificacao = u.verificacao ?? {}; const v = { ...(u.verificacao[y.key] ?? {}) }; fn(v); u.verificacao[y.key] = v; })} />)}
+                  {m.map((y) => <Linha key={y.id} m={y} ut={ut} onEvid={() => setNcKey(y.key)} setV={(fn) => upU((u) => { u.verificacao = u.verificacao ?? {}; const v = { ...(u.verificacao[y.key] ?? {}) }; fn(v); u.verificacao[y.key] = v; })} />)}
                 </div>
               </div>
             ))}
@@ -87,7 +93,7 @@ const CONF: { v: Conformidade; l: string; on: string }[] = [
 ];
 const PRAZOS = opcoesPrazo();
 
-function Linha({ m, ut, setV }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao) => void) => void }) {
+function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao) => void) => void; onEvid: () => void }) {
   const e = ESTADO[m.estado];
   const v = verDe(ut, m);
   return (
@@ -121,6 +127,11 @@ function Linha({ m, ut, setV }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao)
             <option value="">Prazo…</option>
             {PRAZOS.map((p) => <option key={p}>{p}</option>)}
           </select>
+          <div className="flex flex-wrap items-center gap-2 md:col-span-3">
+            {(v.fotos ?? []).map((id) => ut.levantamento?.find((a) => a.id === id)).filter(Boolean).map((a) => <img key={a!.id} src={a!.imagem} alt="" className="h-12 w-12 border border-ink object-cover" />)}
+            {v.ponto && <span className="flex items-center gap-1 text-[12px] font-semibold text-fire"><MapPin size={14} /> Assinalada na planta</span>}
+            <button className="btn h-9 text-[12px]" onClick={onEvid}><Camera size={14} /> Fotos e planta</button>
+          </div>
         </div>
       )}
       {v.estado === 'na' && (

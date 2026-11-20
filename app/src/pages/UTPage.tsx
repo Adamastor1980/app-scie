@@ -1,6 +1,8 @@
 import { nomeUT } from '../nome';
 import { novaUT } from '../store';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import NovaNC from './ut/NovaNC';
 import { useP } from './ProjetoShell';
 import { go } from '../router';
 import type { Edificio, UT } from '../data/types';
@@ -25,6 +27,7 @@ export const precisaCarga = (t: number) => t === 11 || t === 12;
 
 export default function UTPage({ eid, uid, step }: { eid: string; uid: string; step: string }) {
   const { p, up } = useP();
+  const [nc, setNc] = useState(false);
   const ed = p.edificios.find((e) => e.id === eid);
   const ut = ed?.uts.find((u) => u.id === uid);
   if (!ed || !ut) return <div className="p-8">Utilização-tipo não encontrada.</div>;
@@ -75,7 +78,8 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             />
             <p className="mt-1 hidden max-w-3xl text-[12.5px] leading-snug text-ink-3 sm:block">{info.definicao}</p>
           </div>
-          <div className="pb-5">
+          <div className="flex flex-col items-end gap-2 pb-5">
+            <button className="btn-fire h-10 whitespace-nowrap px-3" onClick={() => setNc(true)} title="Registar uma não conformidade (foto, medida, planta)"><Plus size={16} /> <span className="hidden sm:inline">Não conformidade</span><span className="sm:hidden">NC</span></button>
             <button className="btn-icon" title="Apagar UT" onClick={() => {
               if (!confirm('Apagar esta utilização-tipo?')) return;
               up((pp) => { const e = pp.edificios.find((x) => x.id === eid); if (e) e.uts = e.uts.filter((x) => x.id !== uid); });
@@ -100,6 +104,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       </div>
 
       <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8 sm:pt-8">
+        {nc && <NovaNC ed={ed} ut={ut} plantas={p.plantas} upU={upU} onClose={() => setNc(false)} />}
         {step === 'levantamento' && <UTLevantamento {...props} />}
         {step === 'fatores' && <UTFatores {...props} />}
         {step === 'efetivo' && <UTEfetivo {...props} />}

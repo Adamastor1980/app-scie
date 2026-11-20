@@ -373,8 +373,21 @@ export default function Relatorio() {
                     <>
                       <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Desconformidades registadas</p>
                       <table className="tbl mb-4"><tbody>{ds.map((d) => (
-                        <tr key={d.medida.key}><td className="w-8 font-mono font-bold">{d.letra})</td><td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-ink-3">Exigência: {d.medida.exigencia}</span></td><td className="w-[22%] text-[10px] text-ink-3">{d.medida.base}</td></tr>
+                        <tr key={d.medida.key}><td className="w-8 font-mono font-bold">{d.letra})</td><td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-ink-3">Exigência: {d.medida.exigencia}</span>
+                          {(d.ver.fotos?.length ?? 0) > 0 && <span className="mt-1.5 flex flex-wrap gap-1.5">{d.ver.fotos!.map((id) => ut.levantamento?.find((a) => a.id === id)).filter((a) => a?.imagem).map((a) => <img key={a!.id} src={a!.imagem} alt="" className="h-[30mm] w-auto max-w-[45mm] border border-paper-3 object-contain" />)}</span>}
+                        </td><td className="w-[22%] text-[10px] text-ink-3">{d.medida.base}{d.ver.ponto ? <span className="block text-fire">Assinalada em planta</span> : null}</td></tr>
                       ))}</tbody></table>
+                      {p.plantas.filter((pl) => ds.some((d) => d.ver.ponto?.plantaId === pl.id)).map((pl) => (
+                        <figure key={pl.id} className="avoid-break mb-4 text-center">
+                          <div className="relative inline-block border border-paper-3 align-top">
+                            <img src={pl.imagem} alt="" className="block max-h-[170mm] max-w-full" />
+                            {ds.filter((d) => d.ver.ponto?.plantaId === pl.id).map((d) => (
+                              <span key={d.medida.key} className="absolute grid h-[6mm] w-[6mm] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-fire font-mono text-[9px] font-bold text-white" style={{ left: `${d.ver.ponto!.x * 100}%`, top: `${d.ver.ponto!.y * 100}%` }}>{d.letra}</span>
+                            ))}
+                          </div>
+                          <figcaption className="mt-1 text-left text-[10.5px] text-ink-3">Localização das desconformidades — {pl.titulo}{pl.escala ? ` (${pl.escala})` : ''}</figcaption>
+                        </figure>
+                      ))}
                       <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Medidas corretivas / compensatórias</p>
                       <table className="tbl"><thead><tr><th className="w-8">Ref.</th><th>Medida</th><th className="w-28">Prazo</th></tr></thead><tbody>{ds.map((d) => (
                         <tr key={d.medida.key}><td className="font-mono font-bold">{d.letra})</td><td className="text-[11.5px]">{d.ver.corretiva || <span className="italic text-ink-3">Por definir</span>}</td><td className="text-[11.5px]">{d.ver.prazo || '—'}</td></tr>
