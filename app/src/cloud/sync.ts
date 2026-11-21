@@ -90,10 +90,12 @@ export async function iniciarSincronizacao(user: User) {
     const empresa = preenche(perfilRemoto?.empresa, local.empresaPadrao);
     const autor = preenche(perfilRemoto?.autor, local.autorPadrao);
 
+    // imagens guardadas neste aparelho (podem ainda não ter chegado à nuvem)
+    const imagensLocais = new Map(local.projetos.flatMap((p) => imagensDe(p)).filter((x) => x.imagem).map((x) => [x.id, x.imagem]));
     const remotos = new Map<string, Projeto>();
     sp.forEach((d) => {
       const r = d.data() as Projeto;
-      remotos.set(d.id, comImagens({ ...r, empresa, autor }, (id) => imagens.get(id) ?? ''));
+      remotos.set(d.id, comImagens({ ...r, empresa, autor }, (id) => imagens.get(id) ?? imagensLocais.get(id) ?? ''));
     });
 
     const juntos = new Map<string, Projeto>();
@@ -207,6 +209,14 @@ async function enviar(inicial: boolean) {
   }
 
   const ids = new Set(st.projetos.map((p) => p.id));
+  // imagens que existem neste aparelho mas ainda não estão na nuvem (ex.: envio interrompido): enviar sempre
+  for (const p of st.projetos) {
+    for (const pl of imagensDe(p)) {
+      if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
+      imagensEnviadas.add(pl.id);
+      tarefas.push(setDoc(doc(db, 'users', u.uid, 'plantas', pl.id), { pid: p.id, imagem: pl.imagem }).catch((e) => { imagensEnviadas.delete(pl.id); throw e; }));
+    }
+  }
   for (const p of st.projetos) {
     if (enviados.get(p.id) === p.atualizadoEm) continue;
     // logótipo do cliente demasiado grande (o documento do projeto tem o limite de 1 MiB): reduz primeiro e envia depois
@@ -224,11 +234,6 @@ async function enviar(inicial: boolean) {
         throw e;
       }),
     );
-    for (const pl of imagensDe(p)) {
-      if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
-      imagensEnviadas.add(pl.id);
-      tarefas.push(setDoc(doc(db, 'users', u.uid, 'plantas', pl.id), { pid: p.id, imagem: pl.imagem }).catch((e) => { imagensEnviadas.delete(pl.id); throw e; }));
-    }
   }
   if (!inicial) {
     for (const pid of [...enviados.keys()]) {

@@ -5,10 +5,12 @@ import type { Anexo } from '../../data/types';
 import { uid } from '../../store';
 import { Empty, Note, caberNaNuvem, compressImage, readFile } from '../../ui/primitives';
 import Desenho from '../../ui/Desenho';
+import { useNuvem } from '../../cloud/sync';
 
 /** Fotografias e desenhos do levantamento no local, guardados com a UT (apoio ao técnico; não entram nos cálculos nem no relatório). */
 export default function UTLevantamento({ ut, upU }: UTProps) {
   const lista = ut.levantamento ?? [];
+  const estadoNuvem = useNuvem((x) => x.estado);
   const camRef = useRef<HTMLInputElement>(null);
   const galRef = useRef<HTMLInputElement>(null);
   const [editor, setEditor] = useState<{ fundo?: string } | null>(null);
@@ -64,7 +66,11 @@ export default function UTLevantamento({ ut, upU }: UTProps) {
           {lista.map((a, i) => (
             <figure key={a.id} className="flex flex-col border border-ink bg-white">
               <button className="relative block aspect-[4/3] w-full overflow-hidden bg-paper" onClick={() => setVer(a)} title="Ver em grande">
-                {a.imagem ? <img src={a.imagem} alt="" className="h-full w-full object-contain" /> : <span className="grid h-full place-items-center text-[12px] text-ink-4">A carregar da nuvem…</span>}
+                {a.imagem ? <img src={a.imagem} alt="" className="h-full w-full object-contain" /> : (
+                  <span className="grid h-full place-items-center px-4 text-center text-[12px] text-ink-4">
+                    {estadoNuvem === 'sincronizado' ? 'Imagem não disponível: não chegou à nuvem. Abra a app, com rede, no aparelho onde foi criada para a enviar; se já não existir, apague-a.' : 'A carregar da nuvem…'}
+                  </span>
+                )}
                 <span className="absolute left-2 top-2 bg-ink px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white">{a.tipo === 'foto' ? 'Foto' : 'Desenho'} {String(i + 1).padStart(2, '0')}</span>
               </button>
               <figcaption className="flex flex-col gap-2 border-t border-ink p-3">
