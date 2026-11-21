@@ -53,16 +53,16 @@ export default function Home() {
         </div>
       </div>
 
-      <a href="#/empresa" className="mb-10 flex items-center justify-between gap-4 border border-ink bg-white p-4 hover:bg-paper">
-        <div className="flex items-center gap-4">
-          {empresa?.logo ? <img src={empresa.logo} className="h-16 w-16 border border-paper-3 object-contain" /> : <div className="grid h-16 w-16 place-items-center border border-dashed border-ink-4 text-[10px] text-ink-4">logo</div>}
-          <div>
+      <a href="#/empresa" className="mb-10 flex flex-wrap items-center justify-between gap-4 border border-ink bg-white p-4 hover:bg-paper">
+        <div className="flex min-w-0 flex-1 basis-[260px] items-center gap-4">
+          {empresa?.logo ? <img src={empresa.logo} className="h-16 w-16 border border-paper-3 object-contain shrink-0" /> : <div className="grid h-16 w-16 shrink-0 place-items-center border border-dashed border-ink-4 text-[10px] text-ink-4">logo</div>}
+          <div className="min-w-0 [overflow-wrap:anywhere]">
             <p className="label">A minha empresa · aplicada a todos os projetos</p>
             <p className="font-display text-[18px] font-bold">{empresa?.nome || 'Defina os dados da sua empresa e do autor'}</p>
             <p className="text-[12.5px] text-ink-3">{[autor?.nome, autor?.qualificacao, empresa?.email].filter(Boolean).join(' · ') || 'Logótipo, contactos, apresentação e autor técnico'}</p>
           </div>
         </div>
-        <span className="btn">Editar</span>
+        <span className="btn ml-auto shrink-0">Editar</span>
       </a>
 
       <div className="mb-4 flex items-end justify-between">
