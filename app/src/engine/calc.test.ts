@@ -283,3 +283,26 @@ describe('Despacho 8954/2020 — quadro I (valores verificados contra o texto of
     expect(h('Madeira')).toBe(16.7);
   });
 });
+
+describe('«Ver texto da lei»: artigos citados na base legal', () => {
+  it('lê artigos, listas, intervalos e diplomas', async () => {
+    const { refsDeBase } = await import('../ui/TextoLei');
+    expect(refsDeBase('RT-SCIE, arts. 54.º e 56.º, quadros XXIX e XXXI')).toEqual([{ dip: 'RT', art: '54' }, { dip: 'RT', art: '56' }]);
+    expect(refsDeBase('RT-SCIE, arts. 186.º a 189.º').map((r) => r.art)).toEqual(['186', '187', '188', '189']);
+    expect(refsDeBase('RJ-SCIE, art. 19.º n.os 1, 2 e 4')).toEqual([{ dip: 'RJ', art: '19' }]);
+    expect(refsDeBase('RJ-SCIE, art. 11.º n.º 3; RT-SCIE, art. 62.º n.º 11')).toEqual([{ dip: 'RJ', art: '11' }, { dip: 'RT', art: '62' }]);
+    expect(refsDeBase('RJ-SCIE, art. 15.º-A')).toEqual([{ dip: 'RJ', art: '15-A' }]);
+  });
+  it('todos os artigos citados nas medidas existem no texto republicado', async () => {
+    const { refsDeBase } = await import('../ui/TextoLei');
+    const textos = (await import('../data/textosLegais.json')).default as unknown as { RT: Record<string, unknown>; RJ: Record<string, unknown> };
+    const { novaUT, novoEdificio } = await import('../store');
+    const { contexto, gerarMedidas } = await import('./medidas');
+    const faltam = new Set<string>();
+    for (let t = 1; t <= 12; t++) {
+      const ed = novoEdificio(1); const ut = novaUT(t as never); ed.uts = [ut];
+      for (const m of gerarMedidas(contexto(ed, ut))) for (const r of refsDeBase(m.base)) if (!textos[r.dip][r.art]) faltam.add(`${r.dip} ${r.art} (${m.base})`);
+    }
+    expect([...faltam]).toEqual([]);
+  });
+});

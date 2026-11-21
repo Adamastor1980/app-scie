@@ -1,6 +1,7 @@
+import TextoLei, { refsDeBase } from '../../ui/TextoLei';
 import NovaNC from './NovaNC';
 import { useP } from '../ProjetoShell';
-import { Camera, MapPin } from 'lucide-react';
+import { Camera, MapPin, BookOpen } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { UTProps } from '../UTPage';
 import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida, factosVisiveis } from '../../engine/medidas';
@@ -128,6 +129,7 @@ const PRAZOS = opcoesPrazo();
 function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao) => void) => void; onEvid: () => void }) {
   const e = ESTADO[m.estado];
   const v = verDe(ut, m);
+  const [lei, setLei] = useState(false);
   return (
     <div className={`border-b border-ink px-4 py-3 ${m.estado === 'nao' ? 'bg-paper/50' : v.estado === 'nao_cumpre' ? 'bg-fire-soft/40' : ''}`}>
       <div className="grid gap-3 md:grid-cols-[230px_1fr_200px]">
@@ -141,6 +143,8 @@ function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Veri
         </div>
         <div className="flex flex-col gap-2 md:items-end">
           <p className="ref leading-snug md:text-right">{m.base}</p>
+          {refsDeBase(m.base).length > 0 && <button className="flex items-center gap-1 text-[11.5px] font-semibold text-fire hover:underline md:self-end" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>}
+          {lei && <TextoLei refs={refsDeBase(m.base)} titulo={m.titulo} onFechar={() => setLei(false)} />}
           {m.estado !== 'nao' && (
             <div className="flex">
               {CONF.map((c) => (

@@ -170,12 +170,57 @@ export default function Relatorio() {
           </tbody>
         </table>
         <H1 n="—">Índice</H1>
+        <p className="mb-1.5 flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1 text-[12.5px] font-semibold"><span className="w-6 font-mono text-fire">—</span>Síntese para o cliente</p>
         <ol className="space-y-1.5 text-[12.5px]">
           {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
             <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire">{i + 1}</span>{t}</li>
           ))}
         </ol>
       </Sheet>
+
+      {/* ----------------------- SÍNTESE PARA O CLIENTE ------------------- */}
+      {(() => {
+        const ordemPrazo = opcoesPrazo();
+        const posPrazo = (p?: string) => (p ? (ordemPrazo.indexOf(p) >= 0 ? ordemPrazo.indexOf(p) : 900) : 999);
+        const porUT = todas.map((x) => ({ ...x, pg: progresso(x.ut, x.medidas), ds: desconformidades(x.ut, x.medidas) }));
+        const ncs = porUT.flatMap((x) => x.ds.map((d) => ({ x, d }))).sort((a, b) => posPrazo(a.d.ver.prazo) - posPrazo(b.d.ver.prazo));
+        const verificadas = porUT.reduce((s2, x) => s2 + x.pg.marcadas, 0);
+        return (
+          <Sheet className="page-break">
+            <H1 n="—">Síntese para o cliente</H1>
+            <P>Resumo do estado de conformidade dos edifícios com o regime de segurança contra incêndio (RJ-SCIE e RT-SCIE). O detalhe de cada verificação, com a base legal, consta do capítulo «Análise regulamentar e medidas corretivas».</P>
+            <table className="tbl mb-6">
+              <thead><tr><th>Utilização-tipo</th><th>Categoria</th><th className="text-right">Verificadas</th><th className="text-right">Cumpre</th><th className="text-right">Não cumpre</th></tr></thead>
+              <tbody>{porUT.map((x) => (
+                <tr key={x.ut.id}><td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td><td className="whitespace-nowrap">{CAT_NOME[x.cls.cat]}</td><td className="num text-right">{x.pg.marcadas}/{x.pg.total}</td><td className="num text-right text-ok">{x.pg.cumpre}</td><td className={`num text-right font-bold ${x.pg.naoCumpre ? 'text-fire' : ''}`}>{x.pg.naoCumpre}</td></tr>
+              ))}</tbody>
+            </table>
+            {verificadas === 0 ? (
+              <div className="border-l-[4px] border-ink-4 bg-paper px-4 py-3 text-[12.5px]">A verificação no local das exigências ainda não foi registada; a síntese de conformidade será apresentada quando estiver concluída.</div>
+            ) : ncs.length === 0 ? (
+              <div className="border-l-[4px] border-ok bg-ok-soft px-4 py-3 text-[13px] font-semibold">Não foram identificadas não conformidades nas exigências verificadas.</div>
+            ) : (
+              <div className="avoid-break border-2 border-fire">
+                <div className="flex items-baseline justify-between bg-fire px-4 py-2.5 text-white">
+                  <span className="font-display text-[16px] font-extrabold">O que é preciso corrigir</span>
+                  <span className="font-mono text-[12px]">{ncs.length} não conformidade{ncs.length === 1 ? '' : 's'}</span>
+                </div>
+                <table className="tbl">
+                  <thead><tr><th className="w-[16%]">Ref.</th><th>Não conformidade e base legal</th><th className="w-[30%]">Medida corretiva</th><th className="w-[13%]">Prazo</th></tr></thead>
+                  <tbody>{ncs.map(({ x, d }) => (
+                    <tr key={x.ut.id + d.medida.key}>
+                      <td className="font-mono text-[10.5px]">UT {ROMANO[x.ut.tipo]} · {d.letra})</td>
+                      <td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-[10px] text-ink-3">{d.medida.base}</span></td>
+                      <td className="text-[11.5px]">{d.ver.corretiva || <span className="italic text-ink-3">A definir</span>}</td>
+                      <td className={`text-[11.5px] ${d.ver.prazo === 'Imediato' ? 'font-bold text-fire' : ''}`}>{d.ver.prazo || '—'}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </Sheet>
+        );
+      })()}
 
       {/* ------------------------ CORPO DO RELATÓRIO ---------------------- */}
       <Sheet className="page-break">
@@ -345,6 +390,16 @@ export default function Relatorio() {
         ))}
 
         <H1 n={S()}>Análise regulamentar e medidas corretivas</H1>
+        {(() => {
+          const t = todas.map((x) => progresso(x.ut, x.medidas)).reduce((a, b) => ({ m: a.m + b.marcadas, n: a.n + b.naoCumpre, c: a.c + b.cumpre }), { m: 0, n: 0, c: 0 });
+          return t.m > 0 ? (
+            <div className={`avoid-break mb-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 border-l-[4px] px-4 py-3 ${t.n ? 'border-fire bg-fire-soft' : 'border-ok bg-ok-soft'}`}>
+              <span className="font-display text-[15px] font-extrabold">{t.n ? `${t.n} não conformidade${t.n === 1 ? '' : 's'} a corrigir` : 'Sem não conformidades'}</span>
+              <span className="text-[12px]">{t.m} exigências verificadas · {t.c} cumprem · {t.n} não cumprem</span>
+              {t.n > 0 && <span className="text-[12px]">Plano de correção: ver «Síntese para o cliente» e o quadro de medidas corretivas de cada UT.</span>}
+            </div>
+          ) : null;
+        })()}
         {todas.every(({ ut, medidas }) => progresso(ut, medidas).marcadas === 0) ? (
           <P>Não foi registada verificação no local das exigências identificadas no capítulo anterior. A análise de conformidade (cumpre / não cumpre / não aplicável) é feita no passo «Medidas» de cada utilização-tipo.</P>
         ) : (
