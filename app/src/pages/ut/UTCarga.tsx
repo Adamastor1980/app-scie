@@ -148,7 +148,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
                 onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
             </Field>
-            <div className={`flex h-9 items-center border px-3 text-[13px] ${c.raiDet ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
+            <div className={`flex min-h-9 flex-wrap items-center gap-x-1 border px-3 py-1 text-[13px] ${c.raiDet ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
               {c.raiDet ? <>Rai = <b className="num mx-1">{fmt(c.raiDet, 1)}</b> ({RAI_NOME[c.raiDet === 2 ? 'A' : c.raiDet === 1.5 ? 'M' : 'B']}) — aplicado a todos os materiais</> : 'Escolha a atividade para obter o Rai'}
             </div>
           </div>
@@ -230,7 +230,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               ))}
             </tbody>
           </table>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
             <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
           </div>

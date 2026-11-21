@@ -51,6 +51,8 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   .tbl:not(.report-page .tbl) { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .btn, .btn-primary, .btn-fire { min-height: 40px; }
   .btn-icon { width: 40px; height: 40px; }
+  .btn, .btn-primary, .btn-fire { white-space: normal; max-width: 100%; height: auto; min-height: 40px; padding-top: 6px; padding-bottom: 6px; text-align: left; }
+  .field, .grid > * { min-width: 0; }
 }
 @media screen { .report-page { zoom: var(--rz, 1); } }
 
