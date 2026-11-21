@@ -86,7 +86,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                   <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
                     <Field label={`Espaço · ${cod.get(e.id) ?? ""}`}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
                     <Field label="Piso"><Text value={e.piso} onChange={(v) => setE(i, (x) => { x.piso = v; })} /></Field>
-                    <Field label="Local de risco" legal="art. 10.º"><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
+                    <Field label="Local de risco" legal="art. 10.º" hint={e.local === 'B' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) ? `B automático: ${c.valor > 100 ? `efetivo ${c.valor} > 100` : `público ${e.efetivoPublico} > 50`}` : undefined}><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
                     <Field label="Critério do efetivo" legal="RT-SCIE art. 51.º"><Select value={e.criterio} onChange={(v) => setE(i, (x) => { x.criterio = v; })} options={crits.map((k) => ({ v: k.v, l: k.l }))} /></Field>
                     <div className="flex items-end gap-1">
                       <button className="btn-icon" title="Duplicar" onClick={() => upU((u) => { u.espacos.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(e)), id: uid(), nome: e.nome + ' (cópia)' }); })}><Copy size={14} /></button>

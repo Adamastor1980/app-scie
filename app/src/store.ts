@@ -3,6 +3,10 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import { get, set, del } from 'idb-keyval';
 import type { Autoprotecao, Compartimento, Edificio, Espaco, Piso, Projeto, UT, UTNum } from './data/types';
 import { utInfo } from './data/rjscie';
+import { normalizarLocal } from './engine/calc';
+
+/** Local A com efetivo > 100 ou público > 50 passa sempre a B (RJ-SCIE art. 10.º n.º 1 b)), seja qual for o ecrã onde se editou. */
+const locaisCoerentes = (p: Projeto) => p.edificios.forEach((ed) => ed.uts.forEach((u) => u.espacos.forEach((e) => normalizarLocal(e))));
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -123,6 +127,7 @@ export const useStore = create<State>()(
       },
       importar: (p) => {
         const n = { ...clone(p), id: uid(), atualizadoEm: Date.now() };
+        locaisCoerentes(n);
         // perfil «A minha empresa»: completa os campos em falta com os do projeto importado (ex.: logótipo) e aplica-o
         const { empresaPadrao, autorPadrao } = getS();
         const e = { ...(n.empresa ?? {}), ...Object.fromEntries(Object.entries(empresaPadrao ?? {}).filter(([, v]) => v)) } as Projeto['empresa'];
@@ -156,6 +161,7 @@ export const useStore = create<State>()(
             if (p.id !== id) return p;
             const c = clone(p);
             fn(c);
+            locaisCoerentes(c);
             c.atualizadoEm = Date.now();
             return c;
           }),
