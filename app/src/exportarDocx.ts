@@ -43,7 +43,7 @@ async function inline(n: Node): Promise<string> {
   for (const c of Array.from(n.childNodes)) s += await inline(c);
   if (!s.trim()) return s;
   const peso = parseInt(cs.fontWeight, 10) >= 600;
-  const cor = cs.color === 'rgb(229, 56, 14)' ? '#E5380E' : '';
+  const cor = cs.color === 'rgb(229, 56, 14)' ? '#E5380E' : cs.color === 'rgb(18, 122, 75)' ? '#127A4B' : '';
   if (peso) s = `<b>${s}</b>`;
   if (cor) s = `<span style="color:${cor}">${s}</span>`;
   if (cs.display === 'block') s = `${s}<br/>`;

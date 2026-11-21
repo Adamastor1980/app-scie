@@ -414,7 +414,7 @@ export default function Relatorio() {
                   <p className="keep-next avoid-break mb-2 border-b-2 border-ink pb-1 text-[13.5px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)}</p>
                   <p className="mb-2 text-[11.5px] text-ink-3">{pg.marcadas} de {pg.total} exigências verificadas · cumpre {pg.cumpre} · não cumpre {pg.naoCumpre} · não aplicável {pg.na}</p>
                   <table className="tbl mb-4">
-                    <thead><tr><th>Exigência regulamentar (anexo IV)</th><th className="w-14 text-center">Sim</th><th className="w-14 text-center">Não</th><th className="w-14 text-center">N.A.</th><th className="w-24">Notas</th></tr></thead>
+                    <thead><tr><th>Exigência regulamentar (anexo IV) — há desconformidades?</th><th className="w-14 text-center">Sim</th><th className="w-14 text-center">Não</th><th className="w-14 text-center">N.A.</th><th className="w-24">Notas</th></tr></thead>
                     <tbody>
                       {GRUPOS.filter((g) => secs.some((x) => x.g === g)).map((g) => (
                         <Fragment key={g}>
@@ -426,8 +426,8 @@ export default function Relatorio() {
                               <tr key={x.c}>
                                 <td className="text-[11px]">{secRotulo(x.c)}</td>
                                 <td className="text-center font-bold text-fire">{e === 'sim' ? '■' : ''}</td>
-                                <td className="text-center">{e === 'nao' ? '■' : ''}</td>
-                                <td className="text-center text-ink-3">{e === 'na' ? '■' : ''}</td>
+                                <td className="text-center font-bold text-ok">{e === 'nao' ? '■' : ''}</td>
+                                <td className="text-center font-bold text-ink">{e === 'na' ? '■' : ''}</td>
                                 <td className="font-mono text-[11px]">{e === 'pendente' ? '—' : notas}</td>
                               </tr>
                             );
