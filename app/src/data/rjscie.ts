@@ -44,7 +44,7 @@ export const UTS: UTInfo[] = [
   },
   {
     n: 5, nome: 'Hospitalares e lares de idosos', alinea: 'e)', quadro: 'Quadro IV',
-    definicao: 'Edifícios ou partes de edifícios recebendo público, destinados à execução de ações de diagnóstico ou à prestação de cuidados na área da saúde, com ou sem internamento, ao apoio a pessoas idosas ou com condicionalismos decorrentes de fatores de natureza física ou psíquica, ou onde se desenvolvam atividades dedicadas a essas pessoas.',
+    definicao: 'Edifícios ou partes de edifícios recebendo público, destinados à execução de ações de diagnóstico ou à prestação de cuidados na área da saúde, com ou sem internamento, ao apoio a pessoas idosas ou com condicionalismos decorrentes de fatores de natureza física ou psíquica, ou onde se desenvolvam atividades dedicadas a essas pessoas, nomeadamente hospitais, clínicas, consultórios, policlínicas, dispensários médicos, centros de saúde, de diagnóstico, de enfermagem, de hemodiálise ou de fisioterapia, laboratórios de análises clínicas, bem como lares, albergues, residências, centros de abrigo e centros de dia com atividades destinadas à terceira idade.',
     exemplos: 'Hospitais, clínicas, centros de saúde, lares, centros de dia.',
     fatores: 'Altura da UT, efetivo, efetivo em locais de risco D ou E e, apenas para a 1.ª categoria, saída independente direta ao exterior de locais de risco D, ao nível do plano de referência (art. 12.º n.º 2 d)).',
   },

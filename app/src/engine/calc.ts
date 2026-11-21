@@ -93,11 +93,11 @@ export function efetivoEspaco(e: Espaco): EfetivoCalc {
       if (e.desportivoTipo === 'patinagem') {
         bruto = esp + 0.7 * A;
         formula = `${esp} espectadores + 0,7 × ${fmt(A, 2)} m² de pista`;
-        base = 'Art. 283.º b) — pistas de patinagem: 0,7 pessoas/m² de pista';
+        base = 'Art. 283.º b) — pistas de patinagem: 0,7 pessoas/m² de pista (acresce ao efetivo da al. a), registado no espaço de apoio)';
       } else if (e.desportivoTipo === 'agua') {
         bruto = esp + 1.0 * A;
         formula = `${esp} espectadores + 1 × ${fmt(A, 2)} m² de plano de água`;
-        base = 'Art. 283.º c) — piscinas e parques aquáticos: 1 pessoa/m² de plano de água';
+        base = 'Art. 283.º c) — piscinas e parques aquáticos: 1 pessoa/m² de plano de água, sem tanques de saltos, de mergulho e lava-pés (acresce ao efetivo da al. a))';
       } else {
         bruto = esp + 0.1 * A;
         formula = `${esp} espectadores + 0,1 × ${fmt(A, 2)} m² de área útil de apoio`;

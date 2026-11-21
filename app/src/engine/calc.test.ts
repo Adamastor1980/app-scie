@@ -271,3 +271,15 @@ describe('Locais de risco: coerência (art. 10.º) e reflexo nas medidas', () =>
     expect(est('Instruções de segurança')).toBe('aplica');
   });
 });
+
+describe('Despacho 8954/2020 — quadro I (valores verificados contra o texto oficial)', () => {
+  it('resíduos sólidos mistos ao ar livre: 12,5 / 10,5 / 8,5 MJ/kg', async () => {
+    const { QUADRO_I_HI } = await import('../data/despacho');
+    const h = (p: string) => QUADRO_I_HI.find((x) => x.p === p)?.h;
+    expect(h('Resíduos sólidos mistos e ao ar livre (teor de humidade < 30 %)')).toBe(12.5);
+    expect(h('Resíduos sólidos mistos e ao ar livre (30 % < teor de humidade < 60 %)')).toBe(10.5);
+    expect(h('Resíduos sólidos mistos e ao ar livre (teor de humidade > 60 %)')).toBe(8.5);
+    expect(h('Parafina')).toBe(46);
+    expect(h('Madeira')).toBe(16.7);
+  });
+});
