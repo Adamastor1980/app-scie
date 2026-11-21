@@ -31,6 +31,8 @@ const limpo = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 let pararFns: (() => void)[] = [];
 let enviados = new Map<string, number>(); // pid → atualizadoEm enviado/recebido
 let imagensEnviadas = new Set<string>();
+/** imagens apagadas pelo utilizador NESTE aparelho (só estas são apagadas da nuvem) */
+let imagensApagar = new Set<string>();
 let perfilEnviado = '';
 let aplicarRemoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -82,6 +84,7 @@ export async function iniciarSincronizacao(user: User) {
     const imagens = new Map<string, string>();
     si.forEach((d) => imagens.set(d.id, (d.data() as { imagem: string }).imagem));
     imagensEnviadas = new Set(imagens.keys());
+    imagensApagar = new Set();
 
     const local = useStore.getState();
     const perfilRemoto = (su.exists() ? (su.data() as { perfil?: { empresa: Projeto['empresa']; autor: Projeto['autor'] } }).perfil : undefined) ?? null;
@@ -115,11 +118,19 @@ export async function iniciarSincronizacao(user: User) {
 
     // 3) ouve alterações feitas noutros dispositivos
     pararFns.push(onSnapshot(colI, (snap) => {
+      let removidas = false;
       snap.docChanges().forEach((c) => {
-        if (c.type === 'removed') return;
+        if (c.type === 'removed') {
+          // apagada na nuvem: se este aparelho ainda a tiver (e não a apagou), volta a enviá-la
+          imagens.delete(c.doc.id);
+          imagensEnviadas.delete(c.doc.id);
+          removidas = true;
+          return;
+        }
         imagens.set(c.doc.id, (c.doc.data() as { imagem: string }).imagem);
         imagensEnviadas.add(c.doc.id);
       });
+      if (removidas) { if (timer) clearTimeout(timer); timer = setTimeout(() => { enviar(false).catch(falha); }, 1500); }
       // completa imagens que chegaram depois do projeto
       const st = useStore.getState();
       if (st.projetos.some((p) => faltaImagem(p, imagens))) {
@@ -171,8 +182,12 @@ export async function iniciarSincronizacao(user: User) {
     }));
 
     // 4) envia as alterações locais (com um pequeno atraso para agrupar a escrita)
-    pararFns.push(useStore.subscribe(() => {
+    pararFns.push(useStore.subscribe((novo, antigo) => {
       if (aplicarRemoto) return;
+      const ids = (ps: Projeto[]) => new Set(ps.flatMap((p) => imagensDe(p).map((x) => x.id)));
+      const antes = ids(antigo.projetos);
+      const depois = ids(novo.projetos);
+      for (const id of antes) if (!depois.has(id)) imagensApagar.add(id);
       useNuvem.setState({ estado: 'a_sincronizar' });
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => { enviar(false).catch(falha); }, 1200);
@@ -241,9 +256,10 @@ async function enviar(inicial: boolean) {
       enviados.delete(pid);
       tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'projetos', pid)));
     }
-    // imagens de plantas apagadas
+    // imagens apagadas pelo utilizador neste aparelho (nunca se apagam imagens só porque este aparelho ainda não conhece o projeto que as usa)
     const vivas = new Set(st.projetos.flatMap((p) => imagensDe(p).map((pl) => pl.id)));
-    for (const id of [...imagensEnviadas]) {
+    for (const id of [...imagensApagar]) {
+      imagensApagar.delete(id);
       if (vivas.has(id)) continue;
       imagensEnviadas.delete(id);
       tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'plantas', id)));
