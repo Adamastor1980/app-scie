@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Copy, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, Copy, Plus, Trash2 } from 'lucide-react';
+import TextoLei from '../../ui/TextoLei';
 import type { UTProps } from '../UTPage';
 import { precisaEfetivo } from '../UTPage';
 import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
@@ -10,6 +11,18 @@ import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle } from '..
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
 import { codigosEspacos } from '../../nome';
+
+/** Efeito do efetivo de público: só conta para distinguir local A de B (RJ-SCIE art. 10.º n.º 1 a) ii) e b)). */
+function efeitoPublico(e: Espaco, efetivo: number): string {
+  const pub = e.efetivoPublico ?? 0;
+  if (pub > efetivo) return `Atenção: o público (${pub}) não pode ser maior que o efetivo do espaço (${efetivo}), que já inclui todos os ocupantes.`;
+  if (e.local === 'B') {
+    if (efetivo > 100) return `Não altera nada: já é local B por ter efetivo ${efetivo} > 100.`;
+    if (pub > 50) return `É local B por ter público ${pub} > 50.`;
+    return 'Só conta para classificar o local: com público > 50 é local B (art. 10.º n.º 1 b)).';
+  }
+  return 'Só serve para classificar o local: com público > 50 passa a local B (art. 10.º n.º 1 b)).';
+}
 
 const CRITERIOS: { v: CriterioEfetivo; l: string; uts?: number[] }[] = [
   { v: 'indice', l: 'Índice de ocupação × área útil (quadro XXVII)' },
@@ -31,6 +44,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
   const cod = codigosEspacos(useP().p);
   const ef = efetivoUT(ut);
   const [showQ, setShowQ] = useState(false);
+  const [lei, setLei] = useState(false);
   const crits0 = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
   const crits = ut.tipo === 12 ? [...crits0.filter((c) => c.v === 'declarado'), ...crits0.filter((c) => c.v !== 'declarado')] : crits0;
   // cada alteração passa pela coerência com o art. 10.º do RJ-SCIE (local D, A→B)
@@ -86,7 +100,13 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                         <Select value={e.subtipoC ?? ''} onChange={(v) => setE(i, (x) => { x.subtipoC = v; })} options={[{ v: '', l: '—' }, ...SUBTIPOS_C.map((s) => ({ v: s.id, l: s.txt }))]} />
                       </Field>
                     )}
-                    {ut.tipo !== 12 && <Field label="Efetivo de público" hint="Distingue local A de B (art. 10.º n.º 1)."><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>}
+                    {ut.tipo !== 12 && (e.local === 'A' || e.local === 'B') && (
+                      <div className="field">
+                        <Field label="Efetivo de público" legal="art. 10.º n.º 1"><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>
+                        <span className="text-[11.5px] leading-snug text-ink-3">{efeitoPublico(e, c.valor)}</span>
+                        <button type="button" className="flex items-center gap-1 self-start text-[11.5px] font-semibold text-fire hover:underline" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-paper-3 px-4 py-3">
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas na mobilidade/perceção → local D (art. 10.º n.º 1 d)); ×1,3 para saídas (art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
@@ -138,6 +158,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
         </div>
       </Section>
       )}
+    {lei && <TextoLei refs={[{ dip: 'RJ', art: '10' }]} titulo="Classificação dos locais de risco" onFechar={() => setLei(false)} />}
     </div>
   );
 }
