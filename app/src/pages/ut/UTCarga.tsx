@@ -74,6 +74,30 @@ export default function UTCarga({ ut, upU }: UTProps) {
   );
 }
 
+/** Significado de cada símbolo, como definido no n.º 3.º do Despacho n.º 8954/2020. */
+const SIMB_DET: [string, string][] = [
+  ['Mi', 'massa do material (i), em kg'],
+  ['Hi', 'poder calorífico inferior do material, em MJ/kg (quadro I, n.º 5.º)'],
+  ['Ci', 'coeficiente de combustibilidade do material (n.º 6.º)'],
+  ['Rai', 'coeficiente de ativação, conforme a atividade do compartimento (quadro II, n.º 7.º)'],
+  ['S', 'área útil do compartimento corta-fogo, em m²'],
+];
+const simbProb = (arm: boolean): [string, string][] => [
+  ['qsi', 'densidade de carga de incêndio da atividade de fabrico/reparação, em MJ/m² (quadro II)'],
+  ...(arm ? ([['qvi', 'carga de incêndio por volume do produto armazenado, em MJ/m³ (quadro II)'], ['hi', 'altura de armazenagem da zona, em m']] as [string, string][]) : []),
+  ['Si', 'área ocupada pela zona, em m²; vem preenchida com a área ainda livre do compartimento (uma só zona: Si = S)'],
+  ['Ci', 'coeficiente de combustibilidade do material de maior risco na zona (n.º 6.º)'],
+  ['Rai', 'coeficiente de ativação da atividade da zona (quadro II, n.º 7.º)'],
+  ['S', 'área útil do compartimento corta-fogo, em m²'],
+];
+function Simbolos({ l }: { l: [string, string][] }) {
+  return (
+    <dl className="mt-3 grid gap-x-6 gap-y-1 border-t border-paper-3 pt-3 text-[12px] sm:grid-cols-2">
+      {l.map(([k, v]) => <div key={k} className="flex gap-2"><dt className="w-9 shrink-0 font-mono font-semibold text-fire-ink">{k}</dt><dd className="text-ink-2">{v}</dd></div>)}
+    </dl>
+  );
+}
+
 function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compartimento) => void) => void; remove: () => void }) {
   const r = cargaCompartimento(c);
   const [verQuadro, setVerQuadro] = useState(false);
@@ -86,20 +110,23 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
   const pickQ2 = (id: number, tipo: 'qs' | 'qv') => {
     const a = QUADRO_II.find((x) => x.id === id)!;
     if (tipo === 'qs') {
-      set((x) => { x.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs!, area: 0, ci: 1, rai: RAI[a.rs!] }); });
-      setAviso(`Adicionada a atividade «${a.a}» (qsi = ${fmt(a.qs)} MJ/m²). Preencha a área Si nas zonas de atividade.`);
+      set((x) => { x.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs!, area: livre(), ci: 1, rai: RAI[a.rs!] }); });
+      setAviso(`Adicionada a atividade «${a.a}» (qsi = ${fmt(a.qs)} MJ/m²). Confirme a área Si da zona.`);
     } else {
-      set((x) => { x.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv!, altura: 0, area: 0, ci: 1, rai: RAI[a.rv!] }); });
+      set((x) => { x.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv!, altura: 0, area: livre(), ci: 1, rai: RAI[a.rv!] }); });
       setAviso(`Adicionado o armazenamento «${a.a}» (qvi = ${fmt(a.qv)} MJ/m³). Preencha a altura hi e a área Si nas zonas de armazenamento.`);
     }
   };
   const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (art. 10.º n.º 3 n))' : '';
   const somaZonas = [...c.atividades, ...c.armazens].reduce((s, z) => s + z.area, 0);
+  const temArm = c.armazens.length > 0;
+  // Si vem preenchida com a área que ainda falta atribuir no compartimento (com uma só zona, Si = S); só se altera se a zona for menor
+  const livre = () => Math.max(0, c.area - somaZonas);
   return (
     <div data-bloco={c.id} className="border border-ink bg-white">
       <div className="grid items-end gap-3 border-b border-ink p-4 md:grid-cols-[1.5fr_0.8fr_1.4fr_auto]">
         <Field label="Compartimento corta-fogo"><Text value={c.nome} onChange={(v) => set((x) => { x.nome = v; })} /></Field>
-        <Field label="Área útil S do compartimento" hint="Indicada uma única vez: divide a soma de todos os materiais/zonas."><Num value={c.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
+        <Field label="Área útil S do compartimento"><Num value={c.area} onChange={(v) => set((x) => { const zs = [...x.atividades, ...x.armazens]; if (zs.length === 1 && (zs[0].area === 0 || zs[0].area === x.area)) zs[0].area = v; x.area = v; })} suffix="m²" /></Field>
         <div className="field">
           <span className="label">Método (n.º 2.º do Despacho)</span>
           <div className="grid grid-cols-2 border border-ink">
@@ -117,17 +144,19 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         {c.metodo === 'deterministico' ? (
           <>
             <p className="font-display text-[16px] font-bold">Método determinístico — «sei o que lá está e quanto pesa»</p>
-            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais combustíveis e as quantidades: inventário de stock, fichas técnicas, pesagens. Preenche: 1) a atividade do compartimento, que dá o Rai (quadro II); 2) por cada material, o material (Hi automático do quadro I), a massa Mi em kg e o Ci (n.º 6.º).</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais e as quantidades (inventário, fichas técnicas, pesagens).</p>
             <p className="mt-2 font-mono text-[13px]">qs = Σ (Mi × Hi × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 1, b) do Despacho</span></p>
+            <Simbolos l={SIMB_DET} />
           </>
         ) : (
           <>
             <p className="font-display text-[16px] font-bold">Método probabilístico — «sei a atividade e as áreas»</p>
-            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas, só a atividade e a área que ocupa. É o mais usado em projeto. Preenche por zona a atividade (qsi/qvi e Rai automáticos do quadro II), a área Si, o Ci e, no armazenamento, a altura hi. Dois tipos de zona:</p>
+            <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas: basta a atividade e a área de cada zona. Há dois tipos de zona:</p>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               <p className="text-[12.5px]"><b>a) Zonas de fabrico ou reparação</b><br /><span className="font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
               <p className="text-[12.5px]"><b>b) Zonas de armazenamento</b><br /><span className="font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
             </div>
+            <Simbolos l={simbProb(c.armazens.length > 0)} />
           </>
         )}
         <button className={`${verQuadro ? 'btn-primary' : 'btn'} mt-3`} onClick={() => setVerQuadro((v) => !v)}>
@@ -195,20 +224,20 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </tbody>
           </table>
           <button className="btn-fire mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Adicionar material a este compartimento</button>
-          <p className="mt-2 text-[11.5px] text-ink-3">Cada material leva só a massa (em kg, ou em litros × densidade para líquidos, com a densidade da FDS): não tem área própria. Todos os materiais deste compartimento são somados e divididos pela área útil S indicada no topo.</p>
+          
         </div>
       ) : (
         <div className="p-4">
           <p className="label mb-2">Zonas do compartimento — para cada zona escolha se é de fabrico/reparação ou de armazenamento</p>
           <table className="tbl">
-            <thead><tr><th className="w-[200px]">Tipo de zona</th><th>Atividade / produto (quadro II)</th><th className="w-[100px] text-right">qsi / qvi</th><th className="w-[110px] text-right">Altura hi (m)</th><th className="w-[120px] text-right">Área Si (m²)</th><th className="w-[145px]">Ci</th><th className="w-[70px] text-right">Rai</th><th className="w-[120px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
+            <thead><tr><th className="w-[200px]">Tipo de zona</th><th>Atividade / produto (quadro II)</th><th className="w-[100px] text-right">qsi / qvi</th>{temArm && <th className="w-[110px] text-right">Altura hi (m)</th>}<th className="w-[120px] text-right">Área Si (m²)</th><th className="w-[145px]">Ci</th><th className="w-[70px] text-right">Rai</th><th className="w-[120px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.atividades.map((z, k) => (
                 <tr key={z.id}>
                   <td><Select value="f" onChange={(v) => v === 'a' && set((x) => { const [o] = x.atividades.splice(k, 1); x.armazens.push({ id: o.id, nome: '', qv: 0, altura: 0, area: o.area, ci: o.ci, rai: 1 }); })} options={[{ v: 'f', l: 'Fabrico/reparação' }, { v: 'a', l: 'Armazenamento' }]} /></td>
                   <td><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade de fabrico/reparação" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
                   <td className="num pt-4 text-right">{z.qs ? <>{fmt(z.qs)}<span className="block text-[10px] text-ink-4">MJ/m²</span></> : '—'}</td>
-                  <td className="pt-4 text-right text-[11px] text-ink-4">não se aplica</td>
+                  {temArm && <td className="pt-4 text-right text-ink-4">—</td>}
                   <td><Num value={z.area} onChange={(v) => set((x) => { x.atividades[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.atividades[k].ci = v; })} options={CI_OPTS} /></td>
                   <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
@@ -232,12 +261,12 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </tbody>
           </table>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
-            <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
+            <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
+            <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
           </div>
           {c.armazens.some((z) => !z.altura) && <div className="mt-3"><Note tone="warn">Há zonas de armazenamento sem altura de armazenagem hi: a parcela dessa zona fica a zero até a preencher.</Note></div>}
-          <p className="mt-3 text-[11.5px] text-ink-3"><b>Fabrico/reparação:</b> qsi (MJ/m²) × Si × Ci × Rai — sem altura. <b>Armazenamento:</b> qvi (MJ/m³) × hi × Si × Ci × Rai — a altura de armazenagem é obrigatória. Cada lista mostra apenas as atividades que têm valor na respetiva coluna do quadro II (ex.: «Alimentação, expedição» só tem valor de fabrico).</p>
-          <p className="mt-4 text-[11.5px] text-ink-3">qsi, qvi e Rai são lidos do quadro II quando escolhe a atividade.{r.raiNota ? ' Várias zonas no compartimento — ' + r.raiNota : ''}</p>
+          
+          {r.raiNota && <p className="mt-3 text-[11.5px] text-ink-3">Várias zonas no compartimento — {r.raiNota}</p>}
           {c.area > 0 && somaZonas > c.area + 0.01 && <div className="mt-3"><Note tone="warn">A soma das áreas das zonas ({fmt(somaZonas, 1)} m²) excede a área útil do compartimento ({fmt(c.area, 1)} m²).</Note></div>}
         </div>
       )}
