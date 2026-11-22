@@ -70,7 +70,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
       </div>
 
       <Section n="2.1" title="Espaços e locais de risco" sub="Um espaço por linha. O efetivo de cada espaço é arredondado ao inteiro superior (art. 51.º n.os 2 e 3)."
-        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => { const n = novoEspaco(ut.tipo); upU((u) => { u.espacos.unshift(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Espaço</button></div>}>
+        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => { const n = novoEspaco(ut.tipo); upU((u) => { u.espacos.push(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Espaço</button></div>}>
         {showQ && <QuadroXXVII />}
         {ut.espacos.length === 0 ? (
           <Empty title="Sem espaços." action={<button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco(u.tipo)); })}><Plus size={15} /> Adicionar espaço</button>}>
@@ -78,7 +78,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
           </Empty>
         ) : (
           <div className="flex flex-col gap-3">
-            {ut.espacos.map((e, i) => {
+            {ut.espacos.map((e, i) => ({ e, i })).reverse().map(({ e, i }) => {
               const c = efetivoEspaco(e);
               const aviso = e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50);
               return (

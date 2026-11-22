@@ -44,7 +44,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
       </div>
 
       <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
-        <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => { const n = novoCompartimento(ut.compartimentos.length + 1); upU((u) => { u.compartimentos.unshift(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Outro compartimento corta-fogo</button>
+        <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => { const n = novoCompartimento(ut.compartimentos.length + 1); upU((u) => { u.compartimentos.push(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Outro compartimento corta-fogo</button>
       }>
         {ut.compartimentos.length === 0 && (
           <Empty title="Sem compartimentos." action={<button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(1)); })}><Plus size={15} /> Adicionar compartimento</button>}>
@@ -52,7 +52,8 @@ export default function UTCarga({ ut, upU }: UTProps) {
           </Empty>
         )}
         <div className="flex flex-col gap-6">
-          {ut.compartimentos.map((c, i) => <CompBloco key={c.id} c={c} set={(fn) => setC(i, fn)} remove={() => upU((u) => { u.compartimentos.splice(i, 1); })} />)}
+          {/* guardados por ordem de criação (é a ordem do relatório); no ecrã o mais recente aparece primeiro */}
+          {ut.compartimentos.map((c, i) => ({ c, i })).reverse().map(({ c, i }) => <CompBloco key={c.id} c={c} set={(fn) => setC(i, fn)} remove={() => upU((u) => { u.compartimentos.splice(i, 1); })} />)}
         </div>
       </Section>
 
