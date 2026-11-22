@@ -82,18 +82,25 @@ const SIMB_DET: [string, string][] = [
   ['Rai', 'coeficiente de ativação, conforme a atividade do compartimento (quadro II, n.º 7.º)'],
   ['S', 'área útil do compartimento corta-fogo, em m²'],
 ];
-const simbProb = (arm: boolean): [string, string][] => [
-  ['qsi', 'densidade de carga de incêndio da atividade de fabrico/reparação, em MJ/m² (quadro II)'],
-  ...(arm ? ([['qvi', 'carga de incêndio por volume do produto armazenado, em MJ/m³ (quadro II)'], ['hi', 'altura de armazenagem da zona, em m']] as [string, string][]) : []),
-  ['Si', 'área ocupada pela zona, em m²; vem preenchida com a área ainda livre do compartimento (uma só zona: Si = S)'],
+const SIMB_FAB: [string, string][] = [
+  ['qsi', 'densidade de carga de incêndio da atividade, em MJ/m² (quadro II)'],
+  ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
   ['Ci', 'coeficiente de combustibilidade do material de maior risco na zona (n.º 6.º)'],
-  ['Rai', 'coeficiente de ativação da atividade da zona (quadro II, n.º 7.º)'],
+  ['Rai', 'coeficiente de ativação da atividade (quadro II, n.º 7.º)'],
+  ['S', 'área útil do compartimento corta-fogo, em m²'],
+];
+const SIMB_ARM: [string, string][] = [
+  ['qvi', 'carga de incêndio por volume do produto armazenado, em MJ/m³ (quadro II)'],
+  ['hi', 'altura de armazenagem da zona, em m'],
+  ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
+  ['Ci', 'coeficiente de combustibilidade do produto armazenado (n.º 6.º)'],
+  ['Rai', 'coeficiente de ativação do produto armazenado (quadro II, n.º 7.º)'],
   ['S', 'área útil do compartimento corta-fogo, em m²'],
 ];
 function Simbolos({ l }: { l: [string, string][] }) {
   return (
-    <dl className="mt-3 grid gap-x-6 gap-y-1 border-t border-paper-3 pt-3 text-[12px] sm:grid-cols-2">
-      {l.map(([k, v]) => <div key={k} className="flex gap-2"><dt className="w-9 shrink-0 font-mono font-semibold text-fire-ink">{k}</dt><dd className="text-ink-2">{v}</dd></div>)}
+    <dl className="mt-2 flex flex-col gap-0.5 border-l-2 border-fire pl-3 text-[12px]">
+      {l.map(([k, v]) => <div key={k} className="flex gap-2"><dt className="w-8 shrink-0 font-mono font-semibold text-fire-ink">{k}</dt><dd className="text-ink-2">{v}</dd></div>)}
     </dl>
   );
 }
@@ -152,11 +159,18 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           <>
             <p className="font-display text-[16px] font-bold">Método probabilístico — «sei a atividade e as áreas»</p>
             <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando não há inventário de massas: basta a atividade e a área de cada zona. Há dois tipos de zona:</p>
-            <div className="mt-2 grid gap-2 md:grid-cols-2">
-              <p className="text-[12.5px]"><b>a) Zonas de fabrico ou reparação</b><br /><span className="font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
-              <p className="text-[12.5px]"><b>b) Zonas de armazenamento</b><br /><span className="font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S</span> <span className="text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
+            <div className="mt-3 grid gap-5 md:grid-cols-2">
+              <div>
+                <p className="text-[12.5px] font-bold">a) Zonas de fabrico ou reparação</p>
+                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
+                <Simbolos l={SIMB_FAB} />
+              </div>
+              <div>
+                <p className="text-[12.5px] font-bold">b) Zonas de armazenamento</p>
+                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
+                <Simbolos l={SIMB_ARM} />
+              </div>
             </div>
-            <Simbolos l={simbProb(c.armazens.length > 0)} />
           </>
         )}
         <button className={`${verQuadro ? 'btn-primary' : 'btn'} mt-3`} onClick={() => setVerQuadro((v) => !v)}>
