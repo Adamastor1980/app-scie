@@ -34,6 +34,13 @@ let imagensEnviadas = new Set<string>();
 /** imagens apagadas pelo utilizador NESTE aparelho (só estas são apagadas da nuvem) */
 let imagensApagar = new Set<string>();
 let perfilEnviado = '';
+// projetos apagados: registo («lápide») guardado na nuvem para que os outros aparelhos não os voltem a enviar
+type Lapides = Record<string, number>;
+const CHAVE_LAPIDES = 'cautela-apagados-por-enviar';
+let lapidesNuvem: Lapides = {};
+const lapidesPorEnviar = (): Lapides => { try { return JSON.parse(localStorage.getItem(CHAVE_LAPIDES) || '{}'); } catch { return {}; } };
+const guardarPorEnviar = (l: Lapides) => localStorage.setItem(CHAVE_LAPIDES, JSON.stringify(l));
+const apagadoDepois = (p: Projeto, l: Lapides) => l[p.id] != null && (p.atualizadoEm ?? 0) <= l[p.id];
 let aplicarRemoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -87,6 +94,8 @@ export async function iniciarSincronizacao(user: User) {
     imagensApagar = new Set();
 
     const local = useStore.getState();
+    lapidesNuvem = (su.exists() ? (su.data() as { apagados?: Lapides }).apagados : undefined) ?? {};
+    const lapides: Lapides = { ...lapidesNuvem, ...lapidesPorEnviar() };
     const perfilRemoto = (su.exists() ? (su.data() as { perfil?: { empresa: Projeto['empresa']; autor: Projeto['autor'] } }).perfil : undefined) ?? null;
     const preenche = <T extends object>(base: T | null | undefined, extra: T | null | undefined): T =>
       ({ ...(extra ?? {}), ...Object.fromEntries(Object.entries(base ?? {}).filter(([, v]) => v)) }) as T;
@@ -98,17 +107,19 @@ export async function iniciarSincronizacao(user: User) {
     const remotos = new Map<string, Projeto>();
     sp.forEach((d) => {
       const r = d.data() as Projeto;
+      if (apagadoDepois(r, lapides)) return; // apagado noutro aparelho (o documento é removido no envio)
       remotos.set(d.id, comImagens({ ...r, empresa, autor }, (id) => imagens.get(id) ?? imagensLocais.get(id) ?? ''));
     });
 
     const juntos = new Map<string, Projeto>();
-    for (const p of local.projetos) juntos.set(p.id, p);
+    for (const p of local.projetos) if (!apagadoDepois(p, lapides)) juntos.set(p.id, p);
     for (const [id, r] of remotos) {
       const l = juntos.get(id);
       if (!l || (r.atualizadoEm ?? 0) >= (l.atualizadoEm ?? 0)) juntos.set(id, r);
     }
     const lista = [...juntos.values()].map((p) => ({ ...p, empresa, autor })).sort((a, b) => b.atualizadoEm - a.atualizadoEm);
     enviados = new Map([...remotos.values()].map((r) => [r.id, r.atualizadoEm]));
+    sp.forEach((d) => { if (!remotos.has(d.id)) enviados.set(d.id, -1); }); // documentos de projetos apagados: o envio remove-os
     aplicarRemoto = true;
     useStore.setState({ projetos: lista, empresaPadrao: empresa, autorPadrao: autor });
     aplicarRemoto = false;
@@ -171,6 +182,13 @@ export async function iniciarSincronizacao(user: User) {
     }));
     pararFns.push(onSnapshot(docU, (d) => {
       if (d.metadata.hasPendingWrites || !d.exists()) return;
+      lapidesNuvem = (d.data() as { apagados?: Lapides }).apagados ?? {};
+      const stA = useStore.getState();
+      if (stA.projetos.some((p) => apagadoDepois(p, lapidesNuvem))) {
+        aplicarRemoto = true;
+        useStore.setState({ projetos: stA.projetos.filter((p) => !apagadoDepois(p, lapidesNuvem)) });
+        aplicarRemoto = false;
+      }
       const pr = (d.data() as { perfil?: { empresa: Projeto['empresa']; autor: Projeto['autor'] } }).perfil;
       if (!pr) return;
       const s = JSON.stringify(pr);
@@ -184,6 +202,13 @@ export async function iniciarSincronizacao(user: User) {
     // 4) envia as alterações locais (com um pequeno atraso para agrupar a escrita)
     pararFns.push(useStore.subscribe((novo, antigo) => {
       if (aplicarRemoto) return;
+      const vivos = new Set(novo.projetos.map((p) => p.id));
+      const removidos = antigo.projetos.filter((p) => !vivos.has(p.id));
+      if (removidos.length) {
+        const l = lapidesPorEnviar();
+        for (const p of removidos) l[p.id] = Math.max(Date.now(), p.atualizadoEm ?? 0);
+        guardarPorEnviar(l);
+      }
       const ids = (ps: Projeto[]) => new Set(ps.flatMap((p) => imagensDe(p).map((x) => x.id)));
       const antes = ids(antigo.projetos);
       const depois = ids(novo.projetos);
@@ -224,6 +249,23 @@ async function enviar(inicial: boolean) {
   }
 
   const ids = new Set(st.projetos.map((p) => p.id));
+  const pend = lapidesPorEnviar();
+  const novas = Object.entries(pend).filter(([id, t]) => lapidesNuvem[id] !== t && !ids.has(id));
+  if (novas.length) {
+    const apagados = Object.fromEntries(novas);
+    tarefas.push(
+      Promise.all([
+        setDoc(doc(db, 'users', u.uid), { apagados }, { merge: true }),
+        ...novas.map(([id]) => deleteDoc(doc(db, 'users', u.uid, 'projetos', id))),
+      ]).then(() => {
+        Object.assign(lapidesNuvem, apagados);
+        const l = lapidesPorEnviar();
+        for (const [id] of novas) delete l[id];
+        guardarPorEnviar(l);
+        for (const [id] of novas) enviados.delete(id);
+      }),
+    );
+  }
   // imagens que existem neste aparelho mas ainda não estão na nuvem (ex.: envio interrompido): enviar sempre
   for (const p of st.projetos) {
     for (const pl of imagensDe(p)) {
@@ -249,6 +291,11 @@ async function enviar(inicial: boolean) {
         throw e;
       }),
     );
+  }
+  for (const [pid, t] of [...enviados]) {
+    if (t !== -1 || ids.has(pid)) continue;
+    enviados.delete(pid);
+    tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'projetos', pid)));
   }
   if (!inicial) {
     for (const pid of [...enviados.keys()]) {
