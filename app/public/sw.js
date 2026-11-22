@@ -1,4 +1,4 @@
-/* SCIE/CALC — funcionamento offline.
+/* Cautela SCIE — funcionamento offline.
  * Página (index.html): rede primeiro (há sempre a versão mais recente quando há ligação); sem rede, a cópia guardada.
  * Ficheiros com hash em /assets: guardados na instalação (lista em asset-manifest.json) e servidos da cache.
  * Pedidos a outros domínios (Firebase, Google) não passam por aqui: o Firestore tem a sua própria cache offline.

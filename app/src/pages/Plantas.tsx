@@ -62,7 +62,7 @@ export default function Plantas() {
 
   return (
     <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
-      <p className="label !text-fire">Peças desenhadas</p>
+      <p className="label !text-fire-ink">Peças desenhadas</p>
       <h1 className="h-display mb-3 mt-2 text-[40px]">Plantas e desenhos</h1>
       <p className="mb-6 max-w-3xl text-[13px] text-ink-3">
         O anexo IV do RJ-SCIE (art. 3.º) exige: planta de localização; cortes e alçados com a envolvente até 5 m; planta de implantação com acessibilidade dos bombeiros e hidrantes; plantas de todos os pisos com locais de risco, efetivos, resistência ao fogo, vias de evacuação, saídas e posição dos equipamentos de SCIE.

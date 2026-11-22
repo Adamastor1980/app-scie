@@ -27,7 +27,7 @@ export default function Perfil() {
   const logoRef = useRef<HTMLInputElement>(null);
   return (
     <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
-      <p className="label !text-fire">Quem faz os projetos</p>
+      <p className="label !text-fire-ink">Quem faz os projetos</p>
       <h1 className="h-display mb-3 mt-2 text-[44px]">A minha empresa</h1>
       <p className="mb-8 max-w-3xl text-[13px] text-ink-3">Estes dados são usados em todos os projetos e relatórios (capa, cabeçalhos, apresentação da empresa e termo do autor). Uma alteração aqui atualiza todos os projetos. Ao exportar um projeto em JSON, estes dados vão junto; ao importar noutro computador sem perfil, são adotados automaticamente.</p>
       <Section n="01" title="Empresa" sub="Aparece na capa, no cabeçalho de todas as páginas e na secção «Apresentação da empresa» de todos os relatórios.">

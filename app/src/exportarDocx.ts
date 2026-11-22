@@ -43,7 +43,7 @@ async function inline(n: Node): Promise<string> {
   for (const c of Array.from(n.childNodes)) s += await inline(c);
   if (!s.trim()) return s;
   const peso = parseInt(cs.fontWeight, 10) >= 600;
-  const cor = cs.color === 'rgb(229, 56, 14)' ? '#E5380E' : cs.color === 'rgb(18, 122, 75)' ? '#127A4B' : '';
+  const cor = ({ 'rgb(194, 54, 43)': '#C2362B', 'rgb(148, 101, 10)': '#94650A', 'rgb(218, 154, 30)': '#94650A', 'rgb(18, 122, 75)': '#127A4B' } as Record<string, string>)[cs.color] ?? '';
   if (peso) s = `<b>${s}</b>`;
   if (cor) s = `<span style="color:${cor}">${s}</span>`;
   if (cs.display === 'block') s = `${s}<br/>`;
@@ -111,7 +111,7 @@ async function tabela(t: HTMLTableElement) {
       const px = Math.max(24, Math.round((c.getBoundingClientRect().width / larguraT) * LARG_MAX));
       const th = c.tagName === 'TH';
       const span = c.colSpan > 1 ? ` colspan="${c.colSpan}"` : '';
-      const fundo = th || getComputedStyle(c).backgroundColor === 'rgb(243, 242, 237)' ? 'background-color:#F3F2ED;' : '';
+      const fundo = th || getComputedStyle(c).backgroundColor === 'rgb(249, 248, 243)' ? 'background-color:#F3F1E8;' : '';
       const conteudo = c.querySelector('img, table') ? await bloco(c) : await inline(c);
       s += `<td${span} width="${px}" style="width:${px}px;border:1px solid #BBBBBB;padding:3px 5px;vertical-align:top;font-size:9pt;${fundo}">${th ? `<b>${conteudo}</b>` : conteudo.replace(/(<br\/>)+$/, '')}</td>`;
     }
@@ -153,9 +153,9 @@ export async function exportarDocx(p: Projeto, raiz: HTMLElement, tituloFicheiro
   try {
   res = await HTMLtoDOCX(
     html,
-    `<p style="font-size:8pt;color:#5C5B55">${[p.empresa.nome, p.referencia || p.nome, `v${p.versao}`].filter(Boolean).map((x) => esc(x!)).join(' · ')}</p>`,
+    `<p style="font-size:8pt;color:#5A6478">${[p.empresa.nome, p.referencia || p.nome, `v${p.versao}`].filter(Boolean).map((x) => esc(x!)).join(' · ')}</p>`,
     {
-      title: `${p.nome} — ${tituloFicheiro}`, creator: autor || 'SCIE/CALC', lang: 'pt-PT',
+      title: `${p.nome} — ${tituloFicheiro}`, creator: autor || 'Cautela SCIE', lang: 'pt-PT',
       orientation: 'portrait', pageSize: { width: 11906, height: 16838 },
       margins: { top: 1134, right: 1134, bottom: 1134, left: 1134, header: 567, footer: 567 },
       font: 'Calibri', fontSize: 20,
@@ -164,7 +164,7 @@ export async function exportarDocx(p: Projeto, raiz: HTMLElement, tituloFicheiro
       heading1: { font: 'Calibri', fontSize: 30, bold: true, spacing: { before: 240, after: 120 } },
       heading2: { font: 'Calibri', fontSize: 24, bold: true, spacing: { before: 200, after: 80 } },
     },
-    `<p style="font-size:8pt;color:#8E8D86">Realizado por: ${esc(autor)} · ${esc(p.nome)}</p>`,
+    `<p style="font-size:8pt;color:#8B92A0">Realizado por: ${esc(autor)} · ${esc(p.nome)}</p>`,
   );
   } finally {
     // o «Buffer» falso só pode existir durante a conversão: outras bibliotecas (ex.: JSZip) usá-lo-iam por engano

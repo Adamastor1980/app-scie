@@ -1,14 +1,14 @@
 {
-  "name": "SCIE/CALC — Segurança contra incêndio em edifícios",
-  "short_name": "SCIE/CALC",
+  "name": "Cautela SCIE — Segurança contra incêndio em edifícios",
+  "short_name": "Cautela SCIE",
   "description": "Categorias de risco, efetivo, carga de incêndio e medidas de SCIE com base no RJ-SCIE, RT-SCIE e Despacho 8954/2020.",
   "lang": "pt-PT",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0F0F0E",
-  "theme_color": "#0F0F0E",
+  "background_color": "#F9F8F3",
+  "theme_color": "#14233A",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

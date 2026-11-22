@@ -129,11 +129,11 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
                         const n = nomeUT(u);
                         return <span className={`truncate ${n.temNome ? '' : 'italic text-ink-4'}`} title={n.nome}>{n.nome}</span>;
                       })()}
-                      {act && <ChevronRight size={13} className="ml-auto shrink-0 text-fire" />}
+                      {act && <ChevronRight size={13} className="ml-auto shrink-0 text-fire-ink" />}
                     </a>
                   );
                 })}
-                <button onClick={() => setEscolher(e.id)} className="ml-[22px] flex h-8 items-center gap-1.5 border-l border-ink-4/40 px-3 text-[12px] font-medium text-ink-3 hover:text-fire">
+                <button onClick={() => setEscolher(e.id)} className="ml-[22px] flex h-8 items-center gap-1.5 border-l border-ink-4/40 px-3 text-[12px] font-medium text-ink-3 hover:text-fire-ink">
                   <Plus size={13} /> Adicionar utilização-tipo
                 </button>
               </div>
@@ -162,7 +162,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
         </aside>
         {menuAberto && (
           <div className="no-print fixed inset-0 z-50 flex lg:hidden" onClick={() => setMenuAberto(false)}>
-            <div className="flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto border-r border-ink bg-paper-2 shadow-[8px_0_0_rgba(15,15,14,0.15)]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex h-full w-[86vw] max-w-[320px] flex-col overflow-y-auto border-r border-ink bg-paper-2 shadow-[8px_0_0_rgba(20,35,58,0.12)]" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between border-b border-ink-4/40 px-3 py-2">
                 <span className="label">Menu do projeto</span>
                 <button className="btn-icon" onClick={() => setMenuAberto(false)}><X size={18} /></button>

@@ -18,13 +18,13 @@ const TIPO_PLANTA: Record<string, string> = {
 };
 
 function Sheet({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`report-page mx-auto mb-8 w-[210mm] min-h-[297mm] bg-white px-[16mm] py-[16mm] shadow-[0_1px_0_#0F0F0E,8px_8px_0_rgba(15,15,14,0.12)] ${className}`}>{children}</section>;
+  return <section className={`report-page mx-auto mb-8 w-[210mm] min-h-[297mm] bg-white px-[16mm] py-[16mm] shadow-[0_1px_0_#14233A,8px_8px_0_rgba(20,35,58,0.12)] ${className}`}>{children}</section>;
 }
 
 function H1({ n, children }: { n: string; children: ReactNode }) {
   return (
     <h2 className="avoid-break mb-5 mt-2 flex items-baseline gap-3 border-b-[3px] border-ink pb-2">
-      <span className="font-mono text-[13px] font-semibold text-fire">{n}</span>
+      <span className="font-mono text-[13px] font-semibold text-fire-ink">{n}</span>
       <span className="font-display text-[24px] font-extrabold tracking-tight">{children}</span>
     </h2>
   );
@@ -61,10 +61,10 @@ export default function Relatorio() {
   useEffect(() => {
     const st = document.createElement('style');
     const esc = (s: string) => s.replace(/["\\]/g, '');
-    st.textContent = `@page { @top-left { content: "${esc(p.empresa.nome || 'SCIE')}"; font: 8pt Inter, sans-serif; color: #5C5B55; }
-      @top-right { content: "${esc(p.referencia || p.nome)} · v${esc(p.versao)}"; font: 8pt 'JetBrains Mono', monospace; color: #5C5B55; }
-      @bottom-left { content: "Realizado por: ${esc(p.autor.nome || p.empresa.nome || '')} · ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8E8D86; }
-      @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #0F0F0E; } }
+    st.textContent = `@page { @top-left { content: "${esc(p.empresa.nome || 'SCIE')}"; font: 8pt Inter, sans-serif; color: #5A6478; }
+      @top-right { content: "${esc(p.referencia || p.nome)} · v${esc(p.versao)}"; font: 8pt 'JetBrains Mono', monospace; color: #5A6478; }
+      @bottom-left { content: "Realizado por: ${esc(p.autor.nome || p.empresa.nome || '')} · ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8B92A0; }
+      @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #14233A; } }
       @page :first { @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`;
     document.head.appendChild(st);
     return () => { st.remove(); };
@@ -126,7 +126,7 @@ export default function Relatorio() {
         </div>
         {(() => {
           const n = todas.reduce((s2, u) => s2 + u.medidas.filter((m) => m.estado === 'verificar').length, 0);
-          return n > 0 ? <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-fire sm:px-6">{n} medida(s) por decidir: responda às «Características do local» no passo Medidas de cada UT. Só as medidas aplicáveis entram no relatório.</p> : null;
+          return n > 0 ? <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-alerta sm:px-6">{n} medida(s) por decidir: responda às «Características do local» no passo Medidas de cada UT. Só as medidas aplicáveis entram no relatório.</p> : null;
         })()}
         <p className="mx-auto max-w-[1100px] px-4 pb-2 text-[11.5px] sm:px-6 text-ink-3">{usarPdfDireto() ? 'No telemóvel/tablet o PDF é gerado diretamente; no iPhone escolha «Guardar em Ficheiros». Para a versão final (texto pesquisável, máxima qualidade) gere-o no computador.' : <>No diálogo de impressão escolha «Guardar como PDF», papel A4, margens «Predefinição» e ative «Gráficos de fundo». Resultado em texto vetorial, pesquisável.</>}</p>
       </div>
@@ -170,10 +170,10 @@ export default function Relatorio() {
           </tbody>
         </table>
         <H1 n="—">Índice</H1>
-        <p className="mb-1.5 flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1 text-[12.5px] font-semibold"><span className="w-6 font-mono text-fire">—</span>Síntese para o cliente</p>
+        <p className="mb-1.5 flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1 text-[12.5px] font-semibold"><span className="w-6 font-mono text-fire-ink">—</span>Síntese para o cliente</p>
         <ol className="space-y-1.5 text-[12.5px]">
           {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
-            <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire">{i + 1}</span>{t}</li>
+            <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire-ink">{i + 1}</span>{t}</li>
           ))}
         </ol>
       </Sheet>
@@ -192,7 +192,7 @@ export default function Relatorio() {
             <table className="tbl mb-6">
               <thead><tr><th>Utilização-tipo</th><th>Categoria</th><th className="text-right">Verificadas</th><th className="text-right">Cumpre</th><th className="text-right">Não cumpre</th></tr></thead>
               <tbody>{porUT.map((x) => (
-                <tr key={x.ut.id}><td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td><td className="whitespace-nowrap">{CAT_NOME[x.cls.cat]}</td><td className="num text-right">{x.pg.marcadas}/{x.pg.total}</td><td className="num text-right text-ok">{x.pg.cumpre}</td><td className={`num text-right font-bold ${x.pg.naoCumpre ? 'text-fire' : ''}`}>{x.pg.naoCumpre}</td></tr>
+                <tr key={x.ut.id}><td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td><td className="whitespace-nowrap">{CAT_NOME[x.cls.cat]}</td><td className="num text-right">{x.pg.marcadas}/{x.pg.total}</td><td className="num text-right text-ok">{x.pg.cumpre}</td><td className={`num text-right font-bold ${x.pg.naoCumpre ? 'text-fire-ink' : ''}`}>{x.pg.naoCumpre}</td></tr>
               ))}</tbody>
             </table>
             {verificadas === 0 ? (
@@ -200,8 +200,8 @@ export default function Relatorio() {
             ) : ncs.length === 0 ? (
               <div className="border-l-[4px] border-ok bg-ok-soft px-4 py-3 text-[13px] font-semibold">Não foram identificadas não conformidades nas exigências verificadas.</div>
             ) : (
-              <div className="avoid-break border-2 border-fire">
-                <div className="flex items-baseline justify-between bg-fire px-4 py-2.5 text-white">
+              <div className="avoid-break border-2 border-ink">
+                <div className="flex items-baseline justify-between bg-ink px-4 py-2.5 text-white">
                   <span className="font-display text-[16px] font-extrabold">O que é preciso corrigir</span>
                   <span className="font-mono text-[12px]">{ncs.length} não conformidade{ncs.length === 1 ? '' : 's'}</span>
                 </div>
@@ -212,7 +212,7 @@ export default function Relatorio() {
                       <td className="font-mono text-[10.5px]">UT {ROMANO[x.ut.tipo]} · {d.letra})</td>
                       <td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-[10px] text-ink-3">{d.medida.base}</span></td>
                       <td className="text-[11.5px]">{d.ver.corretiva || <span className="italic text-ink-3">A definir</span>}</td>
-                      <td className={`text-[11.5px] ${d.ver.prazo === 'Imediato' ? 'font-bold text-fire' : ''}`}>{d.ver.prazo || '—'}</td>
+                      <td className={`text-[11.5px] ${d.ver.prazo === 'Imediato' ? 'font-bold text-alerta' : ''}`}>{d.ver.prazo || '—'}</td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -289,7 +289,7 @@ export default function Relatorio() {
           <table className="tbl mb-3"><thead><tr><th>Código</th><th>UT</th><th>Espaço</th><th>Piso</th><th>Local</th><th className="text-right">Efetivo</th><th>Justificação</th></tr></thead>
             <tbody>{locaisLista.map(({ u, e, c }) => (
               <tr key={e.id}><td className="whitespace-nowrap font-mono text-[10.5px]">{cod.get(e.id)}</td><td><span className="num font-semibold">{ROMANO[u.ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(u.ut.tipo).nome}</span></td><td>{e.nome || nomeUT(u.ut).nome}</td><td>{e.piso}</td><td className="font-semibold">{e.local === 'Cag' ? 'C agrav.' : e.local}</td><td className="num text-right">{c.valor}</td>
-                <td className="text-[11px] text-ink-3">{justificacaoLocal(e, c.valor)}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
+                <td className="text-[11px] text-ink-3">{justificacaoLocal(e, c.valor)}{e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) && <span className="block font-semibold text-alerta">Efetivo &gt; 100 ou público &gt; 50: corresponde a local de risco B (art. 10.º n.º 1 b)).</span>}</td></tr>
             ))}</tbody></table>
         ) : <P>Sem espaços registados.</P>}
         <H2 n={`${sec}.2`}>Fatores e categorias de risco (RJ-SCIE, arts. 12.º e 13.º e anexo III)</H2>
@@ -350,7 +350,7 @@ export default function Relatorio() {
                   </tbody></table>
               </div>
             ); })}
-            <p className="text-[12px] font-semibold">Densidade de carga de incêndio modificada da UT: q = {fmt(carga.Q)} / {fmt(carga.S, 2)} = <span className="text-fire">{fmt(carga.q, 1)} MJ/m²</span></p>
+            <p className="text-[12px] font-semibold">Densidade de carga de incêndio modificada da UT: q = {fmt(carga.Q)} / {fmt(carga.S, 2)} = <span className="text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
           </div>
         ))}
 
@@ -372,7 +372,7 @@ export default function Relatorio() {
                     const m = filtraMed(todasSec);
                     return (
                       <div key={x.c} className="mb-2.5">
-                        {x.c !== '0' && x.c !== 'ESP' && <p className="keep-next avoid-break mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">{secRotulo(x.c)}</p>}
+                        {x.c !== '0' && x.c !== 'ESP' && <p className="keep-next avoid-break mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire-ink">{secRotulo(x.c)}</p>}
                         {m.length ? (
                           <table className="tbl"><tbody>{m.map((y) => (
                             <tr key={y.id}><td className="w-[27%] font-semibold">{y.titulo}{y.estado !== 'aplica' && <span className={`ml-1 font-mono text-[9.5px] ${y.estado === 'verificar' ? 'text-warn' : 'text-ink-4'}`}>[{y.estado === 'verificar' ? 'verificar' : 'n/a'}]</span>}</td><td className="text-[11.5px] leading-relaxed">{y.exigencia}{y.motivo && <span className="block italic text-ink-3">{y.motivo}</span>}</td><td className="w-[20%] text-[10px] text-ink-3">{y.base}</td></tr>
@@ -393,7 +393,7 @@ export default function Relatorio() {
         {(() => {
           const t = todas.map((x) => progresso(x.ut, x.medidas)).reduce((a, b) => ({ m: a.m + b.marcadas, n: a.n + b.naoCumpre, c: a.c + b.cumpre }), { m: 0, n: 0, c: 0 });
           return t.m > 0 ? (
-            <div className={`avoid-break mb-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 border-l-[4px] px-4 py-3 ${t.n ? 'border-fire bg-fire-soft' : 'border-ok bg-ok-soft'}`}>
+            <div className={`avoid-break mb-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 border-l-[4px] px-4 py-3 ${t.n ? 'border-alerta bg-alerta-soft' : 'border-ok bg-ok-soft'}`}>
               <span className="font-display text-[15px] font-extrabold">{t.n ? `${t.n} não conformidade${t.n === 1 ? '' : 's'} a corrigir` : 'Sem não conformidades'}</span>
               <span className="text-[12px]">{t.m} exigências verificadas · {t.c} cumprem · {t.n} não cumprem</span>
               {t.n > 0 && <span className="text-[12px]">Plano de correção: ver «Síntese para o cliente» e o quadro de medidas corretivas de cada UT.</span>}
@@ -425,7 +425,7 @@ export default function Relatorio() {
                             return (
                               <tr key={x.c}>
                                 <td className="text-[11px]">{secRotulo(x.c)}</td>
-                                <td className="text-center font-bold text-fire">{e === 'sim' ? '■' : ''}</td>
+                                <td className="text-center font-bold text-alerta">{e === 'sim' ? '■' : ''}</td>
                                 <td className="text-center font-bold text-ok">{e === 'nao' ? '■' : ''}</td>
                                 <td className="text-center font-bold text-ink">{e === 'na' ? '■' : ''}</td>
                                 <td className="font-mono text-[11px]">{e === 'pendente' ? '—' : notas}</td>
@@ -438,24 +438,24 @@ export default function Relatorio() {
                   </table>
                   {ds.length > 0 && (
                     <>
-                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Desconformidades registadas</p>
+                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire-ink">Desconformidades registadas</p>
                       <table className="tbl mb-4"><tbody>{ds.map((d) => (
                         <tr key={d.medida.key}><td className="w-8 font-mono font-bold">{d.letra})</td><td className="text-[11.5px]"><b>{d.medida.titulo}</b>{d.ver.obs ? ` — ${d.ver.obs}` : ''}<span className="block text-ink-3">Exigência: {d.medida.exigencia}</span>
                           {(d.ver.fotos?.length ?? 0) > 0 && <span className="mt-1.5 flex flex-wrap gap-1.5">{d.ver.fotos!.map((id) => ut.levantamento?.find((a) => a.id === id)).filter((a) => a?.imagem).map((a) => <img key={a!.id} src={a!.imagem} alt="" className="h-[30mm] w-auto max-w-[45mm] border border-paper-3 object-contain" />)}</span>}
-                        </td><td className="w-[22%] text-[10px] text-ink-3">{d.medida.base}{d.ver.ponto ? <span className="block text-fire">Assinalada em planta</span> : null}</td></tr>
+                        </td><td className="w-[22%] text-[10px] text-ink-3">{d.medida.base}{d.ver.ponto ? <span className="block text-alerta">Assinalada em planta</span> : null}</td></tr>
                       ))}</tbody></table>
                       {p.plantas.filter((pl) => ds.some((d) => d.ver.ponto?.plantaId === pl.id)).map((pl) => (
                         <figure key={pl.id} className="avoid-break mb-4 text-center">
                           <div className="relative inline-block border border-paper-3 align-top">
                             <img src={pl.imagem} alt="" className="block max-h-[170mm] max-w-full" />
                             {ds.filter((d) => d.ver.ponto?.plantaId === pl.id).map((d) => (
-                              <span key={d.medida.key} className="absolute grid h-[6mm] w-[6mm] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-fire font-mono text-[9px] font-bold text-white" style={{ left: `${d.ver.ponto!.x * 100}%`, top: `${d.ver.ponto!.y * 100}%` }}>{d.letra}</span>
+                              <span key={d.medida.key} className="absolute grid h-[6mm] w-[6mm] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-alerta font-mono text-[9px] font-bold text-white" style={{ left: `${d.ver.ponto!.x * 100}%`, top: `${d.ver.ponto!.y * 100}%` }}>{d.letra}</span>
                             ))}
                           </div>
                           <figcaption className="mt-1 text-left text-[10.5px] text-ink-3">Localização das desconformidades — {pl.titulo}{pl.escala ? ` (${pl.escala})` : ''}</figcaption>
                         </figure>
                       ))}
-                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire">Medidas corretivas / compensatórias</p>
+                      <p className="keep-next mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire-ink">Medidas corretivas / compensatórias</p>
                       <table className="tbl"><thead><tr><th className="w-8">Ref.</th><th>Medida</th><th className="w-28">Prazo</th></tr></thead><tbody>{ds.map((d) => (
                         <tr key={d.medida.key}><td className="font-mono font-bold">{d.letra})</td><td className="text-[11.5px]">{d.ver.corretiva || <span className="italic text-ink-3">Por definir</span>}</td><td className="text-[11.5px]">{d.ver.prazo || '—'}</td></tr>
                       ))}</tbody></table>
@@ -473,7 +473,7 @@ export default function Relatorio() {
                   <p className="keep-next mb-1 font-display text-[13.5px] font-bold">Planificação das medidas corretivas / compensatórias</p>
                   <table className="tbl"><thead><tr><th>Intervenção / medida a implementar</th><th className="w-24">UT</th>{prazos.map((p) => <th key={p} className="w-16 text-center text-[9px]">{p}</th>)}</tr></thead>
                     <tbody>{linhas.map(({ ut, d }) => (
-                      <tr key={ut.id + d.medida.key}><td className="text-[11px]">{d.ver.corretiva}</td><td className="text-[10.5px]">{ROMANO[ut.tipo]} — {nomeUT(ut).nome}</td>{prazos.map((p) => <td key={p} className={`text-center ${d.ver.prazo === p ? 'bg-fire text-white' : ''}`}>{d.ver.prazo === p ? '■' : ''}</td>)}</tr>
+                      <tr key={ut.id + d.medida.key}><td className="text-[11px]">{d.ver.corretiva}</td><td className="text-[10.5px]">{ROMANO[ut.tipo]} — {nomeUT(ut).nome}</td>{prazos.map((p) => <td key={p} className={`text-center ${d.ver.prazo === p ? 'bg-ink text-white' : ''}`}>{d.ver.prazo === p ? '■' : ''}</td>)}</tr>
                     ))}</tbody></table>
                 </div>
               );

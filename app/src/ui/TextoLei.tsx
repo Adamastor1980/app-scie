@@ -46,7 +46,7 @@ export default function TextoLei({ refs, titulo, onFechar }: { refs: Ref[]; titu
       <div className="flex max-h-full w-full max-w-[820px] flex-col overflow-hidden border border-ink bg-white" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b border-ink px-5 py-4">
           <div>
-            <p className="label !text-fire flex items-center gap-1.5"><BookOpen size={13} /> Texto integral da lei</p>
+            <p className="label !text-fire-ink flex items-center gap-1.5"><BookOpen size={13} /> Texto integral da lei</p>
             {titulo && <p className="mt-1 text-[13px] text-ink-3">{titulo}</p>}
           </div>
           <button className="btn-icon" onClick={onFechar}><X size={18} /></button>
@@ -54,7 +54,7 @@ export default function TextoLei({ refs, titulo, onFechar }: { refs: Ref[]; titu
         {refs.length > 1 && (
           <div className="flex gap-px overflow-x-auto border-b border-ink bg-paper">
             {refs.map((x, k) => (
-              <button key={x.dip + x.art} onClick={() => setI(k)} className={`whitespace-nowrap px-3 py-2 font-mono text-[12px] ${k === i ? 'bg-white font-semibold text-fire' : 'text-ink-3 hover:text-ink'}`}>
+              <button key={x.dip + x.art} onClick={() => setI(k)} className={`whitespace-nowrap px-3 py-2 font-mono text-[12px] ${k === i ? 'bg-white font-semibold text-fire-ink' : 'text-ink-3 hover:text-ink'}`}>
                 {x.dip === 'RJ' ? 'RJ ' : ''}art. {x.art}.º
               </button>
             ))}

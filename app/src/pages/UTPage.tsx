@@ -70,7 +70,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
           <div className="min-w-0 flex-1 pb-5">
             <p className="label">{ed.nome} · UT {ROMANO[ut.tipo]} · art. 8.º n.º 1 {info.alinea} RJ-SCIE</p>
             <input
-              className="mt-1 w-full bg-transparent font-display text-[22px] sm:text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire"
+              className="mt-1 w-full bg-transparent font-display text-[22px] sm:text-[32px] font-extrabold leading-tight tracking-tight outline-none focus:text-fire-ink"
               value={ut.designacao === novaUT(ut.tipo).designacao ? '' : ut.designacao}
               placeholder={nomeUT(ut).temNome ? nomeUT(ut).nome : 'Nome desta UT (ex.: Escritórios piso 1)'}
               title="Clique para alterar o nome"
@@ -93,7 +93,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             return (
               <a key={s.k} href={`#${base}/${s.k}`} className={`flex min-w-[130px] flex-1 flex-col sm:min-w-[170px] border-t-[3px] px-3 py-2.5 ${a ? 'border-fire bg-paper' : 'border-transparent hover:bg-paper/60'}`}>
                 <span className="flex items-baseline gap-2">
-                  <span className={`font-mono text-[11px] font-semibold ${a ? 'text-fire' : 'text-ink-4'}`}>{s.n}</span>
+                  <span className={`font-mono text-[11px] font-semibold ${a ? 'text-fire-ink' : 'text-ink-4'}`}>{s.n}</span>
                   <span className="text-[13.5px] font-bold">{s.t}</span>
                 </span>
                 <span className="ref ml-[26px]">{s.s}</span>

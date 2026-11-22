@@ -17,7 +17,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
     <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <div className="mb-8 flex items-end justify-between border-b-2 border-ink pb-5">
         <div>
-          <p className="label !text-fire">Edifício / recinto</p>
+          <p className="label !text-fire-ink">Edifício / recinto</p>
           <h1 className="h-display mt-2 text-[40px]">{e.nome}</h1>
         </div>
         {p.edificios.length > 1 && (
@@ -62,7 +62,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
               const c = classificar(u, ef);
               return (
                 <button key={u.id} onClick={() => go(`/p/${p.id}/e/${e.id}/u/${u.id}/fatores`)} className="group flex items-center gap-4 bg-white p-4 text-left hover:bg-paper">
-                  <span className="w-16 font-display text-[36px] font-extrabold leading-none text-fire">{ROMANO[u.tipo]}</span>
+                  <span className="w-16 font-display text-[36px] font-extrabold leading-none text-fire-ink">{ROMANO[u.tipo]}</span>
                   <span className="flex-1">
                     <span className="block font-semibold">{nomeUT(u).nome}</span>
                     <span className="ref">{utInfo(u.tipo).quadro} · efetivo {fmt(ef.total)} · H {fmt(u.altura, 1)} m</span>

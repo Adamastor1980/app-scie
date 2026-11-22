@@ -36,7 +36,7 @@ export default function QuadroAnexo({ c, titulo, mostrarValores = true }: { c: C
                 {c.fatores.map((f) => (
                   <td key={f.id} className="border-r border-ink-2 bg-ink px-3 py-2 font-mono font-semibold text-white last:border-r-0">
                     {typeof f.valor === 'number' ? f.valor.toLocaleString('pt-PT') : f.valor}{typeof f.valor === 'number' && f.unidade ? ` ${f.unidade}` : ''}
-                    <span className="ml-2 text-fire">→ {f.cat}.ª</span>
+                    <span className="ml-2 text-fire-ink">→ {f.cat}.ª</span>
                   </td>
                 ))}
               </tr>

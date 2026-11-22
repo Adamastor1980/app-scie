@@ -85,7 +85,7 @@ export default function MapDocumento() {
     }
     return v.trim()
       ? <div className="mb-3 whitespace-pre-wrap text-[12px] leading-[1.6] text-ink">{v}</div>
-      : <div className="mb-3 border border-dashed border-fire/60 px-2 py-1.5 text-[11px] text-fire">[A preencher pelo autor das medidas de autoproteção]</div>;
+      : <div className="mb-3 border border-dashed border-alerta/60 px-2 py-1.5 text-[11px] text-alerta">[A preencher pelo autor das medidas de autoproteção]</div>;
   };
   const Alinea = (l: string, t: string, children: ReactNode, key?: string) => (
     <div className="avoid-break" key={key ?? l}>
@@ -161,12 +161,12 @@ export default function MapDocumento() {
             <thead><tr><th>Nome</th><th>Função</th><th>Turno</th><th>Contacto</th></tr></thead>
             <tbody>{ap.equipa.map((e) => <tr key={e.id}><td>{e.nome}</td><td>{e.funcao}</td><td>{e.turno}</td><td>{e.telefone}</td></tr>)}</tbody>
           </table>
-        ) : <div className="mb-3 border border-dashed border-fire/60 px-2 py-1.5 text-[11px] text-fire">[Equipa de segurança por definir — separador «Organização»]</div>}
+        ) : <div className="mb-3 border border-dashed border-alerta/60 px-2 py-1.5 text-[11px] text-alerta">[Equipa de segurança por definir — separador «Organização»]</div>}
         <H2 n={`${n}.2`}>Dimensionamento da equipa</H2>
         <P>O dimensionamento das equipas de segurança é estabelecido de acordo com as características de exploração e deve ser fundamentado e aceite pela ANEPC (art. 200.º n.os 3 e 4).</P>
         {ap.fundamentacaoEquipa.trim()
           ? <div className="mb-3 whitespace-pre-wrap text-[12px] leading-[1.6]">{ap.fundamentacaoEquipa}</div>
-          : <div className="mb-3 border border-dashed border-fire/60 px-2 py-1.5 text-[11px] text-fire">[Fundamentação por preencher — separador «Organização»]</div>}
+          : <div className="mb-3 border border-dashed border-alerta/60 px-2 py-1.5 text-[11px] text-alerta">[Fundamentação por preencher — separador «Organização»]</div>}
         <H2 n={`${n}.3`}>Posto de segurança</H2>
         <P>{ap.postoSeguranca ? `Localização: ${ap.postoSeguranca}. ` : ''}Durante os períodos de funcionamento, o posto de segurança deve ser mantido ocupado em permanência, no mínimo, por um elemento da equipa de segurança (art. 200.º n.º 5).{tem('pei') ? ' Deve estar disponível no posto de segurança um exemplar do plano de emergência interno (art. 205.º n.º 9).' : ''}{tem('planoPrevencao') ? ' Deve estar disponível no posto de segurança um exemplar do plano de prevenção (art. 203.º n.º 3).' : ''}</P>
         {tem('pei') && (
@@ -312,7 +312,7 @@ export default function MapDocumento() {
           <div className="mr-auto">
             <p className="label">Documento</p>
             <p className="font-display text-[17px] font-bold">Medidas de autoproteção</p>
-            <p className={`text-[12px] ${porPreencher ? 'text-fire' : 'text-ok'}`}>{porPreencher ? `${porPreencher} secção(ões) por preencher` : 'Todas as secções preenchidas'}</p>
+            <p className={`text-[12px] ${porPreencher ? 'text-alerta' : 'text-ok'}`}>{porPreencher ? `${porPreencher} secção(ões) por preencher` : 'Todas as secções preenchidas'}</p>
           </div>
           <div className="flex border border-ink">
             <button className={`flex h-10 items-center gap-1.5 px-3 text-[13px] font-semibold ${editar ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => setEditar(true)}><PenLine size={15} /> Editar</button>

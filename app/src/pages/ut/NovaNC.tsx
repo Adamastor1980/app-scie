@@ -106,7 +106,7 @@ export default function NovaNC({ ed, ut, plantas, upU, medidaKey, onClose }: {
               <div key={f.id} className="relative h-16 w-16 border border-ink bg-white">
                 <img src={f.imagem} alt="" className="h-full w-full object-cover" />
                 <button className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center bg-ink text-white" title="Anotar (setas, notas)" onClick={() => setAnotar(i)}><PenLine size={12} /></button>
-                <button className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center bg-fire text-white" title="Retirar" onClick={() => setFotos((l) => l.filter((_, k) => k !== i))}><Trash2 size={12} /></button>
+                <button className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center bg-alerta text-white" title="Retirar" onClick={() => setFotos((l) => l.filter((_, k) => k !== i))}><Trash2 size={12} /></button>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function NovaNC({ ed, ut, plantas, upU, medidaKey, onClose }: {
                 <div className="flex flex-wrap gap-1.5">
                   {clausulas(m).map((c) => {
                     const on = obs.includes(`Não cumpre: ${c}`);
-                    return <button key={c} onClick={() => tocarClausula(c)} className={`border px-2.5 py-1.5 text-left text-[12px] leading-snug ${on ? 'border-fire bg-fire text-white' : 'border-paper-3 bg-paper hover:border-ink'}`}>{c}</button>;
+                    return <button key={c} onClick={() => tocarClausula(c)} className={`border px-2.5 py-1.5 text-left text-[12px] leading-snug ${on ? 'border-ink bg-ink text-white' : 'border-paper-3 bg-paper hover:border-ink'}`}>{c}</button>;
                   })}
                 </div>
                 <textarea className="input mt-2" rows={2} placeholder="Constatação no local (pode ditar pelo microfone do teclado)" value={obs} onChange={(e) => setObs(e.target.value)} />
@@ -174,7 +174,7 @@ export default function NovaNC({ ed, ut, plantas, upU, medidaKey, onClose }: {
                     }}>
                       <img src={planta.imagem} alt="" className="block w-full select-none" draggable={false} />
                       {ponto?.plantaId === planta.id && (
-                        <span className="pointer-events-none absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-fire text-white shadow" style={{ left: `${ponto.x * 100}%`, top: `${ponto.y * 100}%` }}><MapPin size={14} /></span>
+                        <span className="pointer-events-none absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-alerta text-white shadow" style={{ left: `${ponto.x * 100}%`, top: `${ponto.y * 100}%` }}><MapPin size={14} /></span>
                       )}
                     </div>
                   ) : <p className="text-[12px] text-ink-3">A carregar a planta…</p>}

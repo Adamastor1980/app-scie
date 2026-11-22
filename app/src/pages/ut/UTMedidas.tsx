@@ -47,7 +47,7 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
           <details open={falta > 0} className="mb-6 border border-ink bg-white">
             <summary className="flex cursor-pointer select-none flex-wrap items-baseline gap-x-3 px-5 py-4">
               <span className="font-display text-[16px] font-bold">Características do local</span>
-              <span className={`text-[12.5px] ${falta ? 'font-semibold text-fire' : 'text-ok'}`}>{falta ? `${falta} por responder` : 'todas respondidas'}</span>
+              <span className={`text-[12.5px] ${falta ? 'font-semibold text-alerta' : 'text-ok'}`}>{falta ? `${falta} por responder` : 'todas respondidas'}</span>
               <span className="text-[12px] text-ink-3">— decidem quais as medidas que se aplicam (o regulamento só as exige se existirem)</span>
             </summary>
             <div className="border-t border-ink">
@@ -87,7 +87,7 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
             <span className="label">Verificação no local</span>
             <span><b className="num">{pg.marcadas}</b> de <b className="num">{pg.total}</b> exigências verificadas</span>
             <span className="text-ok">Cumpre <b className="num">{pg.cumpre}</b></span>
-            <span className="text-fire">Não cumpre <b className="num">{pg.naoCumpre}</b></span>
+            <span className="text-alerta">Não cumpre <b className="num">{pg.naoCumpre}</b></span>
             <span className="text-ink-3">N.A. <b className="num">{pg.na}</b></span>
             <span className="ml-auto text-[11.5px] text-ink-3">As desconformidades e as medidas corretivas entram na «Análise regulamentar» do relatório.</span>
           </div>
@@ -106,7 +106,7 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
             </h3>
             {g.secs.map(({ x, m }) => (
               <div key={x.c} className="mb-3">
-                {x.c !== '0' && x.c !== 'MAP' && x.c !== 'ESP' && <p className="mb-1 mt-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-fire">{secRotulo(x.c)}</p>}
+                {x.c !== '0' && x.c !== 'MAP' && x.c !== 'ESP' && <p className="mb-1 mt-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-fire-ink">{secRotulo(x.c)}</p>}
                 <div className="border-x border-t border-ink bg-white">
                   {m.map((y) => <Linha key={y.id} m={y} ut={ut} onEvid={() => setNcKey(y.key)} setV={(fn) => upU((u) => { u.verificacao = u.verificacao ?? {}; const v = { ...(u.verificacao[y.key] ?? {}) }; fn(v); u.verificacao[y.key] = v; })} />)}
                 </div>
@@ -121,7 +121,7 @@ export default function UTMedidas({ ed, ut, upU }: UTProps) {
 
 const CONF: { v: Conformidade; l: string; on: string }[] = [
   { v: 'cumpre', l: 'Cumpre', on: 'bg-ok text-white border-ok' },
-  { v: 'nao_cumpre', l: 'Não cumpre', on: 'bg-fire text-white border-fire' },
+  { v: 'nao_cumpre', l: 'Não cumpre', on: 'bg-alerta text-white border-alerta' },
   { v: 'na', l: 'N.A.', on: 'bg-ink-3 text-white border-ink-3' },
 ];
 const PRAZOS = opcoesPrazo();
@@ -131,7 +131,7 @@ function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Veri
   const v = verDe(ut, m);
   const [lei, setLei] = useState(false);
   return (
-    <div className={`border-b border-ink px-4 py-3 ${m.estado === 'nao' ? 'bg-paper/50' : v.estado === 'nao_cumpre' ? 'bg-fire-soft/40' : ''}`}>
+    <div className={`border-b border-ink px-4 py-3 ${m.estado === 'nao' ? 'bg-paper/50' : v.estado === 'nao_cumpre' ? 'bg-alerta-soft/40' : ''}`}>
       <div className="grid gap-3 md:grid-cols-[230px_1fr_200px]">
         <div>
           <span className={`chip mb-1.5 border-0 ${e.c}`}>{e.l}</span>
@@ -143,7 +143,7 @@ function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Veri
         </div>
         <div className="flex flex-col gap-2 md:items-end">
           <p className="ref leading-snug md:text-right">{m.base}</p>
-          {refsDeBase(m.base).length > 0 && <button className="flex items-center gap-1 text-[11.5px] font-semibold text-fire hover:underline md:self-end" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>}
+          {refsDeBase(m.base).length > 0 && <button className="flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline md:self-end" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>}
           {lei && <TextoLei refs={refsDeBase(m.base)} titulo={m.titulo} onFechar={() => setLei(false)} />}
           {m.estado !== 'nao' && (
             <div className="flex">
@@ -165,7 +165,7 @@ function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Veri
           </select>
           <div className="flex flex-wrap items-center gap-2 md:col-span-3">
             {(v.fotos ?? []).map((id) => ut.levantamento?.find((a) => a.id === id)).filter(Boolean).map((a) => <img key={a!.id} src={a!.imagem} alt="" className="h-12 w-12 border border-ink object-cover" />)}
-            {v.ponto && <span className="flex items-center gap-1 text-[12px] font-semibold text-fire"><MapPin size={14} /> Assinalada na planta</span>}
+            {v.ponto && <span className="flex items-center gap-1 text-[12px] font-semibold text-alerta"><MapPin size={14} /> Assinalada na planta</span>}
             <button className="btn h-9 text-[12px]" onClick={onEvid}><Camera size={14} /> Fotos e planta</button>
           </div>
         </div>

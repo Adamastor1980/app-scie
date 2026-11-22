@@ -11,7 +11,7 @@ const ESTADO: Record<string, string> = { cumpre: 'Cumpre', nao_cumpre: 'Não cum
 /** Exporta para Excel: (1) plano de ação com as não conformidades; (2) verificação completa de todas as medidas */
 export async function exportarExcel(p: Projeto) {
   const { default: writeExcelFile } = await import('write-excel-file/browser');
-  const cab = (t: string) => ({ value: t, fontWeight: 'bold' as const, backgroundColor: '#E9E7E0' });
+  const cab = (t: string) => ({ value: t, fontWeight: 'bold' as const, backgroundColor: '#EFEDE4' });
 
   const plano: unknown[][] = [[
     cab('N.º'), cab('Edifício'), cab('UT'), cab('Categoria'), cab('Secção (anexo IV)'), cab('Medida'), cab('Base legal'),

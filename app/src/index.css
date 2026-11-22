@@ -7,6 +7,7 @@
 @import '@fontsource/inter-tight/800.css';
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/cormorant-garamond/600.css';
 
 @tailwind base;
 @tailwind components;
@@ -22,15 +23,15 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   .card { @apply bg-white border border-ink; }
   .card-soft { @apply bg-white border border-paper-3; }
   .btn { @apply inline-flex items-center gap-2 h-9 px-3.5 text-[13px] font-semibold border border-ink bg-white hover:bg-ink hover:text-white transition-colors select-none whitespace-nowrap; }
-  .btn-primary { @apply btn bg-ink text-white hover:bg-fire hover:border-fire; }
-  .btn-fire { @apply btn bg-fire border-fire text-white hover:bg-fire-dark hover:border-fire-dark; }
+  .btn-primary { @apply btn bg-ink text-white hover:bg-ink-2 hover:border-ink-2; }
+  .btn-fire { @apply btn bg-fire border-fire text-ink hover:bg-fire-dark hover:border-fire-dark; }
   .btn-ghost { @apply inline-flex items-center gap-1.5 h-8 px-2 text-[12.5px] font-medium text-ink-3 hover:text-ink hover:bg-paper-2 transition-colors; }
-  .btn-icon { @apply inline-flex items-center justify-center w-8 h-8 text-ink-3 hover:text-fire hover:bg-paper-2 transition-colors; }
+  .btn-icon { @apply inline-flex items-center justify-center w-8 h-8 text-ink-3 hover:text-ink hover:bg-paper-2 transition-colors; }
   .field { @apply flex flex-col gap-1.5; }
   .input { @apply h-9 w-full border border-paper-3 bg-white px-2.5 text-[13.5px] outline-none focus:border-ink focus:ring-0 placeholder:text-ink-4 transition-colors; }
   .input-num { @apply input font-mono text-right; }
   textarea.input { @apply h-auto py-2 leading-relaxed; }
-  select.input { @apply pr-7 bg-no-repeat; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230F0F0E' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-position: right 9px center; appearance: none; }
+  select.input { @apply pr-7 bg-no-repeat; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2314233A' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-position: right 9px center; appearance: none; }
   .tbl { @apply w-full text-[12.5px] border-collapse; }
   .tbl th { @apply text-left label font-semibold py-2 px-2.5 border-b border-ink bg-paper; }
   .tbl td { @apply py-2 px-2.5 border-b border-paper-3 align-top; }

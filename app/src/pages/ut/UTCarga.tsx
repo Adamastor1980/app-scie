@@ -246,7 +246,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         <div className="bg-ink p-4 text-white"><p className="label !text-white/60">qs — densidade modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.qs, 1)} <span className="font-mono text-[12px] text-white/60">MJ/m²</span></p></div>
         <div className="bg-paper p-4 text-[12px] leading-snug">
           <p className="ref mb-1">qs = {fmt(r.Qs)} MJ / {fmt(c.area, 2)} m²</p>
-          {locC && <p className="font-semibold text-fire">{locC}</p>}
+          {locC && <p className="font-semibold text-alerta">{locC}</p>}
           {c.area <= 0 && <p className="text-warn">Indique a área útil do compartimento.</p>}
         </div>
       </div>

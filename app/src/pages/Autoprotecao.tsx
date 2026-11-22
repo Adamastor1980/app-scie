@@ -33,7 +33,7 @@ export default function Autoprotecao() {
     <main className="pb-24">
       <div className="no-print border-b border-ink bg-white">
         <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8">
-          <p className="label !text-fire">Medidas de autoproteção</p>
+          <p className="label !text-fire-ink">Medidas de autoproteção</p>
           <h1 className="h-display mb-1 mt-2 text-[40px]">Autoproteção</h1>
           <a href={`#/p/${p.id}/map`} className="btn-primary float-right ml-4 mt-1"><FileText size={15} /> Documento MAP</a>
           <p className="mb-4 max-w-3xl text-[13px] text-ink-3">Organização da segurança, registos de segurança e prazos (RT-SCIE, título VII; RJ-SCIE, arts. 19.º e 21.º). Os registos devem ser arquivados durante pelo menos 10 anos (art. 201.º n.º 2) e as medidas são auditáveis a qualquer momento (art. 198.º n.º 3).</p>
@@ -42,10 +42,10 @@ export default function Autoprotecao() {
           {ABAS.map((a, i) => (
             <button key={a.k} onClick={() => setAba(a.k)} className={`flex min-w-[140px] flex-1 flex-col border-t-[3px] px-3 py-2.5 text-left ${aba === a.k ? 'border-fire bg-paper' : 'border-transparent hover:bg-paper/60'}`}>
               <span className="flex items-baseline gap-2">
-                <span className={`font-mono text-[11px] font-semibold ${aba === a.k ? 'text-fire' : 'text-ink-4'}`}>{String(i + 1).padStart(2, '0')}</span>
+                <span className={`font-mono text-[11px] font-semibold ${aba === a.k ? 'text-fire-ink' : 'text-ink-4'}`}>{String(i + 1).padStart(2, '0')}</span>
                 <span className="text-[13.5px] font-bold">{a.t}</span>
               </span>
-              <span className={`ref ml-[26px] ${a.k === 'prazos' && alertas ? '!text-fire' : ''}`}>{a.s}</span>
+              <span className={`ref ml-[26px] ${a.k === 'prazos' && alertas ? '!text-alerta' : ''}`}>{a.s}</span>
             </button>
           ))}
         </nav>
@@ -83,7 +83,7 @@ function Exigencias() {
               <tr key={x.ut.id}>
                 <td className="min-w-[180px]"><span className="font-mono text-[11px]">UT {ROMANO[x.ut.tipo]}</span> {nomeUT(x.ut).nome}<br /><span className="ref">{x.ed.nome}{x.temDE ? ' · com locais D/E' : ''}</span></td>
                 <td><CatBadge cat={x.cat} size="sm" /></td>
-                {todas.map((m) => <td key={m} className="text-center">{x.medidas?.includes(m) ? <span className="font-bold text-fire">●</span> : <span className="text-ink-4">—</span>}</td>)}
+                {todas.map((m) => <td key={m} className="text-center">{x.medidas?.includes(m) ? <span className="font-bold text-fire-ink">●</span> : <span className="text-ink-4">—</span>}</td>)}
               </tr>
             ))}
           </tbody>
@@ -262,7 +262,7 @@ function EditorRegisto({ r: r0, uts, onGuardar, onFechar }: { r: Registo; uts: {
       <div className="flex max-h-full w-full max-w-[760px] flex-col overflow-hidden border border-ink bg-paper" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b border-ink bg-white px-5 py-4">
           <div>
-            <p className="label !text-fire">{info.base}</p>
+            <p className="label !text-fire-ink">{info.base}</p>
             <h2 className="font-display text-[22px] font-bold">{info.nome}</h2>
             <p className="mt-1 text-[12.5px] text-ink-3">{info.ajuda}</p>
           </div>
@@ -387,7 +387,7 @@ function FolhasRegisto({ onFechar }: { onFechar: () => void }) {
 
 /* ------------------------------ Prazos ------------------------------ */
 
-const COR: Record<EstadoPrazo, string> = { ok: 'text-ok', proximo: 'text-warn', atrasado: 'text-fire', sem_registo: 'text-ink-3' };
+const COR: Record<EstadoPrazo, string> = { ok: 'text-ok', proximo: 'text-warn', atrasado: 'text-alerta', sem_registo: 'text-ink-3' };
 const ROT: Record<EstadoPrazo, string> = { ok: 'Em dia', proximo: 'A vencer (≤ 90 dias)', atrasado: 'Ultrapassado', sem_registo: 'Sem registo anterior' };
 const ICO: Record<EstadoPrazo, typeof Clock> = { ok: CheckCircle2, proximo: Clock, atrasado: AlertTriangle, sem_registo: CalendarClock };
 

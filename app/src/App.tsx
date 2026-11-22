@@ -10,16 +10,13 @@ import Conta, { useLigacaoNuvem } from './cloud/Conta';
 import { useNuvem } from './cloud/sync';
 import { nuvemDisponivel } from './cloud/firebase';
 import Entrar from './pages/Entrar';
+import { NomeApp, Simbolo } from './ui/Marca';
 
 function Logo() {
   return (
     <button onClick={() => go('/')} className="flex items-center gap-2.5">
-      <span className="grid h-8 w-8 place-items-center bg-fire">
-        <svg viewBox="0 0 32 32" className="h-5 w-5"><path d="M16 4c1 5 7 7 7 14a7 7 0 0 1-14 0c0-3 1.5-5 3-6.5 0 2.5 1 4 2.5 4.5C13 11 15 8 16 4z" fill="#fff" /></svg>
-      </span>
-      <span className="hidden font-display text-[17px] font-extrabold tracking-tight text-white sm:inline">
-        SCIE<span className="text-fire">/</span>CALC
-      </span>
+      <Simbolo className="h-9 w-9" c="#F9F8F3" />
+      <NomeApp claro className="hidden text-[17px] sm:inline-flex" />
     </button>
   );
 }
@@ -43,7 +40,7 @@ export default function App() {
   // sem sessão iniciada só se mostra o ecrã de entrada (nenhum dado visível)
   // VITE_SEM_LOGIN: só para testes automáticos locais (nunca definido na publicação)
   if (nuvemDisponivel() && !import.meta.env.VITE_SEM_LOGIN) {
-    if (!verificado) return <div className="grid min-h-[100dvh] place-items-center bg-ink"><span className="h-2 w-16 animate-pulse bg-fire" /></div>;
+    if (!verificado) return <div className="grid min-h-[100dvh] place-items-center bg-paper"><Simbolo className="h-16 w-16 animate-pulse" /></div>;
     if (!user) return <Entrar />;
   }
 

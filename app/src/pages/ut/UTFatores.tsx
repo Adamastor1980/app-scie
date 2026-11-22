@@ -20,7 +20,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
   return (
     <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
       <div>
-        <div className={`mb-8 border p-4 ${semNome ? 'border-fire bg-fire-soft' : 'border-ink bg-white'}`}>
+        <div className={`mb-8 border p-4 ${semNome ? 'border-alerta bg-alerta-soft' : 'border-ink bg-white'}`}>
           <Field label="Nome da utilização-tipo (obrigatório)" hint={semNome ? 'Atribua um nome a esta UT: é o nome usado no menu lateral, no painel e no relatório.' : undefined}>
             <input className="input h-11 text-[15px] font-semibold" value={semNome ? '' : ut.designacao} placeholder="ex.: Parque de estacionamento piso -1"
               onChange={(e) => upU((u) => { u.designacao = e.target.value.trim() ? e.target.value : novaUT(u.tipo).designacao; })} />

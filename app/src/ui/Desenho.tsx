@@ -9,7 +9,7 @@ import { Check, Eraser, Grid3x3, Pen, Redo2, Trash2, Undo2, X } from 'lucide-rea
 type Traco = { cor: string; esp: number; borracha: boolean; pts: [number, number][] };
 
 const W = 1600;
-const CORES = ['#0F0F0E', '#E5380E', '#1D5FD1', '#127A4B'];
+const CORES = ['#14233A', '#C2362B', '#1D5FD1', '#127A4B'];
 const ESPESSURAS = [3, 6, 12];
 
 export default function Desenho({ fundo, onGuardar, onFechar }: { fundo?: string; onGuardar: (img: string) => void; onFechar: () => void }) {
@@ -37,7 +37,7 @@ export default function Desenho({ fundo, onGuardar, onFechar }: { fundo?: string
     ctx.fillRect(0, 0, W, H);
     if (img) ctx.drawImage(img, 0, 0, W, H);
     else if (grelha) {
-      ctx.strokeStyle = '#E9E7E0';
+      ctx.strokeStyle = '#EFEDE4';
       ctx.lineWidth = 1;
       for (let x = 0; x <= W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
       for (let y = 0; y <= H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
@@ -130,7 +130,7 @@ export default function Desenho({ fundo, onGuardar, onFechar }: { fundo?: string
         <button title="Refazer" disabled={!refazer.length} onClick={() => { setTracos((l) => [...l, refazer[refazer.length - 1]]); setRefazer((r) => r.slice(0, -1)); }} className="grid h-10 w-10 place-items-center text-white/80 disabled:opacity-30"><Redo2 size={18} /></button>
         {!fundo && <button title="Quadriculado" onClick={() => setGrelha((g) => !g)} className={`grid h-10 w-10 place-items-center ${grelha ? 'bg-white/15' : 'text-white/70'}`}><Grid3x3 size={18} /></button>}
         <button title="Limpar tudo" disabled={!tracos.length} onClick={() => confirm('Apagar todos os traços?') && (setTracos([]), setRefazer([]))} className="grid h-10 w-10 place-items-center text-white/70 disabled:opacity-30"><Trash2 size={18} /></button>
-        <button className="ml-auto flex h-10 items-center gap-2 bg-fire px-4 text-[14px] font-semibold text-white hover:bg-fire-dark" onClick={guardar}><Check size={18} /> Guardar</button>
+        <button className="ml-auto flex h-10 items-center gap-2 bg-fire px-4 text-[14px] font-semibold text-ink hover:bg-fire-dark" onClick={guardar}><Check size={18} /> Guardar</button>
       </div>
       <div className="flex flex-1 items-center justify-center overflow-hidden p-3">
         <canvas

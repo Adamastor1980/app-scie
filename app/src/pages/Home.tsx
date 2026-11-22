@@ -25,7 +25,7 @@ export default function Home() {
       if (ids.length === 1) go(`/p/${ids[0]}`);
       else alert(`${ids.length} projetos importados.`);
     } catch {
-      alert('Ficheiro inválido: não é um projeto SCIE/CALC exportado em JSON.');
+      alert('Ficheiro inválido: não é um projeto Cautela SCIE exportado em JSON.');
     }
   };
 
@@ -94,7 +94,7 @@ export default function Home() {
                         : <span className="font-display text-[17px] font-extrabold tracking-tight text-ink-4">{iniciais(p.cliente || p.nome)}</span>}
                     </span>
                     <span className="min-w-0">
-                      <h3 className="font-display text-[21px] font-bold leading-tight tracking-tight group-hover:text-fire">{p.nome}</h3>
+                      <h3 className="font-display text-[21px] font-bold leading-tight tracking-tight group-hover:text-fire-ink">{p.nome}</h3>
                       <p className="mt-1 text-[12.5px] text-ink-3">{[p.cliente, p.concelho].filter(Boolean).join(' · ') || '—'}</p>
                     </span>
                   </button>

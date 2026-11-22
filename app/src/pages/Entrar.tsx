@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { entrar } from '../cloud/firebase';
+import { NomeApp, Simbolo } from '../ui/Marca';
 
 const CATS = [
   { n: '1.ª', l: 'Risco reduzido', c: 'bg-cat1' },
@@ -8,10 +9,6 @@ const CATS = [
   { n: '3.ª', l: 'Risco elevado', c: 'bg-cat3' },
   { n: '4.ª', l: 'Risco muito elevado', c: 'bg-cat4' },
 ];
-
-function Chama({ className = '' }: { className?: string }) {
-  return <svg viewBox="0 0 32 32" className={className}><path d="M16 4c1 5 7 7 7 14a7 7 0 0 1-14 0c0-3 1.5-5 3-6.5 0 2.5 1 4 2.5 4.5C13 11 15 8 16 4z" fill="currentColor" /></svg>;
-}
 
 function Google() {
   return (
@@ -41,20 +38,20 @@ export default function Entrar() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-ink text-white">
+    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-paper text-ink">
       {/* grelha técnica de fundo */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '56px 56px' }}
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{ backgroundImage: 'linear-gradient(#14233A 1px, transparent 1px), linear-gradient(90deg, #14233A 1px, transparent 1px)', backgroundSize: '56px 56px' }}
       />
-      <Chama className="pointer-events-none absolute -bottom-[18vh] -right-[12vw] h-[80vh] w-[80vh] text-fire opacity-[0.07]" />
+      <Simbolo className="pointer-events-none absolute hidden sm:block -bottom-[16vh] -right-[14vw] h-[86vh] w-[86vh] opacity-[0.06]" />
 
       <header className="relative flex items-center justify-between px-6 py-6 sm:px-12">
         <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center bg-fire"><Chama className="h-5 w-5 text-white" /></span>
-          <span className="font-display text-[19px] font-extrabold tracking-tight">SCIE<span className="text-fire">/</span>CALC</span>
+          <Simbolo className="h-10 w-10" />
+          <NomeApp className="text-[19px]" />
         </div>
-        <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/40 sm:block">Segurança contra incêndio em edifícios</span>
+        <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-3 sm:block">Segurança contra incêndio em edifícios</span>
       </header>
 
       <main className="relative flex flex-1 items-center px-6 sm:px-12">
@@ -63,20 +60,20 @@ export default function Entrar() {
           <h1 className="font-display text-[clamp(44px,9vw,112px)] font-extrabold leading-[0.9] tracking-[-0.04em]">
             Classificar.<br />Calcular.<br /><span className="text-fire">Cumprir.</span>
           </h1>
-          <p className="mt-8 max-w-[520px] text-[15px] leading-relaxed text-white/60">
+          <p className="mt-8 max-w-[520px] text-[15px] leading-relaxed text-ink-3">
             Categorias de risco, efetivo, carga de incêndio modificada e medidas de autoproteção — tudo com base no RJ-SCIE, no RT-SCIE e no Despacho n.º 8954/2020.
           </p>
 
           <button
             onClick={go}
             disabled={busy}
-            className="group mt-10 inline-flex h-11 items-center gap-3 border border-white/25 bg-white/[0.03] pl-3.5 pr-4 text-[13.5px] font-medium text-white backdrop-blur-sm transition-colors hover:border-fire hover:bg-fire disabled:opacity-60"
+            className="group mt-10 inline-flex h-11 items-center gap-3 border border-ink bg-ink pl-3.5 pr-4 text-[13.5px] font-medium text-white transition-colors hover:border-ink-2 hover:bg-ink-2 disabled:opacity-60"
           >
-            {busy ? <Loader2 size={16} className="animate-spin" /> : <Google />}
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <span className="grid h-6 w-6 place-items-center bg-white"><Google /></span>}
             <span className="mr-2">{busy ? 'A entrar…' : 'Entrar com Google'}</span>
-            <ArrowRight size={15} className="text-white/50 transition-all group-hover:translate-x-0.5 group-hover:text-white" />
+            <ArrowRight size={15} className="text-fire transition-all group-hover:translate-x-0.5" />
           </button>
-          {erro && <p className="mt-3 text-[13px] text-red-400">{erro}</p>}
+          {erro && <p className="mt-3 text-[13px] text-alerta">{erro}</p>}
         </div>
       </main>
 
@@ -86,16 +83,16 @@ export default function Entrar() {
             <div key={c.n}>
               <div className={`h-[5px] ${c.c}`} />
               <p className="mt-2 font-mono text-[11px] font-semibold">{c.n} categoria</p>
-              <p className="hidden text-[11px] text-white/40 sm:block">{c.l}</p>
+              <p className="hidden text-[11px] text-ink-3 sm:block">{c.l}</p>
             </div>
           ))}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/30">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-4">
             DL 220/2008 · Lei 123/2019 · Portaria 135/2020 · Despacho 8954/2020
           </p>
-          <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/50">
-            Autor <span className="text-fire">■</span> <span className="text-white/80">Fernando Adamastor</span>
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-3">
+            Autor <span className="text-fire">■</span> <span className="text-ink">Fernando Adamastor</span>
           </p>
         </div>
       </footer>

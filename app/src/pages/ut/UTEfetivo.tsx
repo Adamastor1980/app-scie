@@ -104,7 +104,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                       <div className="field">
                         <Field label="Efetivo de público" legal="art. 10.º n.º 1"><Num value={e.efetivoPublico} onChange={(v) => setE(i, (x) => { x.efetivoPublico = v; })} /></Field>
                         <span className="text-[11.5px] leading-snug text-ink-3">{efeitoPublico(e, c.valor)}</span>
-                        <button type="button" className="flex items-center gap-1 self-start text-[11.5px] font-semibold text-fire hover:underline" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>
+                        <button type="button" className="flex items-center gap-1 self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei(true)}><BookOpen size={12} /> Ver texto da lei</button>
                       </div>
                     )}
                   </div>
@@ -119,7 +119,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                   </div>
                   <div className="flex justify-between gap-3 border-t border-paper-3 px-4 py-2 text-[11px] text-ink-3">
                     <span>{c.base}</span>
-                    {aviso && <span className="font-semibold text-fire">Efetivo &gt; 100 ou público &gt; 50: é local de risco B, não A (art. 10.º n.º 1 b)).</span>}
+                    {aviso && <span className="font-semibold text-alerta">Efetivo &gt; 100 ou público &gt; 50: é local de risco B, não A (art. 10.º n.º 1 b)).</span>}
                   </div>
                 </div>
               );

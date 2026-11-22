@@ -31,7 +31,7 @@ export default function Overview() {
     <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b-2 border-ink pb-6">
         <div>
-          <p className="label !text-fire">Painel do projeto</p>
+          <p className="label !text-fire-ink">Painel do projeto</p>
           <h1 className="h-display mt-2 text-[44px]">{p.nome}</h1>
           <p className="mt-2 text-[13px] text-ink-3">{[p.cliente, p.morada, p.concelho].filter(Boolean).join(' · ') || 'Preencha os dados do projeto.'}</p>
         </div>

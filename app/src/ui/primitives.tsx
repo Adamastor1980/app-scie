@@ -96,7 +96,7 @@ export function Section({ n, title, sub, right, children, className = '' }: { n?
     <section className={`mb-10 ${className}`}>
       <header className="mb-4 flex items-end justify-between gap-4 border-b-2 border-ink pb-2">
         <div className="flex items-baseline gap-3">
-          {n && <span className="font-mono text-[12px] font-semibold text-fire">{n}</span>}
+          {n && <span className="font-mono text-[12px] font-semibold text-fire-ink">{n}</span>}
           <div>
             <h2 className="section-title">{title}</h2>
             {sub && <p className="mt-0.5 text-[12.5px] text-ink-3">{sub}</p>}
@@ -117,7 +117,7 @@ export function CatBadge({ cat, size = 'md' }: { cat: Cat; size?: 'sm' | 'md' | 
 }
 
 export function Note({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'warn' | 'fire' }) {
-  const c = tone === 'warn' ? 'border-warn bg-warn-soft' : tone === 'fire' ? 'border-fire bg-fire-soft' : 'border-ink-4 bg-paper';
+  const c = tone === 'warn' ? 'border-warn bg-warn-soft' : tone === 'fire' ? 'border-alerta bg-alerta-soft' : 'border-ink-4 bg-paper';
   return (
     <div className={`flex gap-2.5 border-l-[3px] px-3 py-2.5 text-[12.5px] leading-relaxed ${c}`}>
       <Info size={15} className="mt-0.5 shrink-0" />

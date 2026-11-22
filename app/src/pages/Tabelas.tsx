@@ -21,7 +21,7 @@ export function QuadroIView({ onPick }: { onPick?: (i: number) => void } = {}) {
       <div className="grid max-h-[460px] overflow-y-auto md:grid-cols-3">
         {l.map((p, i) => onPick ? (
           <button key={i} onClick={() => onPick(QUADRO_I_HI.indexOf(p))} className="group flex justify-between gap-2 border-b border-r border-paper-3 px-3 py-1.5 text-left text-[12.5px] hover:bg-ink hover:text-white" title="Adicionar como constituinte">
-            <span><span className="mr-1.5 font-mono text-fire">+</span>{p.p}</span><span className="num font-semibold">{fmt(p.h, 2)}</span>
+            <span><span className="mr-1.5 font-mono text-fire-ink">+</span>{p.p}</span><span className="num font-semibold">{fmt(p.h, 2)}</span>
           </button>
         ) : (
           <div key={i} className="flex justify-between gap-2 border-b border-r border-paper-3 px-3 py-1.5 text-[12.5px]"><span>{p.p}</span><span className="num font-semibold">{fmt(p.h, 2)}</span></div>
@@ -74,7 +74,7 @@ export default function Tabelas() {
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
-      <p className="label !text-fire">Biblioteca</p>
+      <p className="label !text-fire-ink">Biblioteca</p>
       <h1 className="h-display mb-6 mt-2 text-[48px]">Tabelas legais</h1>
       <div className="mb-8 flex flex-wrap gap-px border border-ink bg-ink">
         {TABS.map((t) => (

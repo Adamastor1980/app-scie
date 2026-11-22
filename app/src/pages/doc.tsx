@@ -4,13 +4,13 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 
 /** Blocos comuns aos documentos A4 (relatório, MAP) */
 export function Sheet({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`report-page mx-auto mb-8 w-[210mm] min-h-[297mm] bg-white px-[16mm] py-[16mm] shadow-[0_1px_0_#0F0F0E,8px_8px_0_rgba(15,15,14,0.12)] ${className}`}>{children}</section>;
+  return <section className={`report-page mx-auto mb-8 w-[210mm] min-h-[297mm] bg-white px-[16mm] py-[16mm] shadow-[0_1px_0_#14233A,8px_8px_0_rgba(20,35,58,0.12)] ${className}`}>{children}</section>;
 }
 
 export function H1({ n, children }: { n: string; children: ReactNode }) {
   return (
     <h2 className="avoid-break mb-5 mt-2 flex items-baseline gap-3 border-b-[3px] border-ink pb-2">
-      <span className="font-mono text-[13px] font-semibold text-fire">{n}</span>
+      <span className="font-mono text-[13px] font-semibold text-fire-ink">{n}</span>
       <span className="font-display text-[24px] font-extrabold tracking-tight">{children}</span>
     </h2>
   );
@@ -37,10 +37,10 @@ export function useDocumento(p: Projeto, tituloFicheiro: string, idRaiz: string)
   useEffect(() => {
     const st = document.createElement('style');
     const esc = (s: string) => s.replace(/["\\]/g, '');
-    st.textContent = `@page { @top-left { content: "${esc(p.empresa.nome || 'SCIE')}"; font: 8pt Inter, sans-serif; color: #5C5B55; }
-      @top-right { content: "${esc(p.referencia || p.nome)} · v${esc(p.versao)}"; font: 8pt 'JetBrains Mono', monospace; color: #5C5B55; }
-      @bottom-left { content: "Realizado por: ${esc(p.autor.nome || p.empresa.nome || '')} · ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8E8D86; }
-      @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #0F0F0E; } }
+    st.textContent = `@page { @top-left { content: "${esc(p.empresa.nome || 'SCIE')}"; font: 8pt Inter, sans-serif; color: #5A6478; }
+      @top-right { content: "${esc(p.referencia || p.nome)} · v${esc(p.versao)}"; font: 8pt 'JetBrains Mono', monospace; color: #5A6478; }
+      @bottom-left { content: "Realizado por: ${esc(p.autor.nome || p.empresa.nome || '')} · ${esc(p.nome)}"; font: 7.5pt Inter, sans-serif; color: #8B92A0; }
+      @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #14233A; } }
       @page :first { @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`;
     document.head.appendChild(st);
     return () => { st.remove(); };
