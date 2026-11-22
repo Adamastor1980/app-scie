@@ -194,3 +194,15 @@ export async function logoLeve(dataUrl: string): Promise<string> {
   if (dataUrl.length <= 200_000) return dataUrl;
   return caberNaNuvem(await compressImage(dataUrl, 500, 0.9, true), 200_000);
 }
+
+/** Depois de criar um bloco no topo da lista, leva o ecrã até ele e destaca-o por instantes (marca com data-bloco={id}). */
+export function mostrarNovo(id: string) {
+  setTimeout(() => {
+    const el = document.querySelector<HTMLElement>(`[data-bloco="${id}"]`);
+    if (!el) return;
+    el.style.scrollMarginTop = '96px';
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.classList.add('bloco-novo');
+    setTimeout(() => el.classList.remove('bloco-novo'), 1600);
+  }, 60);
+}

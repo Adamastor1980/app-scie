@@ -5,7 +5,7 @@ import { precisaCarga } from '../UTPage';
 import type { Compartimento } from '../../data/types';
 import { QUADRO_I_HI, QUADRO_II } from '../../data/despacho';
 import { CI_OPCOES, RAI, RAI_NOME, cargaCompartimento, cargaUT, fmt } from '../../engine/calc';
-import { Empty, Field, Note, Num, Section, Select, Stat, Text } from '../../ui/primitives';
+import { Empty, Field, Note, Num, Section, Select, Stat, Text, mostrarNovo } from '../../ui/primitives';
 import Combo from '../../ui/Combo';
 import { novoCompartimento, uid } from '../../store';
 import { QuadroIView, QuadroIIView } from '../Tabelas';
@@ -44,7 +44,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
       </div>
 
       <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
-        <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(u.compartimentos.length + 1)); })}><Plus size={15} /> Outro compartimento corta-fogo</button>
+        <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => { const n = novoCompartimento(ut.compartimentos.length + 1); upU((u) => { u.compartimentos.unshift(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Outro compartimento corta-fogo</button>
       }>
         {ut.compartimentos.length === 0 && (
           <Empty title="Sem compartimentos." action={<button className="btn-fire" onClick={() => upU((u) => { u.compartimentos.push(novoCompartimento(1)); })}><Plus size={15} /> Adicionar compartimento</button>}>
@@ -95,7 +95,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
   const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (art. 10.º n.º 3 n))' : '';
   const somaZonas = [...c.atividades, ...c.armazens].reduce((s, z) => s + z.area, 0);
   return (
-    <div className="border border-ink bg-white">
+    <div data-bloco={c.id} className="border border-ink bg-white">
       <div className="grid items-end gap-3 border-b border-ink p-4 md:grid-cols-[1.5fr_0.8fr_1.4fr_auto]">
         <Field label="Compartimento corta-fogo"><Text value={c.nome} onChange={(v) => set((x) => { x.nome = v; })} /></Field>
         <Field label="Área útil S do compartimento" hint="Indicada uma única vez: divide a soma de todos os materiais/zonas."><Num value={c.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>

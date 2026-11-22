@@ -7,7 +7,7 @@ import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
 import { LOCAIS, SUBTIPOS_C } from '../../data/rjscie';
 import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/calc';
-import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle } from '../../ui/primitives';
+import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
 import { codigosEspacos } from '../../nome';
@@ -70,7 +70,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
       </div>
 
       <Section n="2.1" title="Espaços e locais de risco" sub="Um espaço por linha. O efetivo de cada espaço é arredondado ao inteiro superior (art. 51.º n.os 2 e 3)."
-        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco(u.tipo)); })}><Plus size={15} /> Espaço</button></div>}>
+        right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => { const n = novoEspaco(ut.tipo); upU((u) => { u.espacos.unshift(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Espaço</button></div>}>
         {showQ && <QuadroXXVII />}
         {ut.espacos.length === 0 ? (
           <Empty title="Sem espaços." action={<button className="btn-fire" onClick={() => upU((u) => { u.espacos.push(novoEspaco(u.tipo)); })}><Plus size={15} /> Adicionar espaço</button>}>
@@ -82,7 +82,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
               const c = efetivoEspaco(e);
               const aviso = e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50);
               return (
-                <div key={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
+                <div key={e.id} data-bloco={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
                   <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
                     <Field label={`Espaço · ${cod.get(e.id) ?? ""}`}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
                     <Field label="Piso"><Text value={e.piso} onChange={(v) => setE(i, (x) => { x.piso = v; })} /></Field>
