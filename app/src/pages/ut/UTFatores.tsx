@@ -1,6 +1,6 @@
 import type { UTProps } from '../UTPage';
 import { precisaCarga, precisaEfetivo } from '../UTPage';
-import { Field, Num, Section, Toggle } from '../../ui/primitives';
+import { Faltas, Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
 import { classificar, efetivoUT, fmt } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
@@ -15,6 +15,11 @@ export default function UTFatores({ ut, upU }: UTProps) {
   const temArLivre = t === 2 || t === 6 || t === 9 || t === 12;
   const usaAltura = !(ut.arLivre && temArLivre) && t !== 12;
   const usaPisos = [1, 2, 6, 8, 9, 11, 12].includes(t) && !(ut.arLivre && temArLivre);
+  const cargaV = precisaCarga(t) ? ((cls.fatores.find((f) => f.id === 'carga')?.valor as number) ?? 0) : 1;
+  const faltas: [string, string][] = [];
+  if (t === 2 && !ut.arLivre && !(ut.areaBruta > 0)) faltas.push(['Área bruta', 'área total ocupada pela UT II, em m² (art. 2.º b) do RJ-SCIE)']);
+  if (precisaEfetivo(t) && !(ef.total > 0)) faltas.push(['Efetivo', 'n.º de pessoas da UT, calculado no passo «Efetivo» (art. 51.º do RT-SCIE)']);
+  if (precisaCarga(t) && !(cargaV > 0)) faltas.push(['Carga de incêndio', 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)']);
 
 
   return (
@@ -46,7 +51,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
               </Field>
             )}
             {t === 2 && !ut.arLivre && (
-              <Field label="Área bruta ocupada pela UT II" legal="RJ-SCIE, art. 2.º b); quadro II" hint="Superfície total delimitada pelo perímetro exterior das paredes exteriores e eixos das paredes interiores separadoras.">
+              <Field label="Área bruta ocupada pela UT II" legal="RJ-SCIE, art. 2.º b); quadro II" className={ut.areaBruta > 0 ? '' : 'falta'} hint="Superfície total delimitada pelo perímetro exterior das paredes exteriores e eixos das paredes interiores separadoras.">
                 <Num value={ut.areaBruta} onChange={(v) => upU((u) => { u.areaBruta = v; })} suffix="m²" />
               </Field>
             )}
@@ -67,7 +72,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
           {(precisaEfetivo(t) || precisaCarga(t)) && (
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {precisaEfetivo(t) && (
-                <div className="flex items-center justify-between border border-ink bg-white p-4">
+                <div className={`flex items-center justify-between border p-4 ${ef.total > 0 ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
                   <div>
                     <p className="label">Efetivo da UT {t === 4 || t === 5 ? '· em locais D/E' : t === 7 ? '· em locais E' : ''}</p>
                     <p className="mt-1 font-display text-[28px] font-extrabold num">{fmt(ef.total)}{(t === 4 || t === 5) && <span className="text-ink-4"> · {fmt(ef.emDE)}</span>}{t === 7 && <span className="text-ink-4"> · {fmt(ef.emE)}</span>}</p>
@@ -77,17 +82,18 @@ export default function UTFatores({ ut, upU }: UTProps) {
                 </div>
               )}
               {precisaCarga(t) && (
-                <div className="flex items-center justify-between border border-ink bg-white p-4">
+                <div className={`flex items-center justify-between border p-4 ${cargaV > 0 ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
                   <div>
                     <p className="label">Densidade de carga modificada</p>
                     <p className="mt-1 font-display text-[28px] font-extrabold num">{fmt(cls.fatores.find((f) => f.id === 'carga')?.valor as number)} <span className="font-mono text-[12px] text-ink-3">MJ/m²</span></p>
-                    <p className="ref">Calculada no passo 03 (Despacho 2074/2009)</p>
+                    <p className="ref">Calculada no passo 03 (Despacho n.º 8954/2020)</p>
                   </div>
                   <a className="btn" href={`${location.hash.replace(/\/fatores$/, '')}/carga`}>Calcular →</a>
                 </div>
               )}
             </div>
           )}
+          <Faltas itens={faltas} titulo="Falta preencher para classificar a UT" />
         </Section>
 
       </div>

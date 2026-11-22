@@ -5,7 +5,7 @@ import { precisaCarga } from '../UTPage';
 import type { Compartimento } from '../../data/types';
 import { QUADRO_I_HI, QUADRO_II } from '../../data/despacho';
 import { CI_OPCOES, RAI, RAI_NOME, cargaCompartimento, cargaUT, fmt, raiCompartimento } from '../../engine/calc';
-import { Empty, Field, Note, Num, Section, Select, Stat, Text, mostrarNovo } from '../../ui/primitives';
+import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, mostrarNovo } from '../../ui/primitives';
 import Combo from '../../ui/Combo';
 import { novoCompartimento, uid } from '../../store';
 import { QuadroIView, QuadroIIView } from '../Tabelas';
@@ -147,6 +147,37 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
   };
   const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (art. 10.º n.º 3 n))' : '';
   const somaZonas = [...c.atividades, ...c.armazens].reduce((s, z) => s + z.area, 0);
+  // campos obrigatórios por preencher (ficam a âmbar e são listados com o seu significado)
+  const ff = (b: boolean) => (b ? 'falta' : '');
+  const faltaM = (it: Compartimento['itens'][number]) => ({
+    produto: !it.produto || !it.hi,
+    massa: it.emLitros ? !(it.litros! > 0) : !(it.massa > 0),
+    dens: !!it.emLitros && !(it.densidade! > 0),
+  });
+  const faltas: [string, string][] = [];
+  if (!(c.area > 0)) faltas.push(['Área útil S', 'área útil do compartimento corta-fogo, em m²']);
+  if (c.metodo === 'deterministico') {
+    if (!c.raiDet) faltas.push(['Atividade do compartimento', 'dá o coeficiente de ativação Rai (quadro II)']);
+    if (!c.itens.length) faltas.push(['Materiais', 'adicione pelo menos um material combustível']);
+    c.itens.forEach((it, k) => {
+      const f = faltaM(it);
+      if (f.produto) faltas.push([`Material ${k + 1}`, 'escolha o material: dá o poder calorífico Hi, em MJ/kg (quadro I)']);
+      if (f.massa) faltas.push([`Material ${k + 1}: ${it.emLitros ? 'litros' : 'massa Mi'}`, it.emLitros ? 'quantidade do líquido, em litros' : 'massa do material, em kg']);
+      if (f.dens) faltas.push([`Material ${k + 1}: densidade`, 'em kg/L, da ficha de dados de segurança (FDS), secção 9']);
+    });
+  } else {
+    if (!c.atividades.length && !c.armazens.length) faltas.push(['Zonas', 'adicione pelo menos uma zona de fabrico/reparação ou de armazenamento']);
+    c.atividades.forEach((z, k) => {
+      if (!z.qs) faltas.push([`Zona ${k + 1}: atividade`, 'dá qsi (MJ/m²) e Rai (quadro II)']);
+      if (!(z.area > 0)) faltas.push([`Zona ${k + 1}: Si`, 'área ocupada pela zona, em m²']);
+    });
+    c.armazens.forEach((z, k) => {
+      const n = c.atividades.length + k + 1;
+      if (!z.qv) faltas.push([`Zona ${n}: produto armazenado`, 'dá qvi (MJ/m³) e Rai (quadro II)']);
+      if (!(z.altura > 0)) faltas.push([`Zona ${n}: hi`, 'altura de armazenagem, em m']);
+      if (!(z.area > 0)) faltas.push([`Zona ${n}: Si`, 'área ocupada pela zona, em m²']);
+    });
+  }
   const temArm = c.armazens.length > 0;
   // Si vem preenchida com a área que ainda falta atribuir no compartimento (com uma só zona, Si = S); só se altera se a zona for menor
   const livre = () => Math.max(0, c.area - somaZonas);
@@ -154,7 +185,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
     <div data-bloco={c.id} className="border border-ink bg-white">
       <div className="grid items-end gap-3 border-b border-ink p-4 md:grid-cols-[1.5fr_0.8fr_1.4fr_auto]">
         <Field label="Compartimento corta-fogo"><Text value={c.nome} onChange={(v) => set((x) => { x.nome = v; })} /></Field>
-        <Field label="Área útil S do compartimento"><Num value={c.area} onChange={(v) => set((x) => { const zs = [...x.atividades, ...x.armazens]; if (zs.length === 1 && (zs[0].area === 0 || zs[0].area === x.area)) zs[0].area = v; x.area = v; })} suffix="m²" /></Field>
+        <Field label="Área útil S do compartimento" className={ff(!(c.area > 0))}><Num value={c.area} onChange={(v) => set((x) => { const zs = [...x.atividades, ...x.armazens]; if (zs.length === 1 && (zs[0].area === 0 || zs[0].area === x.area)) zs[0].area = v; x.area = v; })} suffix="m²" /></Field>
         <div className="field">
           <span className="label">Método (n.º 2.º do Despacho)</span>
           <div className="grid grid-cols-2 border border-ink">
@@ -209,7 +240,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
       {c.metodo === 'deterministico' ? (
         <div className="p-4">
           <div className="mb-5 grid items-end gap-3 md:grid-cols-[1.6fr_1fr]">
-            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="n.º 3.º, 1 e n.º 7.º">
+            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="n.º 3.º, 1 e n.º 7.º" className={ff(!c.raiDet)}>
               <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
                 onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
             </Field>
@@ -226,25 +257,25 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                 const doQuadro = QUADRO_I_HI.some((p) => p.p === it.produto && p.h === it.hi);
                 return (
                   <tr key={it.id}>
-                    <td>
+                    <td className={ff(faltaM(it).produto)}>
                       <Combo items={ITENS_HI_OUTRO} value={it.produto} placeholder="Escolher material" onPick={(o) => set((x) => {
                         if (o.key === -1) { x.itens[k].produto = ''; x.itens[k].hi = 0; return; }
                         const p = QUADRO_I_HI[o.key as number]; x.itens[k].produto = p.p; x.itens[k].hi = p.h;
                       })} />
                       {!doQuadro && <input className="input mt-1 h-8 text-[12px]" value={it.produto} placeholder="Material não listado: designação (Hi de fonte fundamentada)" onChange={(e) => set((x) => { x.itens[k].produto = e.target.value; })} />}
                     </td>
-                    <td>{doQuadro ? <span className="num block pr-2.5 pt-2 text-right">{fmt(it.hi, 2)}</span> : <Num value={it.hi} onChange={(v) => set((x) => { x.itens[k].hi = v; })} />}</td>
+                    <td className={ff(!doQuadro && !it.hi)}>{doQuadro ? <span className="num block pr-2.5 pt-2 text-right">{fmt(it.hi, 2)}</span> : <Num value={it.hi} onChange={(v) => set((x) => { x.itens[k].hi = v; })} />}</td>
                     <td>
                       <div className="mb-1 grid grid-cols-2 border border-ink text-[11px] font-semibold">
                         <button className={`h-6 ${!it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = false; })}>kg</button>
                         <button className={`h-6 ${it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = true; })}>litros</button>
                       </div>
                       {!it.emLitros ? (
-                        <Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} suffix="kg" />
+                        <span className={ff(faltaM(it).massa)}><Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} suffix="kg" /></span>
                       ) : (
                         <div className="flex flex-col gap-1">
-                          <Num value={it.litros} onChange={(v) => set((x) => { const y = x.itens[k]; y.litros = v; y.massa = v * (y.densidade ?? 0); })} suffix="L" />
-                          <Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="FDS secç. 9" />
+                          <span className={ff(faltaM(it).massa)}><Num value={it.litros} onChange={(v) => set((x) => { const y = x.itens[k]; y.litros = v; y.massa = v * (y.densidade ?? 0); })} suffix="L" /></span>
+                          <span className={ff(faltaM(it).dens)}><Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="FDS secç. 9" /></span>
                           <input className="input h-7 text-[11px]" value={it.fonteDensidade ?? ''} placeholder="fonte: FDS do produto, secção 9" onChange={(e) => set((x) => { x.itens[k].fonteDensidade = e.target.value; })} />
                           <span className="num text-right text-[11px] text-ink-3">= {fmt(it.massa, 1)} kg</span>
                         </div>
@@ -270,10 +301,10 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               {c.atividades.map((z, k) => (
                 <tr key={z.id}>
                   <td><Select value="f" onChange={(v) => v === 'a' && set((x) => { const [o] = x.atividades.splice(k, 1); x.armazens.push({ id: o.id, nome: '', qv: 0, altura: 0, area: o.area, ci: o.ci, rai: 1 }); })} options={[{ v: 'f', l: 'Fabrico/reparação' }, { v: 'a', l: 'Armazenamento' }]} /></td>
-                  <td><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade de fabrico/reparação" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
+                  <td className={ff(!z.qs)}><Combo items={ITENS_QS} value={z.nome} placeholder="Escolher atividade de fabrico/reparação" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.atividades[k], { atividadeId: a.id, nome: a.a, qs: a.qs!, rai: RAI[a.rs!] }); })} /></td>
                   <td className="num pt-4 text-right">{z.qs ? <>{fmt(z.qs)}<span className="block text-[10px] text-ink-4">MJ/m²</span></> : '—'}</td>
                   {temArm && <td className="pt-4 text-right text-ink-4">—</td>}
-                  <td><Num value={z.area} onChange={(v) => set((x) => { x.atividades[k].area = v; })} /></td>
+                  <td className={ff(!(z.area > 0))}><Num value={z.area} onChange={(v) => set((x) => { x.atividades[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.atividades[k].ci = v; })} options={CI_OPTS} /></td>
                   <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
                   <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[k]?.parcela)}</td>
@@ -283,10 +314,10 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               {c.armazens.map((z, k) => (
                 <tr key={z.id}>
                   <td><Select value="a" onChange={(v) => v === 'f' && set((x) => { const [o] = x.armazens.splice(k, 1); x.atividades.push({ id: o.id, nome: '', qs: 0, area: o.area, ci: o.ci, rai: 1 }); })} options={[{ v: 'f', l: 'Fabrico/reparação' }, { v: 'a', l: 'Armazenamento' }]} /></td>
-                  <td><Combo items={ITENS_QV} value={z.nome} placeholder="Escolher produto armazenado" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.armazens[k], { atividadeId: a.id, nome: a.a, qv: a.qv!, rai: RAI[a.rv!] }); })} /></td>
+                  <td className={ff(!z.qv)}><Combo items={ITENS_QV} value={z.nome} placeholder="Escolher produto armazenado" onPick={(o) => set((x) => { const a = QUADRO_II.find((y) => y.id === o.key)!; Object.assign(x.armazens[k], { atividadeId: a.id, nome: a.a, qv: a.qv!, rai: RAI[a.rv!] }); })} /></td>
                   <td className="num pt-4 text-right">{z.qv ? <>{fmt(z.qv)}<span className="block text-[10px] text-ink-4">MJ/m³</span></> : '—'}</td>
-                  <td><Num value={z.altura} onChange={(v) => set((x) => { x.armazens[k].altura = v; })} /></td>
-                  <td><Num value={z.area} onChange={(v) => set((x) => { x.armazens[k].area = v; })} /></td>
+                  <td className={ff(!(z.altura > 0))}><Num value={z.altura} onChange={(v) => set((x) => { x.armazens[k].altura = v; })} /></td>
+                  <td className={ff(!(z.area > 0))}><Num value={z.area} onChange={(v) => set((x) => { x.armazens[k].area = v; })} /></td>
                   <td><Select value={z.ci} onChange={(v) => set((x) => { x.armazens[k].ci = v; })} options={CI_OPTS} /></td>
                   <td className="num pt-4 text-right">{fmt(r.raiAplicado ?? z.rai, r.raiAplicado ? 3 : 1)}</td>
                   <td className="num pt-4 text-right font-semibold">{fmt(r.linhas[c.atividades.length + k]?.parcela)}</td>
@@ -299,13 +330,14 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
             <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
           </div>
-          {c.armazens.some((z) => !z.altura) && <div className="mt-3"><Note tone="warn">Há zonas de armazenamento sem altura de armazenagem hi: a parcela dessa zona fica a zero até a preencher.</Note></div>}
+          
           
           {r.raiNota && <p className="mt-3 text-[11.5px] text-ink-3">Várias zonas no compartimento — {r.raiNota}</p>}
           {c.area > 0 && somaZonas > c.area + 0.01 && <div className="mt-3"><Note tone="warn">A soma das áreas das zonas ({fmt(somaZonas, 1)} m²) excede a área útil do compartimento ({fmt(c.area, 1)} m²).</Note></div>}
         </div>
       )}
 
+      {faltas.length > 0 && <div className="px-4 pb-4"><Faltas itens={faltas} /></div>}
       <div className="grid gap-px border-t border-ink bg-ink md:grid-cols-[1fr_1fr_2fr]">
         <div className="bg-paper p-4"><p className="label">Qs — carga modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.Qs)} <span className="font-mono text-[12px] text-ink-3">MJ</span></p></div>
         <div className="bg-ink p-4 text-white"><p className="label !text-white/60">qs — densidade modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.qs, 1)} <span className="font-mono text-[12px] text-white/60">MJ/m²</span></p></div>
@@ -318,7 +350,6 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </p>
           )}
           {locC && <p className="font-semibold text-alerta">{locC}</p>}
-          {c.area <= 0 && <p className="text-warn">Indique a área útil do compartimento.</p>}
         </div>
       </div>
     </div>

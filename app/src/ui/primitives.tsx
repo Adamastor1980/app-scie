@@ -206,3 +206,16 @@ export function mostrarNovo(id: string) {
     setTimeout(() => el.classList.remove('bloco-novo'), 1600);
   }, 60);
 }
+
+/** Campos obrigatórios por preencher: a caixa fica a âmbar (classe «falta») e esta lista diz o que falta e o que significa. */
+export function Faltas({ itens, titulo = 'Falta preencher para o cálculo' }: { itens: [string, string][]; titulo?: string }) {
+  if (!itens.length) return null;
+  return (
+    <div className="mt-3 border-l-[3px] border-warn bg-warn-soft px-4 py-3 text-[12.5px]">
+      <p className="mb-1 font-semibold">{titulo}:</p>
+      <ul className="flex flex-col gap-0.5">
+        {itens.map(([c, s], i) => <li key={i}><b>{c}</b> <span className="text-ink-2">— {s}</span></li>)}
+      </ul>
+    </div>
+  );
+}

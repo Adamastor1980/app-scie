@@ -7,7 +7,7 @@ import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
 import { LOCAIS, SUBTIPOS_C } from '../../data/rjscie';
 import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/calc';
-import { Empty, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
+import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
 import { codigosEspacos } from '../../nome';
@@ -84,7 +84,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
               return (
                 <div key={e.id} data-bloco={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
                   <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
-                    <Field label={`Espaço · ${cod.get(e.id) ?? ""}`}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
+                    <Field label={`Espaço · ${cod.get(e.id) ?? ""}`} className={e.nome.trim() ? '' : 'falta'}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
                     <Field label="Piso"><Text value={e.piso} onChange={(v) => setE(i, (x) => { x.piso = v; })} /></Field>
                     <Field label="Local de risco" legal="art. 10.º" hint={e.local === 'B' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) ? `B automático: ${c.valor > 100 ? `efetivo ${c.valor} > 100` : `público ${e.efetivoPublico} > 50`}` : undefined}><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
                     <Field label="Critério do efetivo" legal="RT-SCIE art. 51.º"><Select value={e.criterio} onChange={(v) => setE(i, (x) => { x.criterio = v; })} options={crits.map((k) => ({ v: k.v, l: k.l }))} /></Field>
@@ -108,6 +108,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                       </div>
                     )}
                   </div>
+                  {faltasEspaco(e).length > 0 && <div className="border-t border-paper-3 px-4 pb-3"><Faltas itens={faltasEspaco(e).map((x) => [x.c, x.s] as [string, string])} /></div>}
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-paper-3 px-4 py-3">
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas na mobilidade/perceção → local D (art. 10.º n.º 1 d)); ×1,3 para saídas (art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.naoSimultaneo} onChange={(ev) => setE(i, (x) => { x.naoSimultaneo = ev.target.checked; })} /> Ocupado pelas mesmas pessoas noutro horário — não somar (art. 51.º n.º 9)</label>
@@ -163,15 +164,47 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
   );
 }
 
+/** Dados obrigatórios do espaço por preencher, conforme o critério de cálculo do efetivo (art. 51.º do RT-SCIE). */
+function faltasEspaco(e: Espaco): { k: string; c: string; s: string }[] {
+  const f: { k: string; c: string; s: string }[] = [];
+  const pos = (v?: number) => (v ?? 0) > 0;
+  if (!e.nome.trim()) f.push({ k: 'nome', c: 'Nome do espaço', s: 'identifica o espaço no relatório' });
+  switch (e.criterio) {
+    case 'indice':
+      if (!e.indiceId) f.push({ k: 'indice', c: 'Uso do espaço', s: 'dá o índice de ocupação, em pessoas/m² (quadro XXVII)' });
+      if (!pos(e.area)) f.push({ k: 'area', c: 'Área útil', s: 'área útil do espaço, em m² (art. 2.º c) do RJ-SCIE)' });
+      break;
+    case 'camas': if (!pos(e.n)) f.push({ k: 'n', c: 'N.º de ocupantes em camas', s: 'pessoas que dormem no espaço (art. 51.º n.º 2 a))' }); break;
+    case 'lugares': if (!pos(e.n)) f.push({ k: 'n', c: 'N.º de lugares fixos', s: 'lugares sentados fixos do espaço (art. 51.º n.º 2 d))' }); break;
+    case 'acamados': if (!pos(e.n)) f.push({ k: 'n', c: 'N.º de lugares de acamados', s: 'multiplicado por 3,2 (art. 51.º n.º 2 b))' }); break;
+    case 'fundamentado':
+      if (!pos(e.n)) f.push({ k: 'n', c: 'Efetivo fundamentado', s: 'número de pessoas determinado pelo técnico' });
+      if (!e.justificacao?.trim()) f.push({ k: 'justificacao', c: 'Fundamentação', s: 'critério usado e origem dos dados' });
+      break;
+    case 'tipologia':
+      if (!pos(e.n)) f.push({ k: 'n', c: 'N.º de unidades', s: 'apartamentos/moradias com esta tipologia' });
+      break;
+    case 'declarado':
+      if (!pos(e.n)) f.push({ k: 'n', c: 'Efetivo declarado', s: 'número de pessoas declarado pelo responsável' });
+      if (!pos(e.area)) f.push({ k: 'area', c: 'Área útil', s: 'em m²; serve para o mínimo de 0,03 pessoas/m²' });
+      break;
+    case 'comprimento': if (!pos(e.comprimento)) f.push({ k: 'comprimento', c: 'Comprimento', s: 'metros de banco/bancada ou de frente (quadro XXVIII)' }); break;
+    case 'desportivo': if (!pos(e.area)) f.push({ k: 'area', c: 'Área', s: 'área de apoio, da pista ou do plano de água, em m² (art. 283.º)' }); break;
+  }
+  return f;
+}
+
 function Params({ e, set }: { e: Espaco; set: (fn: (e: Espaco) => void) => void }) {
+  const fk = new Set(faltasEspaco(e).map((x) => x.k));
+  const ff = (k: string) => (fk.has(k) ? 'falta' : '');
   switch (e.criterio) {
     case 'indice':
       return (
         <>
-          <Field label="Uso do espaço (quadro XXVII)" className="md:col-span-2">
+          <Field label="Uso do espaço (quadro XXVII)" className={`md:col-span-2 ${ff('indice')}`}>
             <Select value={e.indiceId ?? ''} onChange={(v) => set((x) => { x.indiceId = v; })} options={QUADRO_XXVII.map((q) => ({ v: q.id, l: `${q.indice.toFixed(2).replace('.', ',')} p/m² — ${q.espaco}` }))} />
           </Field>
-          <Field label="Área útil" legal="art. 2.º c) RJ-SCIE"><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
+          <Field label="Área útil" legal="art. 2.º c) RJ-SCIE" className={ff('area')}><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
           <span />
         </>
       );
@@ -180,29 +213,29 @@ function Params({ e, set }: { e: Espaco; set: (fn: (e: Espaco) => void) => void 
     case 'fundamentado':
       return (
         <>
-          <Field label={e.criterio === 'camas' ? 'N.º de ocupantes em camas' : e.criterio === 'lugares' ? 'N.º de lugares fixos' : 'Efetivo fundamentado'}>
+          <Field label={e.criterio === 'camas' ? 'N.º de ocupantes em camas' : e.criterio === 'lugares' ? 'N.º de lugares fixos' : 'Efetivo fundamentado'} className={ff('n')}>
             <Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} />
           </Field>
           {e.criterio === 'fundamentado' ? (
-            <Field label="Fundamentação" className="md:col-span-3"><Text value={e.justificacao ?? ''} onChange={(v) => set((x) => { x.justificacao = v; })} placeholder="Critério usado e origem dos dados" /></Field>
+            <Field label="Fundamentação" className={`md:col-span-3 ${ff('justificacao')}`}><Text value={e.justificacao ?? ''} onChange={(v) => set((x) => { x.justificacao = v; })} placeholder="Critério usado e origem dos dados" /></Field>
           ) : <span className="md:col-span-3" />}
         </>
       );
     case 'acamados':
-      return <><Field label="N.º de lugares de acamados"><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field><span className="md:col-span-3" /></>;
+      return <><Field label="N.º de lugares de acamados" className={ff('n')}><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field><span className="md:col-span-3" /></>;
     case 'tipologia':
       return (
         <>
           <Field label="Tipologia Tn (n)"><Num value={e.tipologia} onChange={(v) => set((x) => { x.tipologia = Math.round(v); })} /></Field>
-          <Field label="N.º de unidades"><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field>
+          <Field label="N.º de unidades" className={ff('n')}><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field>
           <p className="self-end text-[11.5px] text-ink-3 md:col-span-2">Quadro XXVI: T0 = 2, T1 = 4, T2 = 6, T3 = 8, T4 = 10, Tn = 2(n+1).</p>
         </>
       );
     case 'declarado':
       return (
         <>
-          <Field label="Efetivo declarado"><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field>
-          <Field label="Área útil"><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
+          <Field label="Efetivo declarado" className={ff('n')}><Num value={e.n} onChange={(v) => set((x) => { x.n = Math.round(v); })} /></Field>
+          <Field label="Área útil" className={ff('area')}><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
           <p className="self-end text-[11.5px] text-ink-3 md:col-span-2">Arquivos e espaços não acessíveis a público da UT XII: mínimo de 0,03 pessoas/m².</p>
         </>
       );
@@ -215,7 +248,7 @@ function Params({ e, set }: { e: Espaco; set: (fn: (e: Espaco) => void) => void 
               { v: 'pe' as const, l: 'Lugares de pé numa única frente — 5 pessoas/m de frente' },
             ]} />
           </Field>
-          <Field label="Comprimento"><Num value={e.comprimento} onChange={(v) => set((x) => { x.comprimento = v; })} suffix="m" /></Field>
+          <Field label="Comprimento" className={ff('comprimento')}><Num value={e.comprimento} onChange={(v) => set((x) => { x.comprimento = v; })} suffix="m" /></Field>
           <span />
         </>
       );
@@ -230,7 +263,7 @@ function Params({ e, set }: { e: Espaco; set: (fn: (e: Espaco) => void) => void 
             ]} />
           </Field>
           <Field label="Espectadores"><Num value={e.espectadores} onChange={(v) => set((x) => { x.espectadores = Math.round(v); })} /></Field>
-          <Field label="Área"><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
+          <Field label="Área" className={ff('area')}><Num value={e.area} onChange={(v) => set((x) => { x.area = v; })} suffix="m²" /></Field>
         </>
       );
   }
