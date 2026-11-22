@@ -210,7 +210,7 @@ export function cargaCompartimento(c: Compartimento): CargaComp {
       linhas.push({
         desc: i.produto || 'Constituinte',
         parcela: p,
-        formula: `${i.emLitros ? `(${fmt(i.litros ?? 0, 2)} L × ${fmt(i.densidade ?? 0, 3)} kg/L${i.fonteDensidade ? ` [${i.fonteDensidade}]` : ''}) = ` : ''}${fmt(i.massa, 2)} kg × ${fmt(i.hi, 2)} MJ/kg × ${fmt(i.ci, 2)} × ${fmt(rai, 2)}`,
+        formula: `${i.emLitros ? `(${fmt(i.litros ?? 0, 2)} L × ${fmt(i.densidade ?? 0, 3)} kg/L [${i.fonteDensidade || 'FDS, secção 9'}]) = ` : ''}${fmt(i.massa, 2)} kg × ${fmt(i.hi, 2)} MJ/kg × ${fmt(i.ci, 2)} × ${fmt(rai, 2)}`,
       });
     }
   } else {

@@ -268,16 +268,15 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                     <td>
                       <div className="mb-1 grid grid-cols-2 border border-ink text-[11px] font-semibold">
                         <button className={`h-6 ${!it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = false; })}>kg</button>
-                        <button className={`h-6 ${it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { x.itens[k].emLitros = true; })}>litros</button>
+                        <button className={`h-6 ${it.emLitros ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => set((x) => { const y = x.itens[k]; y.emLitros = true; y.massa = (y.litros ?? 0) * (y.densidade ?? 0); })}>litros</button>
                       </div>
                       {!it.emLitros ? (
                         <span className={ff(faltaM(it).massa)}><Num value={it.massa} onChange={(v) => set((x) => { x.itens[k].massa = v; })} suffix="kg" /></span>
                       ) : (
                         <div className="flex flex-col gap-1">
                           <span className={ff(faltaM(it).massa)}><Num value={it.litros} onChange={(v) => set((x) => { const y = x.itens[k]; y.litros = v; y.massa = v * (y.densidade ?? 0); })} suffix="L" /></span>
-                          <span className={ff(faltaM(it).dens)}><Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" placeholder="FDS secç. 9" /></span>
-                          <input className="input h-7 text-[11px]" value={it.fonteDensidade ?? ''} placeholder="fonte: FDS do produto, secção 9" onChange={(e) => set((x) => { x.itens[k].fonteDensidade = e.target.value; })} />
-                          <span className="num text-right text-[11px] text-ink-3">= {fmt(it.massa, 1)} kg</span>
+                          <span className={ff(faltaM(it).dens)}><Num value={it.densidade} onChange={(v) => set((x) => { const y = x.itens[k]; y.densidade = v; y.massa = (y.litros ?? 0) * v; })} suffix="kg/L" /></span>
+                          <span className="text-[11px] leading-snug text-ink-3">Densidade: FDS do produto, secção 9<span className="num block text-right">= {fmt(it.massa, 1)} kg</span></span>
                         </div>
                       )}
                     </td>
