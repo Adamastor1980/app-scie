@@ -4,7 +4,7 @@ import type { UTProps } from '../UTPage';
 import { precisaCarga } from '../UTPage';
 import type { Compartimento } from '../../data/types';
 import { QUADRO_I_HI, QUADRO_II } from '../../data/despacho';
-import { CI_OPCOES, RAI, RAI_NOME, cargaCompartimento, cargaUT, fmt } from '../../engine/calc';
+import { CI_OPCOES, RAI, RAI_NOME, cargaCompartimento, cargaUT, fmt, raiCompartimento } from '../../engine/calc';
 import { Empty, Field, Note, Num, Section, Select, Stat, Text, mostrarNovo } from '../../ui/primitives';
 import Combo from '../../ui/Combo';
 import { novoCompartimento, uid } from '../../store';
@@ -105,8 +105,29 @@ function Simbolos({ l }: { l: [string, string][] }) {
   );
 }
 
+/** Ao mudar de método, aproveita o que já está preenchido no outro (a atividade dá o Rai; no probabilístico dá também qsi/qvi). Os dados de cada método ficam guardados. */
+function aproveitarDados(x: Compartimento, m: Compartimento['metodo']) {
+  if (m === 'deterministico' && x.atividadeDetId == null) {
+    const zonas = [...x.atividades.map((z) => ({ z, arm: false })), ...x.armazens.map((z) => ({ z, arm: true }))].filter(({ z }) => z.atividadeId != null);
+    const r = raiCompartimento(x);
+    if (zonas.length && (!r || r.nota.includes('3, a)'))) {
+      const alvo = r ? zonas.filter(({ z }) => z.rai === r.rai) : zonas;
+      const { z, arm } = alvo.reduce((a, b) => (b.z.area > a.z.area ? b : a), alvo[0]);
+      x.atividadeDetId = z.atividadeId! * 2 + (arm ? 1 : 0);
+      x.raiDet = z.rai;
+    }
+  }
+  if (m === 'probabilistico' && !x.atividades.length && !x.armazens.length && x.atividadeDetId != null) {
+    const a = QUADRO_II.find((y) => y.id === Math.floor(x.atividadeDetId! / 2));
+    if (a?.qs != null) x.atividades.push({ id: uid(), atividadeId: a.id, nome: a.a, qs: a.qs, area: x.area, ci: 1, rai: RAI[a.rs!] });
+    else if (a?.qv != null) x.armazens.push({ id: uid(), atividadeId: a.id, nome: a.a, qv: a.qv, altura: 0, area: x.area, ci: 1, rai: RAI[a.rv!] });
+  }
+  x.metodo = m;
+}
+
 function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compartimento) => void) => void; remove: () => void }) {
   const r = cargaCompartimento(c);
+  const outro = cargaCompartimento({ ...c, metodo: c.metodo === 'deterministico' ? 'probabilistico' : 'deterministico' });
   const [verQuadro, setVerQuadro] = useState(false);
   const [aviso, setAviso] = useState('');
   const pickHi = (i: number) => {
@@ -138,7 +159,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           <span className="label">Método (n.º 2.º do Despacho)</span>
           <div className="grid grid-cols-2 border border-ink">
             {(['deterministico', 'probabilistico'] as const).map((m) => (
-              <button key={m} className={`h-9 text-[12.5px] font-semibold ${c.metodo === m ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`} onClick={() => { set((x) => { x.metodo = m; }); setAviso(''); }}>
+              <button key={m} className={`h-9 text-[12.5px] font-semibold ${c.metodo === m ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`} onClick={() => { set((x) => aproveitarDados(x, m)); setAviso(''); }}>
                 {m === 'deterministico' ? 'Determinístico' : 'Probabilístico'}
               </button>
             ))}
@@ -290,6 +311,12 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         <div className="bg-ink p-4 text-white"><p className="label !text-white/60">qs — densidade modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.qs, 1)} <span className="font-mono text-[12px] text-white/60">MJ/m²</span></p></div>
         <div className="bg-paper p-4 text-[12px] leading-snug">
           <p className="ref mb-1">qs = {fmt(r.Qs)} MJ / {fmt(c.area, 2)} m²</p>
+          {outro.Qs > 0 && r.Qs > 0 && (
+            <p className="mb-1 text-[12px]">
+              Comparação — {c.metodo === 'deterministico' ? 'probabilístico' : 'determinístico'}: <b className="num">{fmt(outro.qs, 1)} MJ/m²</b>
+              {' '}({outro.qs > r.qs ? '+' : ''}{fmt((100 * (outro.qs - r.qs)) / r.qs, 0)} %). <span className="text-ink-3">Conta só o método escolhido.</span>
+            </p>
+          )}
           {locC && <p className="font-semibold text-alerta">{locC}</p>}
           {c.area <= 0 && <p className="text-warn">Indique a área útil do compartimento.</p>}
         </div>
