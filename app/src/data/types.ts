@@ -227,6 +227,8 @@ export interface Edificio {
 
 export interface Projeto {
   id: string;
+  /** projeto de exemplo: só para ver o funcionamento; não é guardado nem sincronizado */
+  exemplo?: boolean;
   nome: string;
   referencia: string;
   cliente: string;

@@ -101,6 +101,8 @@ interface State {
   autorPadrao: Projeto['autor'] | null;
   criar: () => string;
   importar: (p: Projeto) => string;
+  /** abre o exemplo (substitui o anterior); não fica nos projetos nem na nuvem */
+  abrirExemplo: (p: Projeto) => string;
   duplicar: (id: string) => string;
   apagar: (id: string) => void;
   atualizar: (id: string, fn: (p: Projeto) => void) => void;
@@ -138,6 +140,14 @@ export const useStore = create<State>()(
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },
+      abrirExemplo: (p) => {
+        const { empresaPadrao, autorPadrao } = getS();
+        const n: Projeto = { ...clone(p), exemplo: true, atualizadoEm: Date.now() };
+        if (empresaPadrao) n.empresa = clone(empresaPadrao);
+        if (autorPadrao) n.autor = clone(autorPadrao);
+        setS((s) => ({ projetos: [n, ...s.projetos.filter((x) => !x.exemplo)] }));
+        return n.id;
+      },
       duplicar: (id) => {
         const o = getS().projetos.find((p) => p.id === id);
         if (!o) return id;
@@ -150,7 +160,7 @@ export const useStore = create<State>()(
         c.plantas = c.plantas.map((pl) => ({ ...pl, id: uid() }));
         c.edificios.forEach((e) => e.uts.forEach((u) => { u.levantamento = u.levantamento?.map((a) => ({ ...a, id: uid() })); }));
         c.autoprotecao?.registos.forEach((r) => { r.anexos = r.anexos?.map((a) => ({ ...a, id: uid() })); });
-        const n = { ...c, id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
+        const n = { ...c, exemplo: undefined, id: uid(), nome, criadoEm: Date.now(), atualizadoEm: Date.now() };
         setS((s) => ({ projetos: [n, ...s.projetos] }));
         return n.id;
       },
@@ -178,6 +188,8 @@ export const useStore = create<State>()(
     {
       name: 'scie-app-v1',
       storage: createJSONStorage(() => idbStorage),
+      // o exemplo nunca é guardado no aparelho
+      partialize: (st) => ({ ...st, projetos: st.projetos.filter((p) => !p.exemplo) }),
       onRehydrateStorage: () => (st) => {
         if (!st || st.empresaPadrao?.nome || st.autorPadrao?.nome) return;
         const fonte = [...st.projetos].sort((a, b) => b.atualizadoEm - a.atualizadoEm).find((p) => p.empresa?.nome || p.autor?.nome);

@@ -225,7 +225,7 @@ export async function iniciarSincronizacao(user: User) {
     pararFns.push(useStore.subscribe((novo, antigo) => {
       if (aplicarRemoto) return;
       const vivos = new Set(novo.projetos.map((p) => p.id));
-      const removidos = antigo.projetos.filter((p) => !vivos.has(p.id));
+      const removidos = antigo.projetos.filter((p) => !vivos.has(p.id) && !p.exemplo);
       if (removidos.length) {
         const l = lapidesPorEnviar();
         for (const p of removidos) l[p.id] = Math.max(Date.now(), p.atualizadoEm ?? 0);
@@ -290,6 +290,7 @@ async function enviar(inicial: boolean) {
   }
   // imagens que existem neste aparelho mas ainda não estão na nuvem (ex.: envio interrompido): enviar sempre
   for (const p of st.projetos) {
+    if (p.exemplo) continue;
     for (const pl of imagensDe(p)) {
       if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
       imagensEnviadas.add(pl.id);
@@ -297,6 +298,7 @@ async function enviar(inicial: boolean) {
     }
   }
   for (const p of st.projetos) {
+    if (p.exemplo) continue; // o exemplo nunca vai para a nuvem
     if (enviados.get(p.id) === p.atualizadoEm) continue;
     // logótipo do cliente demasiado grande (o documento do projeto tem o limite de 1 MiB): reduz primeiro e envia depois
     if (p.clienteLogo && p.clienteLogo.length > 250_000) {

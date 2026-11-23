@@ -179,6 +179,12 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
             <button className="btn h-9 px-3" onClick={() => setMenuAberto(true)}><Menu size={16} /> Menu</button>
             <span className="truncate font-display text-[14px] font-bold">{p.nome}</span>
           </div>
+          {p.exemplo && (
+            <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-fire bg-fire-soft px-4 py-2 text-[12.5px] sm:px-8">
+              <span><b>Exemplo</b> — serve só para ver o funcionamento: não fica nos seus projetos nem na nuvem, e desaparece ao fechar a app.</span>
+              <a href="#/" className="font-semibold text-fire-ink hover:underline">Voltar aos projetos</a>
+            </div>
+          )}
           {page}
         </div>
       </div>

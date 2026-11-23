@@ -11,7 +11,8 @@ import type { Projeto } from '../data/types';
 import { exemploProjeto } from '../exemplo';
 
 export default function Home() {
-  const { projetos, criar, apagar, duplicar, importar } = useStore();
+  const { projetos: todos, criar, apagar, duplicar, importar, abrirExemplo } = useStore();
+  const projetos = todos.filter((p) => !p.exemplo);
   const fileRef = useRef<HTMLInputElement>(null);
   const empresa = useStore((s) => s.empresaPadrao);
   const autor = useStore((s) => s.autorPadrao);
@@ -48,7 +49,7 @@ export default function Home() {
                 URL.revokeObjectURL(a.href);
               }}><Download size={15} /> Exportar todos (JSON)</button>
           )}
-          <button className="btn h-10 px-3" onClick={() => go(`/p/${importar(exemploProjeto())}`)}>Abrir exemplo</button>
+          <button className="btn h-10 px-3" onClick={() => go(`/p/${abrirExemplo(exemploProjeto())}`)}>Abrir exemplo</button>
           <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
         </div>
       </div>
