@@ -11,7 +11,7 @@ import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/cal
 import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
-import { codigosEspacos } from '../../nome';
+import { codigosEspacos, nomeUT } from '../../nome';
 
 /** Efeito do efetivo de público: só conta para distinguir local A de B (RJ-SCIE art. 10.º n.º 1 a) ii) e b)). */
 function efeitoPublico(e: Espaco, efetivo: number): string {
@@ -42,7 +42,16 @@ const LOCAL_OPTS: { v: LocalRisco; l: string }[] = [
 ];
 
 export default function UTEfetivo({ ut, upU }: UTProps) {
-  const cod = codigosEspacos(useP().p);
+  const { p: proj, up } = useP();
+  const cod = codigosEspacos(proj);
+  // outras UT do projeto para onde um espaço pode ser movido
+  const destinos = proj.edificios.flatMap((ed2) => ed2.uts.filter((u) => u.id !== ut.id).map((u) => ({ ed: ed2, u })));
+  const mover = (espId: string, utId: string) => up((pp) => {
+    let esp: Espaco | undefined;
+    for (const e2 of pp.edificios) for (const u of e2.uts) if (u.id === ut.id) { esp = u.espacos.find((x) => x.id === espId); u.espacos = u.espacos.filter((x) => x.id !== espId); }
+    if (!esp) return;
+    for (const e2 of pp.edificios) for (const u of e2.uts) if (u.id === utId) u.espacos.push(esp);
+  });
   const ef = efetivoUT(ut);
   const [showQ, setShowQ] = useState(false);
   const [lei, setLei] = useState(false);
@@ -105,6 +114,13 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                     <Field label="Local de risco" legal="art. 10.º" hint={e.local === 'B' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) ? `B automático: ${c.valor > 100 ? `efetivo ${c.valor} > 100` : `público ${e.efetivoPublico} > 50`}` : undefined}><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
                     <Field label="Critério do efetivo" legal="RT-SCIE art. 51.º"><Select value={e.criterio} onChange={(v) => setE(i, (x) => { x.criterio = v; })} options={crits.map((k) => ({ v: k.v, l: k.l }))} /></Field>
                     <div className="flex items-end gap-1">
+                      {destinos.length > 0 && (
+                        <select className="h-8 w-8 cursor-pointer appearance-none border-0 bg-transparent bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2216%22%20height=%2216%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%235A6478%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M5%2012h14M13%206l6%206-6%206%22/%3E%3C/svg%3E')] bg-center bg-no-repeat text-transparent hover:bg-paper-2" title="Mover para outra UT" value=""
+                          onChange={(ev) => { const d = destinos.find((x) => x.u.id === ev.target.value); if (d && confirm(`Mover «${e.nome || 'espaço'}» para a UT ${ROMANO[d.u.tipo]} «${nomeUT(d.u).nome}» (${d.ed.nome})?`)) mover(e.id, d.u.id); }}>
+                          <option value="">Mover para outra UT…</option>
+                          {destinos.map((d) => <option key={d.u.id} value={d.u.id}>{d.ed.nome} · UT {ROMANO[d.u.tipo]} — {nomeUT(d.u).nome}</option>)}
+                        </select>
+                      )}
                       <button className="btn-icon" title="Duplicar" onClick={() => upU((u) => { u.espacos.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(e)), id: uid(), nome: e.nome + ' (cópia)' }); })}><Copy size={14} /></button>
                       <button className="btn-icon" title="Apagar" onClick={() => upU((u) => { u.espacos.splice(i, 1); })}><Trash2 size={14} /></button>
                     </div>

@@ -15,6 +15,7 @@ import UTCarga from './ut/UTCarga';
 import UTCategoria from './ut/UTCategoria';
 import UTMedidas from './ut/UTMedidas';
 import UTLevantamento from './ut/UTLevantamento';
+import { juntarUT, mesmoTipo } from '../engine/juntar';
 
 export interface UTProps {
   ed: Edificio;
@@ -106,6 +107,27 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       <div className="mx-auto max-w-[1240px] px-4 pt-6 sm:px-8 sm:pt-8">
         {nc && <NovaNC ed={ed} ut={ut} plantas={p.plantas} upU={upU} onClose={() => setNc(false)} />}
         {step === 'levantamento' && <UTLevantamento {...props} />}
+        {mesmoTipo(ed, ut).length > 0 && (
+          <div className="mb-8 border-l-[4px] border-alerta bg-alerta-soft px-4 py-3 text-[13px]">
+            <p className="font-semibold text-alerta">⚠ Há {mesmoTipo(ed, ut).length === 1 ? 'outra UT' : `${mesmoTipo(ed, ut).length} outras UT`} {ROMANO[ut.tipo]} neste edifício. Na lei, o mesmo uso é uma só utilização-tipo (RJ-SCIE, art. 8.º): a categoria resulta do efetivo de todos os espaços juntos, em todos os pisos.</p>
+            <p className="mt-1 text-ink-2">Junte-as nesta UT. Se algum espaço tiver outro uso e exceder os limites do art. 8.º n.º 3, crie para ele a UT própria (ex.: UT VI).</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {mesmoTipo(ed, ut).map((o) => (
+                <button key={o.id} className="btn h-8 bg-white text-[12.5px]" onClick={() => {
+                  if (!confirm(`Juntar «${nomeUT(o).nome}» a «${nomeUT(ut).nome}»?\n\nOs espaços, compartimentos, pisos, fotografias e verificações passam para esta UT e a UT «${nomeUT(o).nome}» é apagada.`)) return;
+                  up((pp) => {
+                    const e2 = pp.edificios.find((e) => e.id === eid);
+                    const d = e2?.uts.find((x) => x.id === uid);
+                    const or = e2?.uts.find((x) => x.id === o.id);
+                    if (!e2 || !d || !or) return;
+                    juntarUT(d, or);
+                    e2.uts = e2.uts.filter((x) => x.id !== o.id);
+                  });
+                }}>Juntar «{nomeUT(o).nome}» a esta UT</button>
+              ))}
+            </div>
+          </div>
+        )}
         {step === 'fatores' && <UTFatores {...props} />}
         {step === 'efetivo' && <UTEfetivo {...props} />}
         {step === 'carga' && <UTCarga {...props} />}

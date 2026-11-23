@@ -70,3 +70,23 @@ describe('Edifício: altura obrigatória e pisos abaixo calculados', async () =>
     expect(pisosAbaixoEdificio(ed)).toEqual({ n: 1, ut: b });
   });
 });
+
+describe('Juntar UT do mesmo tipo (art. 8.º)', async () => {
+  const { juntarUT, mesmoTipo } = await import('./juntar');
+  const { novoEdificio } = await import('../store');
+  const { efetivoUT } = await import('./calc');
+  it('soma os espaços e o efetivo numa só UT III', () => {
+    const ed = novoEdificio(1);
+    const a = novaUT(3); a.altura = 9; a.indicados = { altura: true, pisos: true };
+    a.espacos = [{ ...esp('Escritórios', 'sala-escritorio', 515), id: 'a1' }]; // 103
+    const b = novaUT(3); b.altura = 9; b.pisosAbaixo = 1; b.indicados = { altura: true, pisos: true };
+    b.espacos = [{ ...esp('Sala de reuniões', 'reuniao', 200), id: 'b1', piso: 'Piso -1' }]; // 100
+    ed.uts = [a, b];
+    expect(mesmoTipo(ed, a)).toEqual([b]);
+    juntarUT(a, b);
+    expect(a.espacos).toHaveLength(2);
+    expect(efetivoUT(a).total).toBe(203);
+    expect(a.pisosAbaixo).toBe(1);
+    expect(a.indicados).toEqual({ altura: true, pisos: true });
+  });
+});
