@@ -2,10 +2,10 @@ import { nomeUT } from '../nome';
 import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { go } from '../router';
-import { Area, CatBadge, Empty, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
+import { Area, CatBadge, Empty, Faltas, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
 import { classeAltura } from '../data/rtscie';
 import { ROMANO, utInfo } from '../data/rjscie';
-import { classificar, efetivoUT, faltaEdificio, fmt, maiorAlturaUT, pisosAbaixoEdificio } from '../engine/calc';
+import { classificar, efetivoUT, faltaCaracterizacao, faltaEdificio, fmt, maiorAlturaUT, pisosAbaixoEdificio } from '../engine/calc';
 
 export default function EdificioPage({ eid }: { eid: string }) {
   const { p, up, pedirUT } = useP();
@@ -34,12 +34,12 @@ export default function EdificioPage({ eid }: { eid: string }) {
       <Section n="01" title="Caracterização" sub="Anexo IV, I-3: caracterização e descrição do edifício.">
         <div className="grid gap-4 md:grid-cols-4 md:[&>.field>span:first-child]:min-h-[30px] md:[&>.field>span:first-child]:items-end md:[&>div>.field>span:first-child]:min-h-[30px] md:[&>div>.field>span:first-child]:items-end md:[&>div>.field>span:first-child]:flex">
           <Field label="Designação" className="md:col-span-2"><Text value={e.nome} onChange={(v) => ue((x) => { x.nome = v; })} /></Field>
-          <Field label="Altura do edifício" legal="RT-SCIE" className={fAlt.length ? 'falta' : ''} hint={fAlt.length ? (e.altura > 0 ? fAlt[0][1] : 'Define a classe de altura e as medidas do RT-SCIE.') : `Classe: ${classeAltura(e.altura)} altura`}>
+          <Field label="Altura do edifício" legal="RT-SCIE" className={fAlt.length ? 'falta' : ''} hint={fAlt.length ? undefined : `Classe: ${classeAltura(e.altura)} altura`}>
             <Num value={e.altura} mostrarZero={!!e.alturaIndicada} onChange={(v, t) => ue((x) => { x.altura = v; x.alturaIndicada = t.trim() !== ''; })} suffix="m" />
             {fAlt.length > 0 && !(e.altura > 0) && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(ev) => { ev.preventDefault(); ue((x) => { x.altura = maiorAlturaUT(x); x.alturaIndicada = true; }); }}>{maiorAlturaUT(e) > 0 ? `Usar ${fmt(maiorAlturaUT(e), 1)} m (maior altura das UT)` : 'Confirmar 0 m (só piso térreo)'}</button>}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Pisos acima"><Num value={e.pisosAcima} onChange={(v) => ue((x) => { x.pisosAcima = v; })} /></Field>
+            <Field label="Pisos acima" className={e.pisosAcimaIndicado ? '' : 'falta'}><Num value={e.pisosAcima} mostrarZero={!!e.pisosAcimaIndicado} onChange={(v, t) => ue((x) => { x.pisosAcima = Math.round(v); x.pisosAcimaIndicado = t.trim() !== ''; })} /></Field>
             <div className="field">
               <span className="label">Pisos abaixo</span>
               <span className="flex h-9 items-center justify-end border border-paper-3 bg-paper px-2.5 font-mono text-[13.5px]">{pisosAb.n}</span>
@@ -50,6 +50,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
             <Area value={e.descricao} onChange={(v) => ue((x) => { x.descricao = v; })} rows={4} />
           </Field>
         </div>
+        <Faltas itens={faltaCaracterizacao(e)} titulo="Falta preencher" />
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Toggle checked={e.independente} onChange={(v) => ue((x) => { x.independente = v; })} label="Edifício independente" legal="RJ-SCIE, art. 2.º j) e art. 13.º n.º 4" hint="Estrutura independente, sem comunicação interior ou apenas por câmara corta-fogo. Em estabelecimentos com vários edifícios independentes a categoria é atribuída a cada edifício." />
           <Toggle checked={e.comunicacoesComuns} onChange={(v) => ue((x) => { x.comunicacoesComuns = v; })} label="Utilização mista com comunicações interiores comuns" legal="RJ-SCIE, art. 13.º n.º 5; RT-SCIE, art. 130.º" hint="Afeta a configuração do alarme e as exigências mais gravosas nos espaços comuns." />

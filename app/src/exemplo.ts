@@ -20,6 +20,7 @@ export function exemploProjeto(): Projeto {
   ed.nome = 'Edifício A — produção e armazém';
   ed.altura = 0;
   ed.alturaIndicada = true;
+  ed.pisosAcimaIndicado = true;
   ed.pisosAcima = 1;
   ed.pisosAbaixo = 0;
   ed.descricao = 'Edifício de um piso, estrutura metálica, cobertura em painel sandwich, implantado isoladamente no lote.';

@@ -40,7 +40,7 @@ export const novoEdificio = (n: number): Edificio => ({
   nome: `Edifício ${n}`,
   descricao: '',
   altura: 0,
-  pisosAcima: 1,
+  pisosAcima: 0,
   pisosAbaixo: 0,
   independente: true,
   comunicacoesComuns: false,

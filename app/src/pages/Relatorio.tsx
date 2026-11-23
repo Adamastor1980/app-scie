@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosAbaixoEdificio } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosAbaixoEdificio } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -128,6 +128,7 @@ export default function Relatorio() {
           }}><FileDown size={16} /> Word</button>
           <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir} disabled={!!aGerar}>{aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}</button>
         </div>
+        {(() => { const eds = p.edificios.filter((e) => faltaCaracterizacao(e).length); return eds.length > 0 ? <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-alerta sm:px-6">Falta preencher a caracterização de {eds.map((e) => `«${e.nome}» (${faltaCaracterizacao(e).map(([k]) => k.toLowerCase()).join(', ')})`).join('; ')}.</p> : null; })()}
         {semCat.length > 0 && <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-alerta sm:px-6">{semCat.length} UT sem categoria atribuída (faltam critérios nos fatores de risco): {semCat.map((u) => tituloUT(u.ut)).join('; ')}. O relatório não é válido enquanto não estiverem completas.</p>}
         {(() => {
           const n = todas.reduce((s2, u) => s2 + u.medidas.filter((m) => m.estado === 'verificar').length, 0);

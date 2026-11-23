@@ -223,6 +223,8 @@ export interface Edificio {
   /** o técnico indicou a altura do edifício (0 também é válido, mas tem de ser indicado) */
   alturaIndicada?: boolean;
   pisosAcima: number;
+  /** o técnico indicou os pisos acima do plano de referência */
+  pisosAcimaIndicado?: boolean;
   pisosAbaixo: number;
   independente: boolean;
   comunicacoesComuns: boolean; // utilização mista com comunicações interiores comuns

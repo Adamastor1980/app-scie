@@ -334,6 +334,13 @@ export function faltaEdificio(ed: Edificio): [string, string][] {
   return [];
 }
 
+/** Caracterização do edifício por preencher (memória descritiva, anexo IV, I-3) e dados das medidas. */
+export function faltaCaracterizacao(ed: Edificio): [string, string][] {
+  const f = [...faltaEdificio(ed)];
+  if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
+  return f;
+}
+
 /** UT ao ar livre: não tem pisos. */
 const semPisos = (ut: UT) => ut.arLivre && [2, 6, 9, 12].includes(ut.tipo);
 
