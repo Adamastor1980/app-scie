@@ -8,7 +8,7 @@ const BASE = new URL('./', self.location).href;
 
 async function precache() {
   const cache = await caches.open(CACHE);
-  const essenciais = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+  const essenciais = ['./', './index.html', './manifest.webmanifest?v=cautela', './favicon.svg?v=cautela', './icon-192.png?v=cautela', './icon-512.png?v=cautela', './apple-touch-icon.png?v=cautela'];
   let ficheiros = [];
   try {
     const m = await (await fetch('./asset-manifest.json', { cache: 'no-cache' })).json();
