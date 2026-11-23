@@ -307,6 +307,43 @@ export const SIGNIFICADO_FATOR: Record<string, string> = {
   carga: 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)',
 };
 
+/** Número do piso a partir do texto («Piso -1», «-2», «Cave», «R/C»…); null se não for possível. */
+export function nPiso(s?: string): number | null {
+  if (!s) return null;
+  const m = s.match(/-?\s*\d+/);
+  if (m) return parseInt(m[0].replace(/\s/g, ''), 10);
+  if (/sub-?cave/i.test(s)) return -2;
+  if (/cave|sub-?solo/i.test(s)) return -1;
+  if (/r\/?c|r[eé]s/i.test(s)) return 0;
+  return null;
+}
+export const rotuloPiso = (n: number) => `Piso ${n}`;
+/** Pisos onde a UT tem espaços (números, por ordem). */
+export const pisosDosEspacos = (ut: UT) => [...new Set(ut.espacos.map((e) => nPiso(e.piso)).filter((n): n is number => n !== null))].sort((a, b) => a - b);
+/** Pisos abaixo do plano de referência calculados a partir dos espaços (sem os pisos só técnicos); null se a UT não tiver espaços com piso. */
+export function pisosAbaixoDerivado(ut: UT): number | null {
+  const ps = pisosDosEspacos(ut);
+  if (!ps.length) return null;
+  return ps.filter((n) => n < 0 && !(ut.pisosTecnicos ?? []).includes(n)).length;
+}
+/** Pisos acima do plano de referência do edifício (incluindo o piso 0) a partir dos espaços das UT; null se não houver. */
+export function pisosAcimaDerivado(ed: Edificio): number | null {
+  const ps = ed.uts.flatMap(pisosDosEspacos).filter((n) => n >= 0);
+  return ps.length ? Math.max(...ps) + 1 : null;
+}
+/** Pisos abaixo do plano de referência da UT: dos espaços, se tiverem piso; senão o indicado. */
+export const pisosAbaixoUT = (ut: UT) => pisosAbaixoDerivado(ut) ?? ut.pisosAbaixo;
+
+/** Mantém pisos abaixo da UT e pisos acima do edifício coerentes com o piso dos espaços. */
+export function sincronizarPisos(ed: Edificio) {
+  for (const u of ed.uts) {
+    const d = pisosAbaixoDerivado(u);
+    if (d !== null) { u.pisosAbaixo = d; u.indicados = { ...u.indicados, pisos: true }; }
+  }
+  const a = pisosAcimaDerivado(ed);
+  if (a !== null) { ed.pisosAcima = a; ed.pisosAcimaIndicado = true; }
+}
+
 /** Pisos abaixo do plano de referência que constam da tabela de pisos (cota negativa) ou do piso dos espaços (ex.: «-1», «cave»). */
 export function pisosAbaixoIndicados(ut: UT): string[] {
   const abaixoTxt = /(^|[^\d])-\s*\d|cave|sub-?solo|semi-?cave/i;
@@ -324,7 +361,7 @@ export const alturaEdificio = (ed: Edificio) => (alturaEdIndicada(ed) ? Math.max
 /** Pisos abaixo do plano de referência do edifício: o maior das suas UT (calculado, não se escreve). */
 export function pisosAbaixoEdificio(ed: Edificio): { n: number; ut?: UT } {
   let r: { n: number; ut?: UT } = { n: 0 };
-  for (const u of ed.uts) if ((u.pisosAbaixo || 0) > r.n) r = { n: u.pisosAbaixo, ut: u };
+  for (const u of ed.uts) if (pisosAbaixoUT(u) > r.n) r = { n: pisosAbaixoUT(u), ut: u };
   return r;
 }
 /** Dados do edifício em falta para as medidas do RT-SCIE. */
@@ -337,7 +374,7 @@ export function faltaEdificio(ed: Edificio): [string, string][] {
 /** Caracterização do edifício por preencher (memória descritiva, anexo IV, I-3) e dados das medidas. */
 export function faltaCaracterizacao(ed: Edificio): [string, string][] {
   const f = [...faltaEdificio(ed)];
-  if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
+  if (!ed.pisosAcimaIndicado && pisosAcimaDerivado(ed) === null) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
   return f;
 }
 
@@ -353,11 +390,12 @@ export function faltaParaMedidas(ut: UT): [string, string][] {
   const f: [string, string][] = [];
   const nomes = pisosAbaixoIndicados(ut);
   if (porConfirmar(ut, 'pisos')) f.push(['N.º de pisos abaixo do plano de referência', 'obrigatório em todas as UT: as exigências do RT-SCIE mudam nos pisos abaixo do plano de referência (vias de evacuação, saídas, câmaras corta-fogo, reação ao fogo); 0 tem de ser confirmado']);
-  else if (ut.pisosAbaixo === 0 && nomes.length) f.push(['N.º de pisos abaixo do plano de referência', `indicou 0, mas há espaços ou pisos abaixo do plano de referência (${nomes.join(', ')}): corrija o número`]);
+  else if (pisosAbaixoDerivado(ut) === null && ut.pisosAbaixo === 0 && nomes.length) f.push(['N.º de pisos abaixo do plano de referência', `indicou 0, mas há espaços ou pisos abaixo do plano de referência (${nomes.join(', ')}): corrija o número`]);
   return f;
 }
 
 export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
+  if (k === 'pisos' && pisosAbaixoDerivado(ut) !== null) return false; // calculado a partir dos espaços
   const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
   return !(v > 0) && !ut.indicados?.[k];
 }
@@ -369,7 +407,7 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
   const falta: string[] = [];
   let quadro = '';
   const h = ut.altura;
-  const pa = ut.pisosAbaixo;
+  const pa = pisosAbaixoUT(ut);
 
   switch (ut.tipo) {
     case 1:

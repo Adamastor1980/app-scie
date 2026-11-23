@@ -179,6 +179,8 @@ export interface UT {
   pisosAbaixo: number;
   /** o técnico indicou o valor (0 também é válido, mas tem de ser confirmado) */
   indicados?: { altura?: boolean; pisos?: boolean };
+  /** pisos abaixo do plano de referência só técnicos (não contam — nota (*) dos quadros do anexo III) */
+  pisosTecnicos?: number[];
   areaBruta: number;
   arLivre: boolean;
   exclusivoArmazem: boolean;

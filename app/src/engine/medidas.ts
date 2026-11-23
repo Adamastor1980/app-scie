@@ -5,7 +5,7 @@ import {
   quadroIX, quadroL, quadroLI, quadroX, quadroXI, quadroXII, quadroXIX, quadroXLI, quadroXLIX, quadroXXII,
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
-import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio } from './calc';
+import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
 
@@ -122,7 +122,7 @@ export const factosVisiveis = (c: Contexto) => FACTOS.filter((f) => !f.mostrar |
 
 function camarasExigidas(c: Contexto) {
   const H = alturaEdificio(c.ed) || c.ut.altura;
-  return H > 28 || c.ut.pisosAbaixo > 0 || c.ut.espacos.some((e) => e.local === 'Cag');
+  return H > 28 || pisosAbaixoUT(c.ut) > 0 || c.ut.espacos.some((e) => e.local === 'Cag');
 }
 
 /** estado e motivo de uma medida que depende de um facto */
@@ -149,7 +149,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const temC = locais.has('C') || locais.has('Cag');
   const temCag = locais.has('Cag');
   const temF = locais.has('F');
-  const abaixo = ut.pisosAbaixo > 0 || pisosAbaixoIndicados(ut).length > 0; // tabela de pisos ou piso dos espaços
+  const abaixo = pisosAbaixoUT(ut) > 0 || pisosAbaixoIndicados(ut).length > 0; // tabela de pisos ou piso dos espaços
   const add = (m: Omit<Medida, 'id' | 'key'>) => M.push({ id: `${M.length + 1}`.padStart(3, '0'), key: `${m.tema}|${m.titulo}`, ...m });
 
   /* ------------------- Enquadramento e procedimento ------------------- */
@@ -352,7 +352,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
   add({
     tema: 'III.5d', titulo: 'Caixas dos elevadores',
-    exigencia: `${H > 28 || ut.pisosAbaixo > 1 ? 'Paredes EI/REI 60 e portas de patamar E 30 C (servem mais de um piso abaixo do plano de referência ou H > 28 m).' : `Paredes ${q22.paredes} / ${q22.suporte} e portas ${q22.portas} (quadro XXII).`} Portas de patamar de funcionamento automático.${t === 2 && abaixo ? ' UT II abaixo do plano de referência: acesso aos elevadores por câmara corta-fogo.' : ''}${H > 28 ? ' Elevador prioritário de bombeiros servido por câmara corta-fogo.' : ''}`,
+    exigencia: `${H > 28 || pisosAbaixoUT(ut) > 1 ? 'Paredes EI/REI 60 e portas de patamar E 30 C (servem mais de um piso abaixo do plano de referência ou H > 28 m).' : `Paredes ${q22.paredes} / ${q22.suporte} e portas ${q22.portas} (quadro XXII).`} Portas de patamar de funcionamento automático.${t === 2 && abaixo ? ' UT II abaixo do plano de referência: acesso aos elevadores por câmara corta-fogo.' : ''}${H > 28 ? ' Elevador prioritário de bombeiros servido por câmara corta-fogo.' : ''}`,
     base: 'RT-SCIE, art. 28.º', ...porFacto(ut, 'elevadores', 'Não existem elevadores.'),
   });
   add({
@@ -548,7 +548,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     tema: 'VII.4', titulo: 'Espaços com controlo de fumo obrigatório',
     exigencia: cf.join('; ') + '.'
       + (H > 28 ? ' H > 28 m: vias verticais enclausuradas por sobrepressão duplicada por desenfumagem passiva de emergência; vias horizontais enclausuradas com sistemas ativos de arranque automático.' : '')
-      + (ut.pisosAbaixo > 1 ? ' Mais de um piso enterrado: meios ativos, de preferência hierarquia de pressões.' : '')
+      + (pisosAbaixoUT(ut) > 1 ? ' Mais de um piso enterrado: meios ativos, de preferência hierarquia de pressões.' : '')
       + (abaixo ? ' Escadas que servem pisos no subsolo sem saída direta ao exterior: pressurizadas.' : '')
       + ' Desenfumagem passiva interdita em espaços amplos com altura > 12 m.',
     base: 'RT-SCIE, arts. 133.º a 135.º; secções II a VII do capítulo IV do título VI (arts. 136.º a 161.º)', estado: 'aplica',
@@ -732,7 +732,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     exigencia: 'Casas de máquinas (carga > 100 kg) isoladas com EI/REI 60 e portas E 30 C; sinal «Não utilizar o ascensor em caso de incêndio»; dispositivo de chamada em caso de incêndio (chave no piso do plano de referência e comando automático pelo SADI) que envia as cabinas ao plano de referência.',
     base: 'RT-SCIE, arts. 101.º a 103.º', ...porFacto(ut, 'elevadores', 'Não existem ascensores.'),
   });
-  const bomb = H > 28 || ut.pisosAbaixo > 2;
+  const bomb = H > 28 || pisosAbaixoUT(ut) > 2;
   add({
     tema: 'VI.6', titulo: 'b) Ascensor para uso dos bombeiros',
     exigencia: 'Pelo menos um ascensor prioritário de bombeiros que sirva todos os pisos, compartimentos corta-fogo e zonas de refúgio; carga ≥ 630 kg (≥ 1000 kg para macas/camas); comando por chave própria; detetores de temperatura (70 °C) e de fumo integrados no SADI; acesso por câmara corta-fogo.',

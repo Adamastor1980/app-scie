@@ -36,15 +36,19 @@ describe('Pisos abaixo do plano de referência — obrigatório em todas as UT',
     ut.indicados = { pisos: true };
     expect(faltaParaMedidas(ut)).toHaveLength(0);
   });
-  it('0 indicado com espaços no piso -1 é incoerente', () => {
+  it('com espaços, os pisos abaixo são calculados a partir do piso de cada espaço', async () => {
+    const { pisosAbaixoUT, pisosAcimaDerivado } = await import('./calc');
+    const { novoEdificio } = await import('../store');
     const ut = novaUT(3);
-    ut.indicados = { pisos: true };
-    ut.espacos = [esp('Sala de reuniões', 'reuniao', 100)];
-    ut.espacos[0].piso = 'Piso -1';
-    expect(pisosAbaixoIndicados(ut)).toEqual(['Piso -1']);
-    expect(faltaParaMedidas(ut)[0][1]).toMatch(/indicou 0/);
-    ut.pisosAbaixo = 1;
+    ut.espacos = [esp('Sala de reuniões', 'reuniao', 100), esp('Arquivo', 'sala-escritorio', 50), esp('Escritório', 'sala-escritorio', 50)];
+    ut.espacos[0].piso = 'Piso -1'; ut.espacos[1].piso = 'Piso -2'; ut.espacos[2].piso = 'Piso 9';
+    expect(pisosAbaixoIndicados(ut)).toEqual(['Piso -1', 'Piso -2']);
+    expect(pisosAbaixoUT(ut)).toBe(2);
     expect(faltaParaMedidas(ut)).toHaveLength(0);
+    ut.pisosTecnicos = [-2]; // piso só técnico não conta
+    expect(pisosAbaixoUT(ut)).toBe(1);
+    const ed = novoEdificio(1); ed.uts = [ut];
+    expect(pisosAcimaDerivado(ed)).toBe(10); // pisos 0 a 9
   });
   it('UT ao ar livre não tem pisos', () => {
     const ut = novaUT(6);

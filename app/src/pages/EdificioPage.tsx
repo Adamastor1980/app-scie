@@ -5,7 +5,7 @@ import { go } from '../router';
 import { Area, CatBadge, Empty, Faltas, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
 import { classeAltura } from '../data/rtscie';
 import { ROMANO, utInfo } from '../data/rjscie';
-import { classificar, efetivoUT, faltaCaracterizacao, faltaEdificio, fmt, maiorAlturaUT, pisosAbaixoEdificio } from '../engine/calc';
+import { classificar, efetivoUT, faltaCaracterizacao, faltaEdificio, fmt, maiorAlturaUT, pisosAbaixoEdificio, pisosAcimaDerivado } from '../engine/calc';
 
 export default function EdificioPage({ eid }: { eid: string }) {
   const { p, up, pedirUT } = useP();
@@ -13,6 +13,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
   if (!e) return <div className="p-8">Edifício não encontrado.</div>;
   const fAlt = faltaEdificio(e);
   const pisosAb = pisosAbaixoEdificio(e);
+  const pisosAc = pisosAcimaDerivado(e);
   const ue = (fn: (x: NonNullable<typeof e>) => void) => up((pp) => { const x = pp.edificios.find((y) => y.id === eid); if (x) fn(x); });
 
   return (
@@ -39,11 +40,19 @@ export default function EdificioPage({ eid }: { eid: string }) {
             {fAlt.length > 0 && !(e.altura > 0) && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(ev) => { ev.preventDefault(); ue((x) => { x.altura = maiorAlturaUT(x); x.alturaIndicada = true; }); }}>{maiorAlturaUT(e) > 0 ? `Usar ${fmt(maiorAlturaUT(e), 1)} m (maior altura das UT)` : 'Confirmar 0 m (só piso térreo)'}</button>}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Pisos acima" className={e.pisosAcimaIndicado ? '' : 'falta'}><Num value={e.pisosAcima} mostrarZero={!!e.pisosAcimaIndicado} onChange={(v, t) => ue((x) => { x.pisosAcima = Math.round(v); x.pisosAcimaIndicado = t.trim() !== ''; })} /></Field>
+            {pisosAc !== null ? (
+              <div className="field">
+                <span className="label">Pisos acima</span>
+                <span className="flex h-9 items-center justify-end border border-paper-3 bg-paper px-2.5 font-mono text-[13.5px]">{pisosAc}</span>
+                <span className="text-[11.5px] leading-snug text-ink-3">Do piso dos espaços (piso 0 ao {pisosAc - 1})</span>
+              </div>
+            ) : (
+              <Field label="Pisos acima" className={e.pisosAcimaIndicado ? '' : 'falta'} hint="Sem espaços com piso: indique"><Num value={e.pisosAcima} mostrarZero={!!e.pisosAcimaIndicado} onChange={(v, t) => ue((x) => { x.pisosAcima = Math.round(v); x.pisosAcimaIndicado = t.trim() !== ''; })} /></Field>
+            )}
             <div className="field">
               <span className="label">Pisos abaixo</span>
               <span className="flex h-9 items-center justify-end border border-paper-3 bg-paper px-2.5 font-mono text-[13.5px]">{pisosAb.n}</span>
-              <span className="text-[11.5px] leading-snug text-ink-3">{pisosAb.ut ? `Da UT ${ROMANO[pisosAb.ut.tipo]} «${nomeUT(pisosAb.ut).nome}»` : 'Calculado a partir das UT'}</span>
+              <span className="text-[11.5px] leading-snug text-ink-3">{pisosAb.ut ? `Do piso dos espaços (UT ${ROMANO[pisosAb.ut.tipo]})` : 'Do piso dos espaços das UT'}</span>
             </div>
           </div>
           <Field label="Descrição funcional" className="md:col-span-4" hint="Sistema construtivo, envolvente, acessos, ocupação. Entra na memória descritiva.">

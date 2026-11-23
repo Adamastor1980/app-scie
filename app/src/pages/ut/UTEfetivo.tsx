@@ -7,7 +7,7 @@ import { precisaEfetivo } from '../UTPage';
 import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
 import { LOCAIS, ROMANO, SUBTIPOS_C } from '../../data/rjscie';
-import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/calc';
+import { efetivoEspaco, efetivoUT, fmt, normalizarLocal, nPiso, rotuloPiso } from '../../engine/calc';
 import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
@@ -24,6 +24,12 @@ function efeitoPublico(e: Espaco, efetivo: number): string {
   }
   return 'Só serve para classificar o local: com público > 50 passa a local B (art. 10.º n.º 1 b)).';
 }
+
+/** Pisos em relação ao plano de referência (o piso de cada espaço define os pisos da UT e do edifício). */
+const OPCOES_PISO: { v: string; l: string }[] = [
+  { v: '', l: 'Escolher piso…' },
+  ...Array.from({ length: 51 }, (_, k) => 40 - k).map((n) => ({ v: String(n), l: n === 0 ? 'Piso 0 (ref.)' : `Piso ${n}` })),
+];
 
 const CRITERIOS: { v: CriterioEfetivo; l: string; uts?: number[] }[] = [
   { v: 'indice', l: 'Índice de ocupação × área útil (quadro XXVII)' },
@@ -110,7 +116,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                 <div key={e.id} data-bloco={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
                   <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
                     <Field label={`Espaço · ${cod.get(e.id) ?? ""}`} className={e.nome.trim() ? '' : 'falta'}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
-                    <Field label="Piso"><Text value={e.piso} onChange={(v) => setE(i, (x) => { x.piso = v; })} /></Field>
+                    <Field label="Piso" className={nPiso(e.piso) === null ? 'falta' : ''}><Select value={nPiso(e.piso) === null ? '' : String(nPiso(e.piso))} onChange={(v) => setE(i, (x) => { x.piso = v === '' ? '' : rotuloPiso(Number(v)); })} options={OPCOES_PISO} /></Field>
                     <Field label="Local de risco" legal="art. 10.º" hint={e.local === 'B' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) ? `B automático: ${c.valor > 100 ? `efetivo ${c.valor} > 100` : `público ${e.efetivoPublico} > 50`}` : undefined}><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>
                     <Field label="Critério do efetivo" legal="RT-SCIE art. 51.º"><Select value={e.criterio} onChange={(v) => setE(i, (x) => { x.criterio = v; })} options={crits.map((k) => ({ v: k.v, l: k.l }))} /></Field>
                     <div className="flex items-end gap-1">
@@ -215,6 +221,7 @@ function faltasEspaco(e: Espaco): { k: string; c: string; s: string }[] {
   const f: { k: string; c: string; s: string }[] = [];
   const pos = (v?: number) => (v ?? 0) > 0;
   if (!e.nome.trim()) f.push({ k: 'nome', c: 'Nome do espaço', s: 'identifica o espaço no relatório' });
+  if (nPiso(e.piso) === null) f.push({ k: 'piso', c: 'Piso', s: 'andar do espaço em relação ao plano de referência; define os pisos da UT e do edifício' });
   switch (e.criterio) {
     case 'indice':
       if (!e.indiceId) f.push({ k: 'indice', c: 'Uso do espaço', s: 'dá o índice de ocupação, em pessoas/m² (quadro XXVII)' });
