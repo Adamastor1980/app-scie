@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { BookOpen, Copy, Plus, Trash2 } from 'lucide-react';
 import TextoLei from '../../ui/TextoLei';
+import { integracao } from '../../engine/integrados';
 import type { UTProps } from '../UTPage';
 import { precisaEfetivo } from '../UTPage';
 import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
-import { LOCAIS, SUBTIPOS_C } from '../../data/rjscie';
+import { LOCAIS, ROMANO, SUBTIPOS_C } from '../../data/rjscie';
 import { efetivoEspaco, efetivoUT, fmt, normalizarLocal } from '../../engine/calc';
 import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
@@ -45,6 +46,8 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
   const ef = efetivoUT(ut);
   const [showQ, setShowQ] = useState(false);
   const [lei, setLei] = useState(false);
+  const [lei8, setLei8] = useState(false);
+  const naoIntegrados = ut.espacos.filter((e) => integracao(e, ut)?.integrado === false);
   const crits0 = CRITERIOS.filter((c) => !c.uts || c.uts.includes(ut.tipo));
   const crits = ut.tipo === 12 ? [...crits0.filter((c) => c.v === 'declarado'), ...crits0.filter((c) => c.v !== 'declarado')] : crits0;
   // cada alteração passa pela coerência com o art. 10.º do RJ-SCIE (local D, A→B)
@@ -76,6 +79,12 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
         {ut.espacos.some((e) => e.mobilidadeReduzida) && <Stat label="Para evacuação (×1,3)" value={fmt(ef.totalEvacuacao)} unit="pessoas" sub="Art. 51.º n.º 5: só dimensiona vias e saídas" />}
       </div>
 
+      {naoIntegrados.length > 0 && (
+        <div className="mb-8 border-l-[4px] border-alerta bg-alerta-soft px-4 py-3 text-[13px]">
+          <p className="font-semibold text-alerta">⚠ {naoIntegrados.length === 1 ? 'Um espaço não pode' : `${naoIntegrados.length} espaços não podem`} ficar integrado{naoIntegrados.length === 1 ? '' : 's'} nesta UT (RJ-SCIE, art. 8.º n.º 3):</p>
+          <ul className="mt-1 list-disc pl-5">{naoIntegrados.map((e) => { const ig = integracao(e, ut)!; return <li key={e.id}><b>{e.nome || 'Espaço sem nome'}</b> — {ig.uso}: passa a UT {ig.utPropria.map((t) => ROMANO[t]).join(' ou ')} própria.</li>; })}</ul>
+        </div>
+      )}
       <Section n="2.1" title="Espaços e locais de risco" sub="Um espaço por linha. O efetivo de cada espaço é arredondado ao inteiro superior (art. 51.º n.os 2 e 3)."
         right={<div className="flex gap-2"><button className="btn" onClick={() => setShowQ((s) => !s)}>{showQ ? 'Ocultar' : 'Ver'} quadro XXVII</button><button className="btn-fire" onClick={() => { const n = novoEspaco(ut.tipo); upU((u) => { u.espacos.push(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Espaço</button></div>}>
         {showQ && <QuadroXXVII />}
@@ -115,6 +124,19 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
                       </div>
                     )}
                   </div>
+                  {(() => {
+                    const ig = integracao(e, ut);
+                    if (!ig) return null;
+                    const mau = ig.integrado === false;
+                    return (
+                      <div className={`border-t px-4 py-3 text-[12.5px] ${mau ? 'border-alerta bg-alerta-soft' : ig.integrado === null ? 'border-warn bg-warn-soft' : 'border-paper-3 text-ink-3'}`}>
+                        <p className={mau ? 'font-semibold text-alerta' : ''}>{mau ? '⚠ ' : ''}{ig.uso[0].toUpperCase() + ig.uso.slice(1)} — {ig.motivo}</p>
+                        {mau && <p className="mt-1 text-ink-2">Crie uma UT {ig.utPropria.map((t) => ROMANO[t]).join(' ou ')} para este espaço («Adicionar utilização-tipo» no edifício) e retire-o desta UT. O edifício passa a ser de utilização mista (art. 8.º n.º 2).</p>}
+                        {ig.usoQuadro && <p className="mt-1 text-ink-2">Uso do quadro XXVII: para {ig.uso} o índice é «{QUADRO_XXVII.find((q) => q.id === ig.usoQuadro)?.espaco}» ({QUADRO_XXVII.find((q) => q.id === ig.usoQuadro)?.indice.toFixed(2).replace('.', ',')} p/m²), não «{QUADRO_XXVII.find((q) => q.id === e.indiceId)?.espaco}».</p>}
+                        <button type="button" className="mt-1 flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei8(true)}><BookOpen size={12} /> Ver texto da lei (art. 8.º)</button>
+                      </div>
+                    );
+                  })()}
                   {faltasEspaco(e).length > 0 && <div className="border-t border-paper-3 px-4 pb-3"><Faltas itens={faltasEspaco(e).map((x) => [x.c, x.s] as [string, string])} /></div>}
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-paper-3 px-4 py-3">
                     <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" className="accent-fire" checked={!!e.mobilidadeReduzida} onChange={(ev) => setE(i, (x) => { x.mobilidadeReduzida = ev.target.checked; })} /> Crianças ≤ 3 anos ou pessoas limitadas na mobilidade/perceção → local D (art. 10.º n.º 1 d)); ×1,3 para saídas (art. 51.º n.º 5{ut.tipo === 5 ? ', art. 232.º' : ''})</label>
@@ -166,6 +188,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
         </div>
       </Section>
       )}
+    {lei8 && <TextoLei refs={[{ dip: 'RJ', art: '8' }]} titulo="Utilizações-tipo e espaços integrados" onFechar={() => setLei8(false)} />}
     {lei && <TextoLei refs={[{ dip: 'RJ', art: '10' }]} titulo="Classificação dos locais de risco" onFechar={() => setLei(false)} />}
     </div>
   );

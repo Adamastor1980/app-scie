@@ -2,11 +2,14 @@ import { Check } from 'lucide-react';
 import type { UT } from '../../data/types';
 import { classificar, CAT_NOME, CAT_RISCO, SIGNIFICADO_FATOR } from '../../engine/calc';
 import { CAT_COR } from '../../ui/primitives';
+import { integracao } from '../../engine/integrados';
+import { ROMANO } from '../../data/rjscie';
 
 /** Critérios da UT (quadro do anexo III): o que falta preencher e, só com tudo preenchido, a categoria atribuída. */
 export default function ClassPanel({ ut }: { ut: UT }) {
   const c = classificar(ut);
   const n = c.falta.length;
+  const fora = ut.espacos.map((e) => ({ e, ig: integracao(e, ut) })).filter((x) => x.ig?.integrado === false);
   return (
     <aside className="order-first xl:order-none xl:sticky xl:top-[72px] xl:self-start">
       <div className={`border ${n ? 'border-warn' : 'border-ink'} bg-white`}>
@@ -42,6 +45,12 @@ export default function ClassPanel({ ut }: { ut: UT }) {
             </li>
           ))}
         </ul>
+        {fora.length > 0 && (
+          <div className="border-t border-alerta bg-alerta-soft px-4 py-2.5 text-[12px]">
+            <p className="font-semibold text-alerta">⚠ Espaços que não podem ficar nesta UT (art. 8.º n.º 3):</p>
+            {fora.map(({ e, ig }) => <p key={e.id}>{e.nome || 'Espaço sem nome'} → UT {ig!.utPropria.map((t) => ROMANO[t]).join(' ou ')} própria</p>)}
+          </div>
+        )}
         <p className="border-t border-paper-3 px-4 py-2.5 text-[11.5px] leading-snug text-ink-3">
           A categoria é a mais baixa que satisfaça integralmente todos os critérios; basta exceder um valor para passar à categoria superior (RJ-SCIE, art. 13.º n.os 1 e 2).
         </p>
