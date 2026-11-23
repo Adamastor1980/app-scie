@@ -29,7 +29,7 @@ describe('Espaços integrados — RJ-SCIE art. 8.º n.º 3', () => {
 });
 
 describe('Pisos abaixo do plano de referência — obrigatório em todas as UT', async () => {
-  const { faltaParaMedidas, pisosAbaixoIndicados } = await import('./calc');
+  const { faltaParaMedidas } = await import('./calc');
   it('UT III: não conta para a categoria, mas é obrigatório para as medidas', () => {
     const ut = novaUT(3);
     expect(faltaParaMedidas(ut)).toHaveLength(1);
