@@ -175,6 +175,8 @@ export interface UT {
   descricao: string;
   altura: number;
   pisosAbaixo: number;
+  /** o técnico indicou o valor (0 também é válido, mas tem de ser confirmado) */
+  confirmados?: { altura?: boolean; pisos?: boolean };
   areaBruta: number;
   arLivre: boolean;
   exclusivoArmazem: boolean;

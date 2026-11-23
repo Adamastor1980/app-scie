@@ -43,7 +43,7 @@ export default function UTComplementares({ ed, ut, upU }: UTProps) {
                 <span className="text-[12.5px] text-ink-2">
                   Dos pisos: altura da UT <b className="num">{fmt(pisosCalc.altura, 2)} m</b> · pisos abaixo <b className="num">{pisosCalc.abaixo}</b> · área total <b className="num">{fmt(pisosCalc.area)} m²</b>
                 </span>
-                <button className="btn-ghost" onClick={() => upU((u) => { u.altura = pisosCalc.altura; u.pisosAbaixo = pisosCalc.abaixo; if (u.tipo === 2 && !u.areaBruta) u.areaBruta = pisosCalc.area; })}>
+                <button className="btn-ghost" onClick={() => upU((u) => { u.altura = pisosCalc.altura; u.pisosAbaixo = pisosCalc.abaixo; u.confirmados = { altura: true, pisos: true }; if (u.tipo === 2 && !u.areaBruta) u.areaBruta = pisosCalc.area; })}>
                   <Wand2 size={14} /> Usar nos fatores de risco
                 </button>
               </div>

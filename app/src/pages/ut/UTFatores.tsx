@@ -2,7 +2,7 @@ import type { UTProps } from '../UTPage';
 import { precisaCarga, precisaEfetivo } from '../UTPage';
 import { Faltas, Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
-import { classificar, efetivoUT, fmt } from '../../engine/calc';
+import { classificar, efetivoUT, fmt, porConfirmar } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
 import { novaUT } from '../../store';
 
@@ -17,6 +17,10 @@ export default function UTFatores({ ut, upU }: UTProps) {
   const usaPisos = [1, 2, 6, 8, 9, 11, 12].includes(t) && !(ut.arLivre && temArLivre);
   const cargaV = precisaCarga(t) ? ((cls.fatores.find((f) => f.id === 'carga')?.valor as number) ?? 0) : 1;
   const faltas: [string, string][] = [];
+  const fAlt = usaAltura && porConfirmar(ut, 'altura');
+  const fPis = usaPisos && porConfirmar(ut, 'pisos');
+  if (fAlt) faltas.push(['Altura da UT', 'diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT, em m (art. 2.º a) do RJ-SCIE); se for 0, confirme']);
+  if (fPis) faltas.push(['N.º de pisos abaixo do plano de referência', `pisos ocupados pela UT abaixo do plano de referência (${info.quadro}); se não houver, confirme 0`]);
   if (t === 2 && !ut.arLivre && !(ut.areaBruta > 0)) faltas.push(['Área bruta', 'área total ocupada pela UT II, em m² (art. 2.º b) do RJ-SCIE)']);
   if (precisaEfetivo(t) && !(ef.total > 0)) faltas.push(['Efetivo', 'n.º de pessoas da UT, calculado no passo «Efetivo» (art. 51.º do RT-SCIE)']);
   if (precisaCarga(t) && !(cargaV > 0)) faltas.push(['Carga de incêndio', 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)']);
@@ -41,13 +45,16 @@ export default function UTFatores({ ut, upU }: UTProps) {
             )}
             {usaAltura && (
               <Field label={`Altura da UT ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][t - 1]}`} legal="RJ-SCIE, art. 2.º a)"
+                className={fAlt ? 'falta' : ''}
                 hint="Diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT. Não conta o último piso só técnico nem pisos de arrecadações com visitas episódicas.">
-                <Num value={ut.altura} onChange={(v) => upU((u) => { u.altura = v; })} suffix="m" />
+                <Num value={ut.altura} onChange={(v) => upU((u) => { u.altura = v; u.confirmados = { ...u.confirmados, altura: true }; })} suffix="m" />
+                {fAlt && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.altura = 0; u.confirmados = { ...u.confirmados, altura: true }; }); }}>Confirmar 0 m (só piso térreo)</button>}
               </Field>
             )}
             {usaPisos && (
-              <Field label="N.º de pisos abaixo do plano de referência" legal={info.quadro} hint={NOTA_PISOS_TECNICOS.replace('(*) ', '')}>
-                <Num value={ut.pisosAbaixo} onChange={(v) => upU((u) => { u.pisosAbaixo = Math.round(v); })} />
+              <Field label="N.º de pisos abaixo do plano de referência" legal={info.quadro} className={fPis ? 'falta' : ''} hint={NOTA_PISOS_TECNICOS.replace('(*) ', '')}>
+                <Num value={ut.pisosAbaixo} onChange={(v) => upU((u) => { u.pisosAbaixo = Math.round(v); u.confirmados = { ...u.confirmados, pisos: true }; })} />
+                {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.confirmados = { ...u.confirmados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
               </Field>
             )}
             {t === 2 && !ut.arLivre && (

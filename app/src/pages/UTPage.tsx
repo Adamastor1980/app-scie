@@ -52,7 +52,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       ? [{ k: 'efetivo', t: 'Efetivo', s: `${fmt(ef.total)} pessoas` }]
       : []),
     ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
-    { k: 'categoria', t: 'Categoria', s: CAT_NOME[cls.cat] },
+    { k: 'categoria', t: 'Categoria', s: cls.falta.length ? `${CAT_NOME[cls.cat]} (provisória)` : CAT_NOME[cls.cat] },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
   const steps = todos.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
@@ -65,7 +65,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
         <div className="mx-auto flex max-w-[1240px] items-stretch gap-3 sm:gap-6 px-4 pt-6 sm:px-8">
           <div className={`flex w-[64px] shrink-0 flex-col items-center sm:w-[92px] justify-center self-stretch ${CAT_COR[cls.cat]} text-white`}>
             <span className="font-display text-[30px] font-extrabold leading-none sm:text-[44px]">{cls.cat}.ª</span>
-            <span className="mt-1 font-mono text-[9.5px] uppercase tracking-wider">categoria</span>
+            <span className="mt-1 font-mono text-[9.5px] uppercase tracking-wider">{cls.falta.length ? 'provisória' : 'categoria'}</span>
           </div>
           <div className="min-w-0 flex-1 pb-5">
             <p className="label">{ed.nome} · UT {ROMANO[ut.tipo]} · art. 8.º n.º 1 {info.alinea} RJ-SCIE</p>

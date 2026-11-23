@@ -268,6 +268,8 @@ export interface Fator {
   limites: (string | null)[]; // texto por categoria 1..4
   cat: Cat;
   nota?: string;
+  /** valor ainda não indicado pelo técnico */
+  porPreencher?: boolean;
 }
 
 export interface Classificacao {
@@ -290,6 +292,12 @@ const lim = (max: [number, number, number], u: string, fmtv = (x: number) => fmt
 
 function fator(id: string, rotulo: string, valor: number, unidade: string, max: [number, number, number], nota?: string): Fator {
   return { id, rotulo, valor, unidade, limites: lim(max, unidade ? ' ' + unidade : ''), cat: catDe(valor, max), nota };
+}
+
+/** Altura ou n.º de pisos abaixo ainda por indicar (valor 0 nunca confirmado pelo técnico). */
+export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
+  const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
+  return !(v > 0) && !ut.confirmados?.[k];
 }
 
 export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Classificacao {
@@ -409,6 +417,13 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
     }
   }
   if ([3, 4, 5, 6, 7, 8, 9, 10, 11].includes(ut.tipo) && ef.total === 0) falta.push('Efetivo da UT');
+  // altura e pisos abaixo: 0 é um valor válido, mas só conta depois de o técnico o indicar
+  for (const x of f) {
+    if ((x.id === 'altura' || x.id === 'pisos') && porConfirmar(ut, x.id)) {
+      x.porPreencher = true;
+      falta.push(x.id === 'altura' ? 'Altura da UT' : 'N.º de pisos abaixo do plano de referência');
+    }
+  }
   const cat = f.reduce<Cat>((m, x) => (x.cat > m ? x.cat : m), 1);
   const determinantes = f.filter((x) => x.cat === cat && cat > 1).map((x) => x.rotulo);
   return { cat, fatores: f, determinantes, quadro, notas, falta };
