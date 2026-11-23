@@ -22,7 +22,7 @@ export default function Rodape() {
         </section>
         <section>
           <h3 className="label mb-2 !text-fire-ink">Autoria</h3>
-          <p><b>Fernando Adamastor Pinto Pereira</b><br />Projeto final da licenciatura em Engenharia da Segurança do Trabalho — ISLA Gaia.</p>
+          <p><b>Fernando Adamastor Pinto Pereira</b><br />Projeto final da licenciatura em Engenharia da Segurança do Trabalho — ISLA Gaia, ano letivo 2026/2027.<br />Orientador: Prof. Acácio Amorim.</p>
           <p className="mt-2"><a className="font-semibold text-ink underline decoration-fire underline-offset-2" href="mailto:fernandoadamastor@engenheiros.pt">fernandoadamastor@engenheiros.pt</a></p>
         </section>
         <section>
