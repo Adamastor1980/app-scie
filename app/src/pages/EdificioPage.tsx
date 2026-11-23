@@ -39,7 +39,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
             {fAlt.length > 0 && !(e.altura > 0) && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(ev) => { ev.preventDefault(); ue((x) => { x.altura = maiorAlturaUT(x); x.alturaIndicada = true; }); }}>{maiorAlturaUT(e) > 0 ? `Usar ${fmt(maiorAlturaUT(e), 1)} m (maior altura das UT)` : 'Confirmar 0 m (só piso térreo)'}</button>}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Pisos acima" className={faltaP('Pisos acima') ? 'falta' : ''} hint="Sem contar o r/c (piso 0)"><Num value={e.pisosAcima} mostrarZero={!!e.pisosAcimaIndicado} onChange={(v, t) => ue((x) => { x.pisosAcima = Math.round(v); x.pisosAcimaIndicado = t.trim() !== ''; })} /></Field>
+            <Field label="Pisos acima" className={faltaP('Pisos acima') ? 'falta' : ''}><Num value={e.pisosAcima} mostrarZero={!!e.pisosAcimaIndicado} onChange={(v, t) => ue((x) => { x.pisosAcima = Math.round(v); x.pisosAcimaIndicado = t.trim() !== ''; })} /></Field>
             <Field label="Pisos abaixo" className={faltaP('Pisos abaixo') ? 'falta' : ''}><Num value={e.pisosAbaixo} mostrarZero={!!e.pisosAbaixoIndicado} onChange={(v, t) => ue((x) => { x.pisosAbaixo = Math.round(v); x.pisosAbaixoIndicado = t.trim() !== ''; })} /></Field>
           </div>
           <Field label="Descrição funcional" className="md:col-span-4" hint="Sistema construtivo, envolvente, acessos, ocupação. Entra na memória descritiva.">
