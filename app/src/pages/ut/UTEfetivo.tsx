@@ -64,6 +64,13 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
       {ut.tipo === 9 && <div className="mb-6"><Note>Instalações desportivas: espectadores + 0,1 pessoas/m² da área útil de apoio (art. 283.º a)); às pistas de patinagem acresce 0,7 pessoas/m² da pista e às piscinas 1 pessoa/m² dos planos de água, excluindo tanques de saltos e de mergulho e lava-pés (b) e c)). Registe a área de apoio num espaço próprio.</Note></div>}
       <div className="mb-8 grid gap-3 md:grid-cols-4">
         <Stat label="Efetivo da UT" value={fmt(ef.total)} unit="pessoas" sub={ef.origem === 'manual' ? 'Valor introduzido manualmente' : 'Somatório dos espaços (art. 51.º n.º 1)'} accent />
+        {ut.espacos.length > 0 && (() => {
+          // apoio ao levantamento: área já introduzida, para comparar com as notas de campo e com a área dos pisos
+          const area = ut.espacos.reduce((t, e) => t + (e.area ?? 0), 0);
+          const pisos = ut.pisos.reduce((t, x) => t + (x.area ?? 0), 0);
+          const n = ut.espacos.length;
+          return <Stat label="Área útil introduzida" value={fmt(area, 1)} unit="m²" sub={`${n} ${n === 1 ? 'espaço' : 'espaços'}${pisos > 0 ? ` · pisos da UT: ${fmt(pisos, 1)} m²` : ''}`} />;
+        })()}
         {(ut.tipo === 4 || ut.tipo === 5) && <Stat label="Efetivo em locais D ou E" value={fmt(ef.emDE)} unit="pessoas" sub="Fator de risco do quadro IV" />}
         {ut.tipo === 7 && <Stat label="Efetivo em locais E" value={fmt(ef.emE)} unit="pessoas" sub="Fator de risco do quadro VI" />}
         {ut.espacos.some((e) => e.mobilidadeReduzida) && <Stat label="Para evacuação (×1,3)" value={fmt(ef.totalEvacuacao)} unit="pessoas" sub="Art. 51.º n.º 5: só dimensiona vias e saídas" />}
