@@ -41,6 +41,11 @@ let lapidesNuvem: Lapides = {};
 const lapidesPorEnviar = (): Lapides => { try { return JSON.parse(localStorage.getItem(CHAVE_LAPIDES) || '{}'); } catch { return {}; } };
 const guardarPorEnviar = (l: Lapides) => localStorage.setItem(CHAVE_LAPIDES, JSON.stringify(l));
 const apagadoDepois = (p: Projeto, l: Lapides) => l[p.id] != null && (p.atualizadoEm ?? 0) <= l[p.id];
+const todasLapides = (): Lapides => ({ ...lapidesNuvem, ...lapidesPorEnviar() });
+// projetos que este aparelho já viu na nuvem (id → versão): se desaparecerem da nuvem sem alterações locais, foram apagados noutro aparelho
+const CHAVE_VISTOS = 'cautela-vistos-na-nuvem';
+const vistosGuardados = (): Lapides => { try { return JSON.parse(localStorage.getItem(CHAVE_VISTOS) || '{}'); } catch { return {}; } };
+const guardarVistos = () => localStorage.setItem(CHAVE_VISTOS, JSON.stringify(Object.fromEntries([...enviados].filter(([, t]) => t > 0))));
 let aplicarRemoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -112,7 +117,15 @@ export async function iniciarSincronizacao(user: User) {
     });
 
     const juntos = new Map<string, Projeto>();
-    for (const p of local.projetos) if (!apagadoDepois(p, lapides)) juntos.set(p.id, p);
+    const vistos = vistosGuardados();
+    const idsNuvem = new Set<string>();
+    sp.forEach((d) => idsNuvem.add(d.id));
+    for (const p of local.projetos) {
+      if (apagadoDepois(p, lapides)) continue;
+      // já esteve na nuvem, desapareceu e não foi alterado aqui depois: foi apagado noutro aparelho
+      if (!sp.metadata.fromCache && !idsNuvem.has(p.id) && vistos[p.id] != null && (p.atualizadoEm ?? 0) <= vistos[p.id]) continue; // só com a lista lida do servidor (nunca da cache)
+      juntos.set(p.id, p);
+    }
     for (const [id, r] of remotos) {
       const l = juntos.get(id);
       if (!l || (r.atualizadoEm ?? 0) >= (l.atualizadoEm ?? 0)) juntos.set(id, r);
@@ -120,6 +133,7 @@ export async function iniciarSincronizacao(user: User) {
     const lista = [...juntos.values()].map((p) => ({ ...p, empresa, autor })).sort((a, b) => b.atualizadoEm - a.atualizadoEm);
     enviados = new Map([...remotos.values()].map((r) => [r.id, r.atualizadoEm]));
     sp.forEach((d) => { if (!remotos.has(d.id)) enviados.set(d.id, -1); }); // documentos de projetos apagados: o envio remove-os
+    guardarVistos();
     aplicarRemoto = true;
     useStore.setState({ projetos: lista, empresaPadrao: empresa, autorPadrao: autor });
     aplicarRemoto = false;
@@ -165,6 +179,13 @@ export async function iniciarSincronizacao(user: User) {
           return;
         }
         const r = c.doc.data() as Projeto;
+        if (apagadoDepois(r, todasLapides())) {
+          // reenviado por um aparelho com uma versão antiga: continua apagado e o documento é removido
+          enviados.set(r.id, -1);
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => { enviar(false).catch(falha); }, 1200);
+          return;
+        }
         const l = projetos.find((p) => p.id === c.doc.id);
         if (l && (l.atualizadoEm ?? 0) >= (r.atualizadoEm ?? 0)) return;
         const locais = new Map(l ? imagensDe(l).map((x) => [x.id, x.imagem]) : []);
@@ -173,6 +194,7 @@ export async function iniciarSincronizacao(user: User) {
         projetos = l ? projetos.map((p) => (p.id === r.id ? novo : p)) : [novo, ...projetos];
         mudou = true;
       });
+      guardarVistos();
       if (mudou) {
         aplicarRemoto = true;
         useStore.setState({ projetos });
@@ -313,6 +335,7 @@ async function enviar(inicial: boolean) {
     }
   }
   await Promise.all(tarefas);
+  guardarVistos();
   useNuvem.setState({ estado: navigator.onLine ? 'sincronizado' : 'offline' });
 }
 
