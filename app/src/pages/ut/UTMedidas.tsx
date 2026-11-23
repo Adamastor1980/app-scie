@@ -1,3 +1,4 @@
+import { classificar } from '../../engine/calc';
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
 import NovaNC from './NovaNC';
 import { useP } from '../ProjetoShell';
@@ -17,7 +18,25 @@ const ESTADO: Record<Estado, { l: string; c: string }> = {
   nao: { l: 'Não aplicável', c: 'bg-paper-3 text-ink-3' },
 };
 
-export default function UTMedidas({ ed, ut, upU }: UTProps) {
+export default function UTMedidas(props: UTProps) {
+  const cls = classificar(props.ut);
+  if (cls.falta.length) return <SemCategoria falta={cls.falta} />;
+  return <Medidas {...props} />;
+}
+
+/** Sem categoria atribuída não há medidas: dependem da categoria de risco. */
+function SemCategoria({ falta }: { falta: string[] }) {
+  return (
+    <div className="border border-warn bg-warn-soft p-6">
+      <p className="font-display text-[20px] font-bold">Categoria por atribuir</p>
+      <p className="mt-1 max-w-3xl text-[13px] text-ink-2">As medidas de segurança exigidas dependem da categoria de risco da UT (RT-SCIE). Preencha primeiro os critérios em falta no passo «Fatores de risco»:</p>
+      <ul className="mt-3 list-disc pl-5 text-[13px] font-semibold">{falta.map((x) => <li key={x}>{x}</li>)}</ul>
+      <a className="btn mt-4" href={location.hash.replace(/\/medidas$/, '/fatores')}>Ir para os fatores de risco →</a>
+    </div>
+  );
+}
+
+function Medidas({ ed, ut, upU }: UTProps) {
   const M = useMemo(() => gerarMedidas(contexto(ed, ut)), [ed, ut]);
   const r = resumoMedidas(M);
   const [filtro, setFiltro] = useState<'todas' | Estado>('aplica');

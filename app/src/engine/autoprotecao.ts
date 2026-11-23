@@ -65,6 +65,8 @@ export interface ExigenciasUT {
   ed: Edificio;
   ut: UT;
   cat: Cat;
+  /** categoria ainda por atribuir (faltam critérios) */
+  porAtribuir: boolean;
   temDE: boolean;
   medidas: MAP[] | null;
   simulacroAnos: number | null;
@@ -78,7 +80,7 @@ export function exigencias(p: Projeto): ExigenciasUT[] {
       const temDE = ut.espacos.some((e) => e.local === 'D' || e.local === 'E');
       const medidas = quadroXXXIX(ut.tipo, cls.cat, temDE);
       return {
-        ed, ut, cat: cls.cat, temDE, medidas,
+        ed, ut, cat: cls.cat, porAtribuir: cls.falta.length > 0, temDE, medidas,
         simulacroAnos: medidas?.includes('simulacros') ? anosDe(quadroXLI(ut.tipo, cls.cat, temDE)) : null,
         inspecaoAnos: inspecaoRegularAnos(ed, ut, cls.cat),
       };

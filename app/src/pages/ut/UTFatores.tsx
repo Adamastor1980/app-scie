@@ -1,6 +1,6 @@
 import type { UTProps } from '../UTPage';
 import { precisaCarga, precisaEfetivo } from '../UTPage';
-import { Faltas, Field, Num, Section, Toggle } from '../../ui/primitives';
+import { Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
 import { classificar, efetivoUT, fmt, porConfirmar } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
@@ -16,14 +16,8 @@ export default function UTFatores({ ut, upU }: UTProps) {
   const usaAltura = !(ut.arLivre && temArLivre) && t !== 12;
   const usaPisos = [1, 2, 6, 8, 9, 11, 12].includes(t) && !(ut.arLivre && temArLivre);
   const cargaV = precisaCarga(t) ? ((cls.fatores.find((f) => f.id === 'carga')?.valor as number) ?? 0) : 1;
-  const faltas: [string, string][] = [];
   const fAlt = usaAltura && porConfirmar(ut, 'altura');
   const fPis = usaPisos && porConfirmar(ut, 'pisos');
-  if (fAlt) faltas.push(['Altura da UT', 'diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT, em m (art. 2.º a) do RJ-SCIE); se for 0, confirme']);
-  if (fPis) faltas.push(['N.º de pisos abaixo do plano de referência', `pisos ocupados pela UT abaixo do plano de referência (${info.quadro}); se não houver, confirme 0`]);
-  if (t === 2 && !ut.arLivre && !(ut.areaBruta > 0)) faltas.push(['Área bruta', 'área total ocupada pela UT II, em m² (art. 2.º b) do RJ-SCIE)']);
-  if (precisaEfetivo(t) && !(ef.total > 0)) faltas.push(['Efetivo', 'n.º de pessoas da UT, calculado no passo «Efetivo» (art. 51.º do RT-SCIE)']);
-  if (precisaCarga(t) && !(cargaV > 0)) faltas.push(['Carga de incêndio', 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)']);
 
 
   return (
@@ -100,7 +94,6 @@ export default function UTFatores({ ut, upU }: UTProps) {
               )}
             </div>
           )}
-          <Faltas itens={faltas} titulo="Falta preencher para classificar a UT" />
         </Section>
 
       </div>

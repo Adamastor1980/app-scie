@@ -36,6 +36,7 @@ export function Num({ value, onChange, suffix, min, step, className = '', placeh
         className={`input-num ${suffix ? 'pr-12' : ''}`}
         inputMode="decimal"
         value={s}
+        onFocus={(e) => e.target.select()}
         placeholder={placeholder ?? '0'}
         step={step}
         onChange={(e) => {
@@ -113,8 +114,9 @@ export function Section({ n, title, sub, right, children, className = '' }: { n?
 
 export const CAT_COR: Record<Cat, string> = { 1: 'bg-cat1', 2: 'bg-cat2', 3: 'bg-cat3', 4: 'bg-cat4' };
 
-export function CatBadge({ cat, size = 'md' }: { cat: Cat; size?: 'sm' | 'md' | 'lg' }) {
+export function CatBadge({ cat, size = 'md' }: { cat: Cat | null; size?: 'sm' | 'md' | 'lg' }) {
   const s = size === 'sm' ? 'h-6 px-2 text-[11px]' : size === 'lg' ? 'h-10 px-4 text-[15px]' : 'h-7 px-2.5 text-[12px]';
+  if (cat == null) return <span className={`inline-flex items-center border border-dashed border-ink-4 font-mono font-semibold text-ink-3 ${s}`} title="Categoria por atribuir: faltam critérios">POR ATRIBUIR</span>;
   return <span className={`inline-flex items-center font-mono font-semibold text-white ${CAT_COR[cat]} ${s}`}>{cat}.ª CAT</span>;
 }
 

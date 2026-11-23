@@ -15,7 +15,8 @@ export default function Overview() {
     const c = classificar(u, ef);
     return { e, u, ef, c };
   }));
-  const max = linhas.length ? (Math.max(...linhas.map((l) => l.c.cat)) as Cat) : null;
+  const completas = linhas.length > 0 && linhas.every((l) => !l.c.falta.length);
+  const max = completas ? (Math.max(...linhas.map((l) => l.c.cat)) as Cat) : null;
   const efTotal = linhas.reduce((s, l) => s + l.ef.total, 0);
 
   const checks = [
@@ -42,7 +43,7 @@ export default function Overview() {
         <Stat label="Edifícios" value={p.edificios.length} />
         <Stat label="Utilizações-tipo" value={linhas.length} />
         <Stat label="Efetivo total" value={fmt(efTotal)} unit="pessoas" />
-        <Stat label="Categoria mais gravosa" value={max ? `${max}.ª` : '—'} sub={max ? CAT_NOME[max] : 'Sem UT'} accent />
+        <Stat label="Categoria mais gravosa" value={max ? `${max}.ª` : '—'} sub={max ? CAT_NOME[max] : linhas.length ? 'Por atribuir (faltam critérios)' : 'Sem UT'} accent />
       </div>
 
       <section className="mb-10">
@@ -65,7 +66,7 @@ export default function Overview() {
                     <td>{nomeUT(u).nome}</td>
                     <td className="num text-right">{fmt(ef.total)}</td>
                     <td className="text-ink-3">{c.falta.length ? <span className="text-warn">Falta: {c.falta.join(', ')}</span> : c.determinantes.join('; ') || 'Todos os fatores na 1.ª categoria'}</td>
-                    <td><CatBadge cat={c.cat} size="sm" /></td>
+                    <td><CatBadge cat={c.falta.length ? null : c.cat} size="sm" /></td>
                     <td className="text-right"><ArrowRight size={15} /></td>
                   </tr>
                 ))}

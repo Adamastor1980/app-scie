@@ -21,7 +21,7 @@ export default function QuadroAnexo({ c, titulo, mostrarValores = true }: { c: C
               <tr key={k}>
                 <td className={`border-b border-r border-ink px-3 py-2 font-mono font-semibold ${c.cat === k ? `${CAT_COR[k as 1]} text-white` : ''}`}>{k}.ª</td>
                 {c.fatores.map((f) => {
-                  const hit = f.cat === k;
+                  const hit = !f.porPreencher && f.cat === k;
                   return (
                     <td key={f.id} className={`border-b border-r border-paper-3 px-3 py-2 font-mono last:border-r-0 ${hit ? 'bg-fire-soft font-semibold text-ink outline outline-2 -outline-offset-2 outline-fire' : 'text-ink-2'}`}>
                       {f.limites[k - 1] ?? '—'}
@@ -35,8 +35,8 @@ export default function QuadroAnexo({ c, titulo, mostrarValores = true }: { c: C
                 <td className="border-r border-ink bg-ink px-3 py-2 font-mono text-[11px] uppercase text-white">Valor</td>
                 {c.fatores.map((f) => (
                   <td key={f.id} className="border-r border-ink-2 bg-ink px-3 py-2 font-mono font-semibold text-white last:border-r-0">
-                    {typeof f.valor === 'number' ? f.valor.toLocaleString('pt-PT') : f.valor}{typeof f.valor === 'number' && f.unidade ? ` ${f.unidade}` : ''}
-                    <span className="ml-2 text-fire-ink">→ {f.cat}.ª</span>
+                    {f.porPreencher ? 'por preencher' : <>{typeof f.valor === 'number' ? f.valor.toLocaleString('pt-PT') : f.valor}{typeof f.valor === 'number' && f.unidade ? ` ${f.unidade}` : ''}
+                    <span className="ml-2 text-fire">→ {f.cat}.ª</span></>}
                   </td>
                 ))}
               </tr>

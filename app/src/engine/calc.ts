@@ -295,6 +295,18 @@ function fator(id: string, rotulo: string, valor: number, unidade: string, max: 
 }
 
 /** Altura ou n.º de pisos abaixo ainda por indicar (valor 0 nunca confirmado pelo técnico). */
+/** Categoria só atribuída com todos os critérios do quadro preenchidos (null = por atribuir). */
+export const catAtribuida = (c: Classificacao): Cat | null => (c.falta.length ? null : c.cat);
+
+/** O que significa cada critério por preencher e onde se preenche. */
+export const SIGNIFICADO_FATOR: Record<string, string> = {
+  altura: 'diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT (art. 2.º a) do RJ-SCIE); 0 tem de ser confirmado',
+  pisos: 'pisos ocupados pela UT abaixo do plano de referência; 0 tem de ser confirmado',
+  area: 'área bruta ocupada pela UT II, em m² (art. 2.º b) do RJ-SCIE)',
+  efetivo: 'n.º de pessoas da UT, calculado no passo «Efetivo» (art. 51.º do RT-SCIE)',
+  carga: 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)',
+};
+
 export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
   const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
   return !(v > 0) && !ut.indicados?.[k];
@@ -324,7 +336,6 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
         f.push(fator('altura', 'Altura da UT II', h, 'm', T.q2_altura));
         f.push(fator('area', 'Área bruta ocupada pela UT II', ut.areaBruta, 'm²', T.q2_area));
         f.push(fator('pisos', 'N.º de pisos abaixo do plano de referência', pa, '', T.q2_pisos));
-        if (!ut.areaBruta) falta.push('Área bruta da UT II');
       }
       break;
     case 3:
@@ -397,7 +408,6 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
       f.push(fator('pisos', 'N.º de pisos abaixo do plano de referência', pa, '', T.q9_pisos));
       f.push(fator('efetivo', 'Efetivo da UT XI', ef.total, 'pessoas', T.q9_efetivo));
       f.push(fator('carga', 'Densidade de carga de incêndio modificada', round(carga.q, 1), 'MJ/m²', qmax));
-      if (carga.S === 0) falta.push('Densidade de carga de incêndio modificada (sem compartimentos calculados)');
       break;
     }
     case 12: {
@@ -412,17 +422,18 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
         f.push(fator('carga', 'Densidade de carga de incêndio modificada', round(carga.q, 1), 'MJ/m²', qmax));
         f.push(fator('pisos', 'N.º de pisos abaixo do plano de referência', pa, '', T.q10_pisos));
       }
-      if (carga.S === 0) falta.push('Densidade de carga de incêndio modificada (sem compartimentos calculados)');
       break;
     }
   }
-  if ([3, 4, 5, 6, 7, 8, 9, 10, 11].includes(ut.tipo) && ef.total === 0) falta.push('Efetivo da UT');
-  // altura e pisos abaixo: 0 é um valor válido, mas só conta depois de o técnico o indicar
+  // critérios obrigatórios por preencher: sem eles a categoria não é atribuída
   for (const x of f) {
-    if ((x.id === 'altura' || x.id === 'pisos') && porConfirmar(ut, x.id)) {
-      x.porPreencher = true;
-      falta.push(x.id === 'altura' ? 'Altura da UT' : 'N.º de pisos abaixo do plano de referência');
-    }
+    const por =
+      x.id === 'altura' || x.id === 'pisos' ? porConfirmar(ut, x.id) // 0 é válido, mas tem de ser indicado
+      : x.id === 'area' ? !(ut.areaBruta > 0)
+      : x.id === 'efetivo' ? !(ef.total > 0)
+      : x.id === 'carga' ? !(carga.S > 0)
+      : false;
+    if (por) { x.porPreencher = true; falta.push(x.rotulo); }
   }
   const cat = f.reduce<Cat>((m, x) => (x.cat > m ? x.cat : m), 1);
   const determinantes = f.filter((x) => x.cat === cat && cat > 1).map((x) => x.rotulo);

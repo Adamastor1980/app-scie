@@ -2,7 +2,7 @@ import type { UTProps } from '../UTPage';
 import { classificar, efetivoUT, cargaUT, CAT_NOME, CAT_RISCO, fmt, justificacaoCategoria } from '../../engine/calc';
 import { INSPECOES, NOTA_PISOS_TECNICOS, ROMANO, utInfo } from '../../data/rjscie';
 import { MAP_INFO, quadroXLI, quadroXXXIX } from '../../data/rtscie';
-import { CAT_COR, Note, Section } from '../../ui/primitives';
+import { CAT_COR, Section } from '../../ui/primitives';
 import QuadroAnexo from './QuadroAnexo';
 
 export default function UTCategoria({ ut }: UTProps) {
@@ -14,6 +14,24 @@ export default function UTCategoria({ ut }: UTProps) {
   const map = quadroXXXIX(ut.tipo, c.cat, temDE);
   const sim = quadroXLI(ut.tipo, c.cat, temDE);
   const inspIsenta = c.cat === 1 && ut.tipo !== 4 && ut.tipo !== 5;
+
+  if (c.falta.length) {
+    return (
+      <div>
+        <div className="mb-10 border border-warn bg-warn-soft p-6">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-3">UT {ROMANO[ut.tipo]} · {info.quadro}</p>
+          <p className="mt-2 font-display text-[28px] font-extrabold">Categoria por atribuir</p>
+          <p className="mt-1 max-w-3xl text-[13px] text-ink-2">A categoria só é atribuída com todos os critérios do {info.quadro} preenchidos (RJ-SCIE, art. 13.º). Falta preencher:</p>
+          <ul className="mt-3 list-disc pl-5 text-[13px] font-semibold">{c.falta.map((x) => <li key={x}>{x}</li>)}</ul>
+          <a className="btn mt-4" href={location.hash.replace(/\/categoria$/, '/fatores')}>Ir para os fatores de risco →</a>
+        </div>
+        <Section n="4.1" title={`${info.quadro} do anexo III — UT ${ROMANO[ut.tipo]}`} sub="Valores máximos por categoria.">
+          <QuadroAnexo c={c} />
+          <p className="mt-2 text-[11.5px] text-ink-3">{NOTA_PISOS_TECNICOS}</p>
+        </Section>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -30,7 +48,6 @@ export default function UTCategoria({ ut }: UTProps) {
           <p className="label mb-2">Justificação</p>
           <p className="text-[14px] leading-relaxed">{justificacaoCategoria(c)}</p>
           {c.notas.map((n) => <p key={n} className="mt-2 text-[12.5px] text-ink-3">{n}</p>)}
-          {c.falta.length > 0 && <div className="mt-3"><Note tone="warn">Dados em falta: {c.falta.join('; ')}. A categoria apresentada assume o valor zero para esses fatores.</Note></div>}
           <div className={`mt-5 grid gap-px border border-ink bg-ink ${['', 'sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3', 'sm:grid-cols-4'][Math.min(c.fatores.length, 4)]}`}>
             {c.fatores.map((f) => (
               <div key={f.id} className="bg-white p-3">

@@ -67,7 +67,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
                     <span className="block font-semibold">{nomeUT(u).nome}</span>
                     <span className="ref">{utInfo(u.tipo).quadro} · efetivo {fmt(ef.total)} · H {fmt(u.altura, 1)} m</span>
                   </span>
-                  <CatBadge cat={c.cat} size="sm" />
+                  <CatBadge cat={c.falta.length ? null : c.cat} size="sm" />
                   <ArrowRight size={16} className="text-ink-4 group-hover:text-ink" />
                 </button>
               );

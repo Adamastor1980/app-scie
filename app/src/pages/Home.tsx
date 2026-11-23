@@ -77,14 +77,15 @@ export default function Home() {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {projetos.map((p) => {
             const uts = p.edificios.flatMap((e) => e.uts);
-            const cats = uts.map((u) => classificar(u).cat);
-            const max = cats.length ? (Math.max(...cats) as 1 | 2 | 3 | 4) : null;
+            const cls = uts.map((u) => classificar(u));
+            const completas = cls.length > 0 && cls.every((c) => !c.falta.length);
+            const max = completas ? (Math.max(...cls.map((c) => c.cat)) as 1 | 2 | 3 | 4) : null;
             return (
               <article key={p.id} className="group flex min-h-[210px] flex-col justify-between border border-ink bg-white p-5 transition-colors hover:bg-paper">
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
-                    {max && <CatBadge cat={max} size="sm" />}
+                    {uts.length > 0 && <CatBadge cat={max} size="sm" />}
                   </div>
                   <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}

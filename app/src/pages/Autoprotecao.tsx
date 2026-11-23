@@ -82,7 +82,7 @@ function Exigencias() {
             {ex.map((x) => (
               <tr key={x.ut.id}>
                 <td className="min-w-[180px]"><span className="font-mono text-[11px]">UT {ROMANO[x.ut.tipo]}</span> {nomeUT(x.ut).nome}<br /><span className="ref">{x.ed.nome}{x.temDE ? ' · com locais D/E' : ''}</span></td>
-                <td><CatBadge cat={x.cat} size="sm" /></td>
+                <td><CatBadge cat={x.porAtribuir ? null : x.cat} size="sm" /></td>
                 {todas.map((m) => <td key={m} className="text-center">{x.medidas?.includes(m) ? <span className="font-bold text-fire-ink">●</span> : <span className="text-ink-4">—</span>}</td>)}
               </tr>
             ))}

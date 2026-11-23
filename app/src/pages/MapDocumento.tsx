@@ -134,7 +134,7 @@ export default function MapDocumento() {
             {ex.map((x) => (
               <tr key={x.ut.id}>
                 <td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td>
-                <td className="whitespace-nowrap">{x.cat}.ª</td>
+                <td className="whitespace-nowrap">{x.porAtribuir ? 'por atribuir' : `${x.cat}.ª`}</td>
                 <td>{x.medidas ? x.medidas.map((m) => `${MAP_INFO[m].nome} (art. ${MAP_INFO[m].art})`).join('; ') : 'Não exigíveis pelo quadro XXXIX'}</td>
               </tr>
             ))}

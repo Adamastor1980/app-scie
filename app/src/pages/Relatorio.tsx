@@ -34,6 +34,9 @@ function H2({ n, children }: { n: string; children: ReactNode }) {
 }
 const P = ({ children }: { children: ReactNode }) => <p className="mb-2.5 text-[12px] leading-[1.6] text-ink-2">{children}</p>;
 
+/** Sem todos os critérios preenchidos não há categoria atribuída (RJ-SCIE, art. 13.º). */
+const nomeCat = (c: { falta: string[]; cat: Cat }) => (c.falta.length ? 'Categoria por atribuir' : CAT_NOME[c.cat]);
+
 export default function Relatorio() {
   const { p } = useP();
   const [incluirNao, setIncluirNao] = useState(false);
@@ -51,11 +54,12 @@ export default function Relatorio() {
     ed,
     uts: ed.uts.map((ut) => {
       const ctx = contexto(ed, ut);
-      return { ...ctx, carga: cargaUT(ut), medidas: gerarMedidas(ctx) };
+      return { ...ctx, carga: cargaUT(ut), medidas: ctx.cls.falta.length ? [] : gerarMedidas(ctx) }; // sem categoria não há medidas
     }),
   })), [p]);
   const todas = dados.flatMap((d) => d.uts);
-  const maxCat = todas.length ? (Math.max(...todas.map((u) => u.cls.cat)) as Cat) : null;
+  const semCat = todas.filter((u) => u.cls.falta.length);
+  const maxCat = todas.length && !semCat.length ? (Math.max(...todas.map((u) => u.cls.cat)) as Cat) : null;
   const dataPt = p.data ? new Date(p.data + 'T00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
 
   useEffect(() => {
@@ -124,6 +128,7 @@ export default function Relatorio() {
           }}><FileDown size={16} /> Word</button>
           <button className="btn-fire h-11 w-full justify-center px-5 sm:w-auto" onClick={imprimir} disabled={!!aGerar}>{aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}</button>
         </div>
+        {semCat.length > 0 && <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-alerta sm:px-6">{semCat.length} UT sem categoria atribuída (faltam critérios nos fatores de risco): {semCat.map((u) => tituloUT(u.ut)).join('; ')}. O relatório não é válido enquanto não estiverem completas.</p>}
         {(() => {
           const n = todas.reduce((s2, u) => s2 + u.medidas.filter((m) => m.estado === 'verificar').length, 0);
           return n > 0 ? <p className="mx-auto max-w-[1100px] px-4 pb-1 text-[12px] font-semibold text-alerta sm:px-6">{n} medida(s) por decidir: responda às «Características do local» no passo Medidas de cada UT. Só as medidas aplicáveis entram no relatório.</p> : null;
@@ -192,7 +197,7 @@ export default function Relatorio() {
             <table className="tbl mb-6">
               <thead><tr><th>Utilização-tipo</th><th>Categoria</th><th className="text-right">Verificadas</th><th className="text-right">Cumpre</th><th className="text-right">Não cumpre</th></tr></thead>
               <tbody>{porUT.map((x) => (
-                <tr key={x.ut.id}><td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td><td className="whitespace-nowrap">{CAT_NOME[x.cls.cat]}</td><td className="num text-right">{x.pg.marcadas}/{x.pg.total}</td><td className="num text-right text-ok">{x.pg.cumpre}</td><td className={`num text-right font-bold ${x.pg.naoCumpre ? 'text-fire-ink' : ''}`}>{x.pg.naoCumpre}</td></tr>
+                <tr key={x.ut.id}><td>{tituloUT(x.ut)}<br /><span className="ref">{x.ed.nome}</span></td><td className="whitespace-nowrap">{nomeCat(x.cls)}</td><td className="num text-right">{x.pg.marcadas}/{x.pg.total}</td><td className="num text-right text-ok">{x.pg.cumpre}</td><td className={`num text-right font-bold ${x.pg.naoCumpre ? 'text-fire-ink' : ''}`}>{x.pg.naoCumpre}</td></tr>
               ))}</tbody>
             </table>
             {verificadas === 0 ? (
@@ -297,16 +302,16 @@ export default function Relatorio() {
           <div key={ut.id} className="avoid-break mb-5">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[12.5px] font-bold">{ed.nome} · {tituloUT(ut)}</p>
-              <span className={`${CAT_COR[cls.cat]} px-2 py-0.5 font-mono text-[11px] font-semibold text-white`}>{CAT_NOME[cls.cat]}</span>
+              <span className={`${cls.falta.length ? 'border border-dashed border-ink-4 text-ink-3' : `${CAT_COR[cls.cat]} text-white`} px-2 py-0.5 font-mono text-[11px] font-semibold`}>{nomeCat(cls)}</span>
             </div>
             <QuadroAnexo c={cls} titulo={`${cls.quadro} do anexo III`} />
             <p className="mt-2 text-[11.5px] leading-relaxed text-ink-2">
-              {justificacaoCategoria(cls)} {cls.notas.join(' ')} {CAT_RISCO[cls.cat]}.
+              {cls.falta.length ? `Categoria por atribuir: falta preencher ${cls.falta.join(', ').toLowerCase()}.` : <>{justificacaoCategoria(cls)} {cls.notas.join(' ')} {CAT_RISCO[cls.cat]}.</>}
             </p>
           </div>
         ))}
         <table className="tbl"><thead><tr><th>Edifício</th><th>UT</th><th>Designação</th><th>Categoria</th></tr></thead>
-          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td>{nomeUT(ut).nome}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td></tr>)}</tbody></table>
+          <tbody>{todas.map(({ ut, ed, cls }) => <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td>{nomeUT(ut).nome}</td><td className="font-semibold">{nomeCat(cls)}</td></tr>)}</tbody></table>
 
         <H1 n={S()}>Cálculo do efetivo</H1>
         <P>O efetivo é o somatório dos efetivos de todos os espaços suscetíveis de ocupação (RT-SCIE, art. 51.º n.º 1), arredondados ao inteiro superior. A correção pelo fator 1,3 (art. 51.º n.º 5) aplica-se apenas ao dimensionamento das vias de evacuação e saídas.</P>
@@ -358,7 +363,8 @@ export default function Relatorio() {
         <P>Organizadas segundo os capítulos II a VII da memória descritiva do anexo IV do RJ-SCIE (art. 2.º), com a mesma numeração. Para cada utilização-tipo, as exigências são concretizadas em função da categoria de risco, da altura do edifício e dos locais de risco. «Verificar» identifica exigências cujo cumprimento depende de elementos de projeto não introduzidos; «n/a» indica a razão legal da não aplicação.</P>
         {todas.map(({ ut, ed, medidas, cls }, ui) => (
           <div key={ut.id} className="mb-8">
-            <p className="avoid-break mb-3 border-b-2 border-ink pb-1 text-[14px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)} · {CAT_NOME[cls.cat]}</p>
+            <p className="avoid-break mb-3 border-b-2 border-ink pb-1 text-[14px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)} · {nomeCat(cls)}</p>
+            {cls.falta.length > 0 && <P>Medidas não determinadas: dependem da categoria de risco, que ainda não está atribuída.</P>}
             {GRUPOS.filter((g) => g !== 'Medidas de autoproteção').map((g) => {
               const secs = SECOES.filter((x) => x.g === g);
               const temAlgo = secs.some((x) => medidas.some((m) => m.tema === x.c));
@@ -513,10 +519,10 @@ export default function Relatorio() {
         {p.plantas.length === 0 && <P>Não foram anexadas peças desenhadas. O anexo IV do RJ-SCIE (art. 3.º) exige planta de localização, cortes e alçados, planta de implantação e plantas de todos os pisos.</P>}
         <table className="tbl mb-4"><thead><tr><th>Edifício</th><th>UT</th><th className="text-right">Efetivo</th><th className="text-right">q (MJ/m²)</th><th>Categoria</th><th>Medidas aplicáveis</th></tr></thead>
           <tbody>{todas.map(({ ut, ed, ef, carga, cls, medidas }) => (
-            <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td className="num text-right">{ef.total}</td><td className="num text-right">{carga.S ? fmt(carga.q, 1) : '—'}</td><td className="font-semibold">{CAT_NOME[cls.cat]}</td><td className="num">{medidas.filter((m) => m.estado === 'aplica').length} (+{medidas.filter((m) => m.estado === 'verificar').length} a verificar)</td></tr>
+            <tr key={ut.id}><td>{ed.nome}</td><td><span className="num font-semibold">{ROMANO[ut.tipo]}</span> <span className="text-[10.5px] text-ink-3">{utInfo(ut.tipo).nome}</span></td><td className="num text-right">{ef.total}</td><td className="num text-right">{carga.S ? fmt(carga.q, 1) : '—'}</td><td className="font-semibold">{nomeCat(cls)}</td><td className="num">{medidas.filter((m) => m.estado === 'aplica').length} (+{medidas.filter((m) => m.estado === 'verificar').length} a verificar)</td></tr>
           ))}</tbody></table>
         {todas.map(({ ut, cls }) => (
-          <P key={ut.id}>A UT {ROMANO[ut.tipo]} ({nomeUT(ut).nome}) classifica-se na <b>{CAT_NOME[cls.cat]}</b> de risco{cls.determinantes.length ? `, determinada por ${cls.determinantes.join(' e ').toLowerCase()}` : ''}{cls.falta.length ? ` — dados em falta: ${cls.falta.join(', ')}` : ''}.</P>
+          <P key={ut.id}>A UT {ROMANO[ut.tipo]} ({nomeUT(ut).nome}) {cls.falta.length ? <>ainda <b>não tem categoria atribuída</b></> : <>classifica-se na <b>{nomeCat(cls)}</b> de risco</>}{cls.determinantes.length ? `, determinada por ${cls.determinantes.join(' e ').toLowerCase()}` : ''}{cls.falta.length ? ` — dados em falta: ${cls.falta.join(', ')}` : ''}.</P>
         ))}
         {maxCat && <P>Entidade competente para a categoria mais gravosa: {maxCat === 1 ? 'câmara municipal' : 'ANEPC'} (RJ-SCIE, art. 5.º).</P>}
         {p.conclusoes && <div className="mt-4 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}

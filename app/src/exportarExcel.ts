@@ -25,14 +25,14 @@ export async function exportarExcel(p: Projeto) {
   for (const ed of p.edificios) {
     for (const ut of ed.uts) {
       const ctx = contexto(ed, ut);
-      const med = gerarMedidas(ctx);
+      const med = ctx.cls.falta.length ? [] : gerarMedidas(ctx); // sem categoria atribuída não há medidas
       const nomeU = `UT ${ROMANO[ut.tipo]} — ${nomeUT(ut).nome}`;
       for (const d of desconformidades(ut, med)) {
-        plano.push([++n, ed.nome, nomeU, CAT_NOME[ctx.cls.cat], secRotulo(d.sec), d.medida.titulo, d.medida.base, d.ver.obs ?? '', d.ver.corretiva ?? '', d.ver.prazo ?? '', '', 'Por corrigir']);
+        plano.push([++n, ed.nome, nomeU, (ctx.cls.falta.length ? 'Por atribuir' : CAT_NOME[ctx.cls.cat]), secRotulo(d.sec), d.medida.titulo, d.medida.base, d.ver.obs ?? '', d.ver.corretiva ?? '', d.ver.prazo ?? '', '', 'Por corrigir']);
       }
       for (const m of med) {
         const v = verDe(ut, m);
-        todas.push([ed.nome, nomeU, CAT_NOME[ctx.cls.cat], secRotulo(m.tema), m.titulo, m.exigencia, m.base,
+        todas.push([ed.nome, nomeU, (ctx.cls.falta.length ? 'Por atribuir' : CAT_NOME[ctx.cls.cat]), secRotulo(m.tema), m.titulo, m.exigencia, m.base,
           m.estado === 'aplica' ? 'Aplicável' : m.estado === 'verificar' ? 'A verificar' : 'Não aplicável',
           v.estado ? ESTADO[v.estado] : '', v.obs ?? '']);
       }

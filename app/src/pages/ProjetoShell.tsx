@@ -119,11 +119,13 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
                   <span className="truncate">{e.nome}</span>
                 </a>
                 {e.uts.map((u) => {
-                  const c = classificar(u).cat;
+                  const cl = classificar(u);
+                  const c = cl.cat;
+                  const sem = cl.falta.length > 0;
                   const act = mU?.uid === u.id;
                   return (
                     <a key={u.id} href={`#${base}/e/${e.id}/u/${u.id}/fatores`} className={`ml-[22px] flex h-8 items-center gap-2 border-l px-3 text-[12.5px] ${act ? 'border-fire bg-white font-semibold text-ink' : 'border-ink-4/40 text-ink-2 hover:bg-white/60'}`}>
-                      <span className={`h-2 w-2 shrink-0 ${CAT_COR[c]}`} />
+                      <span className={`h-2 w-2 shrink-0 ${sem ? 'border border-warn bg-warn-soft' : CAT_COR[c]}`} title={sem ? 'Categoria por atribuir' : undefined} />
                       <span className="w-9 shrink-0 font-mono text-[11px]">{ROMANO[u.tipo]}</span>
                       {(() => {
                         const n = nomeUT(u);
