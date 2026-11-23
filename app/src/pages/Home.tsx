@@ -1,4 +1,4 @@
-import { Lema } from '../ui/Marca';
+import Rodape from '../ui/Rodape';
 import LogoPreto from '../ui/LogoPreto';
 import { useRef } from 'react';
 import { ArrowUpRight, Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
@@ -123,7 +123,7 @@ export default function Home() {
           })}
         </div>
       )}
-      <Lema className="mt-16 border-t border-paper-3 pt-6" />
+      <Rodape />
     </main>
   );
 }
