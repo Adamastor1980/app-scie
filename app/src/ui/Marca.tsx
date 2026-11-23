@@ -20,16 +20,15 @@ export function NomeApp({ claro = false, className = '' }: { claro?: boolean; cl
   );
 }
 
-export const LEMA = 'Cautela e caldos de galinha nunca fizeram mal a ninguém.';
+export const LEMA = 'Cautela não é medo. É respeito pela vida.';
 
-/** Lema da marca (provérbio popular português). */
+/** Lema da marca. */
 export function Lema({ grande = false, className = '' }: { grande?: boolean; className?: string }) {
   return grande ? (
-    <figure className={`border-l-2 border-fire pl-4 ${className}`}>
-      <blockquote className="font-brand text-[21px] font-semibold italic leading-snug text-ink sm:text-[24px]">«{LEMA}»</blockquote>
-      <figcaption className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-4">Provérbio popular</figcaption>
-    </figure>
+    <p className={`border-l-2 border-fire pl-4 font-brand text-[22px] font-semibold italic leading-snug text-ink sm:text-[26px] ${className}`}>
+      Cautela não é medo.<br /><span className="text-fire-ink">É respeito pela vida.</span>
+    </p>
   ) : (
-    <p className={`text-center font-brand text-[15px] font-semibold italic text-ink-3 ${className}`}>«{LEMA}»</p>
+    <p className={`text-center font-brand text-[15px] font-semibold italic text-ink-3 ${className}`}>{LEMA}</p>
   );
 }
