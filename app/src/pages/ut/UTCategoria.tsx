@@ -4,8 +4,9 @@ import { INSPECOES, NOTA_PISOS_TECNICOS, ROMANO, utInfo } from '../../data/rjsci
 import { MAP_INFO, quadroXLI, quadroXXXIX } from '../../data/rtscie';
 import { CAT_COR, Section } from '../../ui/primitives';
 import QuadroAnexo from './QuadroAnexo';
+import { inspecaoRegularAnos } from '../../engine/autoprotecao';
 
-export default function UTCategoria({ ut }: UTProps) {
+export default function UTCategoria({ ed, ut }: UTProps) {
   const ef = efetivoUT(ut);
   const carga = cargaUT(ut);
   const c = classificar(ut, ef, carga);
@@ -13,7 +14,7 @@ export default function UTCategoria({ ut }: UTProps) {
   const temDE = ef.temD || ef.temE;
   const map = quadroXXXIX(ut.tipo, c.cat, temDE);
   const sim = quadroXLI(ut.tipo, c.cat, temDE);
-  const inspIsenta = c.cat === 1 && ut.tipo !== 4 && ut.tipo !== 5;
+  const inspIsenta = inspecaoRegularAnos(ed, ut, c.cat) == null; // RJ-SCIE, art. 19.º n.º 5
 
   if (c.falta.length) {
     return (

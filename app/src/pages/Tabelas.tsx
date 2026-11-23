@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { QUADRO_I_HI, QUADRO_II } from '../data/despacho';
 import { DIPLOMAS, NOTA_PISOS_TECNICOS, ROMANO, UTS } from '../data/rjscie';
-import { ENVOLVENTE_LOCAIS, QUADRO_XXV, QUADRO_XXVII, QUADRO_XXXVI, QUADRO_XXXVII, quadroIX, quadroX, quadroXI } from '../data/rtscie';
+import { ENVOLVENTE_LOCAIS, MAP_INFO, QUADRO_XXV, QUADRO_XXVII, QUADRO_XXXVI, QUADRO_XXXVII, quadroIX, quadroX, quadroXI, quadroXXXIX } from '../data/rtscie';
 import { classificar, fmt, RAI, RAI_NOME } from '../engine/calc';
 import { novaUT } from '../store';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -112,7 +112,7 @@ export default function Tabelas() {
             <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Quadro XXVIII — por comprimento</p>Lugares sentados não individualizados: 2 pessoas/m de banco ou bancada · Lugares de pé numa única frente: 5 pessoas/m</div>
             <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Art. 51.º n.º 2</p>a) ocupantes em camas (IV, V, VII) · b) 3,2 × lugares de acamados (V) · d) lugares fixos · e) declarado, mín. 0,03 p/m² (arquivos e UT XII sem público)</div>
             <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Art. 51.º n.º 5 e art. 232.º</p>Crianças ≤ 3 anos e pessoas limitadas: efetivo × 1,3 só para dimensionar vias de evacuação e saídas.</div>
-            <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Art. 283.º — UT IX</p>a) espectadores + 0,1 p/m² de área útil de apoio · b) pistas de patinagem +0,7 p/m² · c) piscinas +1 p/m² de plano de água</div>
+            <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Art. 283.º — UT IX</p>a) espectadores + 0,1 p/m² de área útil de apoio · b) pistas de patinagem +0,7 p/m² · c) piscinas e parques aquáticos +1 p/m² de plano de água (sem tanques de saltos, de mergulho e lava-pés, exceto os só de competição)</div>
             <div className="bg-white p-4 text-[13px]"><p className="label mb-2">Quadros XXIX e XXXI — saídas e UP (coberto)</p>Saídas: 1–50 → 1; 51–1 500 → 1/500 + 1; 1 501–3 000 → 1/500; &gt; 3 000 → mín. 6 · UP: 1–50 → 1; 51–500 → 1/100 + 1; &gt; 500 → 1/100</div>
           </div>
         </div>
@@ -151,22 +151,22 @@ export default function Tabelas() {
       {tab === TABS[4] && (
         <div className="grid gap-6 lg:grid-cols-2">
           <TabelaSimples titulo="Quadro XXXVI — configurações de alarme (art. 125.º)" cab={['Componente', '1', '2', '3']} linhas={QUADRO_XXXVI.linhas.map((l) => [l.comp, ...l.c.map((x) => (x ? '■' : ''))])} />
-          <TabelaSimples titulo="Quadro XXXVII — sprinklers (art. 174.º)" cab={['UT', 'L/min/m²', 'Área m²', 'N.º', 'mm', 'min']} linhas={Object.entries(QUADRO_XXXVII).map(([k, v]) => [k, String(v.densidade), String(v.area), String(v.n), String(v.calibre), String(v.tempo)])} />
+          <TabelaSimples titulo="Quadro XXXVII — sprinklers (art. 174.º)" cab={['UT', 'L/min/m²', 'Área m²', 'N.º', 'mm', 'min']} linhas={Object.entries(QUADRO_XXXVII).map(([k, v]) => [k === 'XII' ? 'XII *' : k, String(v.densidade), String(v.area), String(v.n), String(v.calibre), String(v.tempo)])} nota="* Incluindo sistemas tipo dilúvio previstos para a UT VI, com um tempo de descarga de 30 min." />
           <TabelaSimples titulo="Quadro XXXIX — medidas de autoproteção (art. 198.º)" cab={['UT', 'Categoria', 'Medidas']} linhas={[
-            ['I', '3.ª (espaços comuns)', 'Registos · Plano de prevenção · Proc. emergência · Formação'],
-            ['I', '4.ª (espaços comuns)', 'Registos · Plano de prevenção · PEI · Formação · Simulacros'],
-            ['II, III, VI, VIII a XII', '1.ª', 'Registos · Procedimentos de prevenção'],
-            ['II, III, VI, VIII a XII', '2.ª', 'Registos · Plano de prevenção · Proc. emergência · Formação'],
-            ['II, III, VI, VIII a XII', '3.ª e 4.ª', 'Registos · Plano de prevenção · PEI · Formação · Simulacros'],
-            ['IV, V e VII', '1.ª sem D/E', 'Registos · Procedimentos de prevenção'],
-            ['IV, V e VII', '1.ª com D/E; 2.ª sem D/E', 'Registos · Plano de prevenção · Proc. emergência · Formação'],
-            ['IV, V e VII', '2.ª com D/E; 3.ª; 4.ª', 'Registos · Plano de prevenção · PEI · Formação · Simulacros'],
+            // gerado a partir da mesma função usada nos cálculos (linhas e marcas do quadro XXXIX)
+            ...([
+              ['I', '3.ª (apenas espaços comuns)', 1, 3, false], ['I', '4.ª (apenas espaços comuns)', 1, 4, false],
+              ['II', '1.ª', 2, 1, false], ['II', '2.ª', 2, 2, false], ['II', '3.ª e 4.ª', 2, 3, false],
+              ['III, VI, VIII, IX, X, XI e XII', '1.ª', 3, 1, false], ['III, VI, VIII, IX, X, XI e XII', '2.ª', 3, 2, false], ['III, VI, VIII, IX, X, XI e XII', '3.ª e 4.ª', 3, 3, false],
+              ['IV, V e VII', '1.ª (sem locais D ou E)', 4, 1, false], ['IV, V e VII', '1.ª (com locais D ou E) e 2.ª (sem locais D ou E)', 4, 2, false],
+              ['IV, V e VII', '2.ª (com locais D ou E), 3.ª e 4.ª', 4, 2, true],
+            ] as [string, string, UTNum, 1 | 2 | 3 | 4, boolean][]).map(([u, c, t, k, de]) => [u, c, (quadroXXXIX(t, k, de) ?? []).map((m) => MAP_INFO[m].nome).join(' · ')]),
           ]} />
           <TabelaSimples titulo="Quadro XLI — periodicidade dos simulacros (art. 207.º)" cab={['UT', 'Categoria', 'Período máximo']} linhas={[
             ['I', '4.ª', 'Dois anos'], ['II', '3.ª e 4.ª', 'Dois anos'], ['VI e IX', '2.ª e 3.ª', 'Dois anos'], ['VI e IX', '4.ª', 'Um ano'],
             ['III, VIII, X, XI e XII', '2.ª e 3.ª', 'Dois anos'], ['III, VIII, X, XI e XII', '4.ª', 'Um ano'], ['IV, V e VII', '2.ª (com D/E), 3.ª e 4.ª', 'Um ano'],
           ]} />
-          <TabelaSimples titulo="RJ-SCIE, art. 19.º — inspeções regulares" cab={['Categoria', 'Prazo máximo']} linhas={[['1.ª', '6 anos'], ['2.ª', '5 anos'], ['3.ª', '4 anos'], ['4.ª', '3 anos']]} />
+          <TabelaSimples titulo="RJ-SCIE, art. 19.º — inspeções regulares" cab={['Categoria', 'Prazo máximo']} linhas={[['1.ª', '6 anos'], ['2.ª', '5 anos'], ['3.ª', '4 anos'], ['4.ª', '3 anos']]} nota="Excetuam-se (n.º 5): UT I, II, III, VI, VII, VIII, IX, X, XI e XII da 1.ª categoria e edifícios de utilização exclusiva da UT I da 2.ª categoria. Na 1.ª categoria a competência é do município (n.º 2)." />
         </div>
       )}
 
@@ -185,7 +185,7 @@ export default function Tabelas() {
   );
 }
 
-function TabelaSimples({ titulo, cab, linhas }: { titulo: string; cab: string[]; linhas: string[][] }) {
+function TabelaSimples({ titulo, cab, linhas, nota }: { titulo: string; cab: string[]; linhas: string[][]; nota?: string }) {
   return (
     <div className="border border-ink bg-white">
       <div className="border-b border-ink bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white">{titulo}</div>
@@ -193,6 +193,7 @@ function TabelaSimples({ titulo, cab, linhas }: { titulo: string; cab: string[];
         <thead><tr>{cab.map((c) => <th key={c}>{c}</th>)}</tr></thead>
         <tbody>{linhas.map((l, i) => <tr key={i}>{l.map((c, j) => <td key={j} className={j ? 'font-mono' : ''}>{c}</td>)}</tr>)}</tbody>
       </table>
+      {nota && <p className="border-t border-paper-3 px-3 py-2 text-[11px] text-ink-3">{nota}</p>}
     </div>
   );
 }
