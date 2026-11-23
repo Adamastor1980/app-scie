@@ -37,6 +37,8 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // verificação de versão nova: vai sempre à rede
+  if (url.searchParams.has('verificar')) return;
 
   // página: rede primeiro, cópia guardada sem rede
   if (req.mode === 'navigate') {
