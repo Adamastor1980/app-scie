@@ -49,7 +49,7 @@ describe('Pisos abaixo do plano de referência — obrigatório em todas as UT',
     expect(incoerentePisos(ut)).toBeNull();
     expect(faltaParaMedidas(ut)).toHaveLength(0);
     const ed = novoEdificio(1); ed.uts = [ut];
-    expect(pisosAcimaDerivado(ed)).toBe(10); // espaços do piso 0 ao 9
+    expect(pisosAcimaDerivado(ed)).toBe(9); // espaço no piso 9: 9 pisos acima do r/c
   });
   it('UT ao ar livre não tem pisos', () => {
     const ut = novaUT(6);

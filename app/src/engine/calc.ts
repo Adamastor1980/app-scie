@@ -326,10 +326,10 @@ export function pisosAbaixoDerivado(ut: UT): number | null {
   if (!ps.length) return null;
   return ps.filter((n) => n < 0 && !(ut.pisosTecnicos ?? []).includes(n)).length;
 }
-/** Pisos acima do plano de referência do edifício (incluindo o piso 0) a partir dos espaços das UT; null se não houver. */
+/** Pisos acima do plano de referência (sem contar o piso 0, o do plano de referência) a partir dos espaços das UT; null se não houver. */
 export function pisosAcimaDerivado(ed: Edificio): number | null {
   const ps = ed.uts.flatMap(pisosDosEspacos).filter((n) => n >= 0);
-  return ps.length ? Math.max(...ps) + 1 : null;
+  return ps.length ? Math.max(...ps) : null;
 }
 /** Pisos abaixo do plano de referência da UT: dos espaços, se tiverem piso; senão o indicado. */
 export const pisosAbaixoUT = (ut: UT) => ut.pisosAbaixo;
@@ -383,8 +383,8 @@ export function faltaEdificio(ed: Edificio): [string, string][] {
 export function faltaCaracterizacao(ed: Edificio): [string, string][] {
   const f = [...faltaEdificio(ed)];
   const ac = pisosAcimaDerivado(ed);
-  if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
-  else if (ac !== null && ac > ed.pisosAcima) f.push(['Pisos acima', `indicou ${ed.pisosAcima}, mas há espaços até ao piso ${ac - 1} (${ac} pisos do 0 ao ${ac - 1}): corrija`]);
+  if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, sem contar o piso do plano de referência (r/c); 0 tem de ser confirmado (caracterização do edifício)`]);
+  else if (ac !== null && ac > ed.pisosAcima) f.push(['Pisos acima', `indicou ${ed.pisosAcima}, mas há espaços no piso ${ac}: corrija`]);
   const ab = Math.max(0, ...ed.uts.map((u) => Math.max(u.pisosAbaixo || 0, negativosEspacos(u).length)));
   if (!ed.pisosAbaixoIndicado && !(ed.pisosAbaixo > 0)) f.push(['Pisos abaixo', `n.º de pisos do edifício «${ed.nome}» abaixo do plano de referência; 0 tem de ser confirmado (caracterização do edifício)`]);
   else if (ab > ed.pisosAbaixo) f.push(['Pisos abaixo', `indicou ${ed.pisosAbaixo}, mas há UT ou espaços em ${ab} ${ab === 1 ? 'piso' : 'pisos'} abaixo do plano de referência: corrija`]);
