@@ -32,7 +32,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
           </Field>
         </div>
         <Section n="1.1" title="Fatores de risco" sub={info.fatores}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:[&>.field>span:first-child]:min-h-[30px] md:[&>.field>span:first-child]:items-end">
             {temArLivre && (
               <div className="md:col-span-2">
                 <Toggle checked={ut.arLivre} onChange={(v) => upU((u) => { u.arLivre = v; })} label="Espaço ao ar livre" legal={`RJ-SCIE, art. 12.º n.º 2; ${info.quadro}`}
@@ -48,7 +48,8 @@ export default function UTFatores({ ut, upU }: UTProps) {
               </Field>
             )}
             {usaPisos && (
-              <Field label="N.º de pisos abaixo do plano de referência (obrigatório)" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''} hint={`${pisosCriterio ? '' : `Não conta para a categoria da UT ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][t - 1]} (${info.quadro}), mas conta para as medidas: evacuação, saídas, câmaras corta-fogo e reação ao fogo nos pisos abaixo do plano de referência. `}${NOTA_PISOS_TECNICOS.replace('(*) ', '')}`}>
+              <Field label="Pisos abaixo do plano de referência" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''}
+                hint={pisosCriterio ? NOTA_PISOS_TECNICOS.replace('(*) ', '') : `Não conta para a categoria (${info.quadro}). Conta para as medidas do RT-SCIE nos pisos abaixo do plano de referência.`}>
                 <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
                 {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
                 {pisosIncoerente && <span className="text-[11.5px] font-semibold text-alerta">Indicou 0, mas há espaços ou pisos abaixo do plano de referência ({pisosAbaixoIndicados(ut).join(', ')}). Corrija.</span>}
