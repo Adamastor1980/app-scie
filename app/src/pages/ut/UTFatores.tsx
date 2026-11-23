@@ -47,14 +47,14 @@ export default function UTFatores({ ut, upU }: UTProps) {
               <Field label={`Altura da UT ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][t - 1]}`} legal="RJ-SCIE, art. 2.º a)"
                 className={fAlt ? 'falta' : ''}
                 hint="Diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT. Não conta o último piso só técnico nem pisos de arrecadações com visitas episódicas.">
-                <Num value={ut.altura} onChange={(v) => upU((u) => { u.altura = v; u.confirmados = { ...u.confirmados, altura: true }; })} suffix="m" />
-                {fAlt && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.altura = 0; u.confirmados = { ...u.confirmados, altura: true }; }); }}>Confirmar 0 m (só piso térreo)</button>}
+                <Num value={ut.altura} mostrarZero={!!ut.indicados?.altura} onChange={(v, t) => upU((u) => { u.altura = v; u.indicados = { ...u.indicados, altura: t.trim() !== '' }; })} suffix="m" />
+                {fAlt && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.altura = 0; u.indicados = { ...u.indicados, altura: true }; }); }}>Confirmar 0 m (só piso térreo)</button>}
               </Field>
             )}
             {usaPisos && (
               <Field label="N.º de pisos abaixo do plano de referência" legal={info.quadro} className={fPis ? 'falta' : ''} hint={NOTA_PISOS_TECNICOS.replace('(*) ', '')}>
-                <Num value={ut.pisosAbaixo} onChange={(v) => upU((u) => { u.pisosAbaixo = Math.round(v); u.confirmados = { ...u.confirmados, pisos: true }; })} />
-                {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.confirmados = { ...u.confirmados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
+                <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
+                {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
               </Field>
             )}
             {t === 2 && !ut.arLivre && (

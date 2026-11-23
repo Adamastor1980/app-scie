@@ -20,14 +20,16 @@ const parse = (s: string) => {
   return Number.isFinite(v) ? v : 0;
 };
 
-export function Num({ value, onChange, suffix, min, step, className = '', placeholder }: {
-  value: number | undefined; onChange: (v: number) => void; suffix?: string; min?: number; step?: number; className?: string; placeholder?: string;
+export function Num({ value, onChange, suffix, min, step, className = '', placeholder, mostrarZero = false }: {
+  /** onChange recebe também o texto escrito: caixa apagada («») é diferente de 0 escrito */
+  value: number | undefined; onChange: (v: number, texto: string) => void; suffix?: string; min?: number; step?: number; className?: string; placeholder?: string; mostrarZero?: boolean;
 }) {
-  const [s, setS] = useState(value === undefined || value === 0 ? '' : String(value).replace('.', ','));
+  const txt = (v: number | undefined) => (v === undefined || (v === 0 && !mostrarZero) ? '' : String(v).replace('.', ','));
+  const [s, setS] = useState(txt(value));
   useEffect(() => {
-    if (parse(s) !== (value ?? 0)) setS(value === undefined || value === 0 ? '' : String(value).replace('.', ','));
+    if (parse(s) !== (value ?? 0) || (mostrarZero && s === '' && value === 0)) setS(txt(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, mostrarZero]);
   return (
     <div className={`relative ${className}`}>
       <input
@@ -41,7 +43,7 @@ export function Num({ value, onChange, suffix, min, step, className = '', placeh
           setS(t);
           let v = parse(t);
           if (min !== undefined && v < min) v = min;
-          onChange(v);
+          onChange(v, t);
         }}
       />
       {suffix && <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-mono text-ink-4">{suffix}</span>}

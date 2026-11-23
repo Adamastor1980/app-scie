@@ -27,7 +27,7 @@ export function exemploProjeto(): Projeto {
   xii.designacao = 'UT XII — Produção e armazenagem de produtos lácteos';
   xii.casoXII = 4;
   xii.pisos = [{ id: uid(), nome: 'Piso 0', cota: 0, area: 4200 }];
-  xii.confirmados = { altura: true, pisos: true };
+  xii.indicados = { altura: true, pisos: true };
   const leite = atv('Leite em pó');
   const emb = atv('Alimentação, embalagem');
   xii.compartimentos = [
@@ -65,7 +65,7 @@ export function exemploProjeto(): Projeto {
   const iii = novaUT(3);
   iii.designacao = 'UT III — Serviços administrativos';
   iii.altura = 3.5;
-  iii.confirmados = { altura: true, pisos: true };
+  iii.indicados = { altura: true, pisos: true };
   iii.pisos = [{ id: uid(), nome: 'Piso 0', cota: 0, area: 320 }, { id: uid(), nome: 'Piso 1', cota: 3.5, area: 320 }];
   iii.espacos = [
     { id: uid(), nome: 'Open space', piso: 'Piso 1', local: 'A', criterio: 'indice', indiceId: 'sala-escritorio', area: 210 },

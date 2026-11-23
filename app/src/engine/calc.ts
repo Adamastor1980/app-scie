@@ -297,7 +297,7 @@ function fator(id: string, rotulo: string, valor: number, unidade: string, max: 
 /** Altura ou n.º de pisos abaixo ainda por indicar (valor 0 nunca confirmado pelo técnico). */
 export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
   const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
-  return !(v > 0) && !ut.confirmados?.[k];
+  return !(v > 0) && !ut.indicados?.[k];
 }
 
 export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Classificacao {
