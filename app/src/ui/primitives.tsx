@@ -132,13 +132,14 @@ export function Note({ children, tone = 'info' }: { children: ReactNode; tone?: 
 
 export function Stat({ label, value, unit, sub, accent }: { label: string; value: ReactNode; unit?: string; sub?: string; accent?: boolean }) {
   return (
-    <div className={`flex flex-col justify-between gap-3 border p-4 ${accent ? 'border-ink bg-ink text-white' : 'border-ink bg-white'}`}>
+    <div className={`flex flex-col gap-3 border p-4 ${accent ? 'border-ink bg-ink text-white' : 'border-ink bg-white'}`}>
       <span className={`label ${accent ? '!text-white/60' : ''}`}>{label}</span>
       <div className="flex items-baseline gap-1.5">
         <span className="font-display text-[34px] font-extrabold leading-none tracking-tight num">{value}</span>
         {unit && <span className={`font-mono text-[12px] ${accent ? 'text-white/60' : 'text-ink-3'}`}>{unit}</span>}
       </div>
-      {sub && <span className={`text-[11.5px] ${accent ? 'text-white/70' : 'text-ink-3'}`}>{sub}</span>}
+      {/* número sempre à mesma altura, com ou sem nota por baixo */}
+      <span className={`min-h-[1.2em] text-[11.5px] ${accent ? 'text-white/70' : 'text-ink-3'}`}>{sub}</span>
     </div>
   );
 }
