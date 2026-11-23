@@ -2,7 +2,7 @@ import type { UTProps } from '../UTPage';
 import { precisaCarga, precisaEfetivo } from '../UTPage';
 import { Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
-import { classificar, efetivoUT, fmt, pisosAbaixoDerivado, pisosAbaixoIndicados, pisosDosEspacos, porConfirmar } from '../../engine/calc';
+import { classificar, efetivoUT, fmt, incoerentePisos, pisosDosEspacos, porConfirmar } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
 import { novaUT } from '../../store';
 
@@ -14,11 +14,10 @@ export default function UTFatores({ ut, upU }: UTProps) {
   const cls = classificar(ut, ef);
   const temArLivre = t === 2 || t === 6 || t === 9 || t === 12;
   const usaAltura = !(ut.arLivre && temArLivre) && t !== 12;
-  const pisosDer = pisosAbaixoDerivado(ut); // com espaços: calculado a partir do piso de cada espaço
   const negativos = pisosDosEspacos(ut).filter((n) => n < 0);
   const pisosCriterio = [1, 2, 6, 8, 9, 11, 12].includes(t); // critério da categoria (quadros do anexo III)
   const usaPisos = !(ut.arLivre && temArLivre); // em todas as UT cobertas: conta para as medidas do RT-SCIE
-  const pisosIncoerente = !porConfirmar(ut, 'pisos') && ut.pisosAbaixo === 0 && pisosAbaixoIndicados(ut).length > 0;
+  const pisosIncoerente = incoerentePisos(ut);
   const cargaV = precisaCarga(t) ? ((cls.fatores.find((f) => f.id === 'carga')?.valor as number) ?? 0) : 1;
   const fAlt = usaAltura && porConfirmar(ut, 'altura');
   const fPis = usaPisos && (porConfirmar(ut, 'pisos') || pisosIncoerente);
@@ -49,28 +48,21 @@ export default function UTFatores({ ut, upU }: UTProps) {
                 {fAlt && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.altura = 0; u.indicados = { ...u.indicados, altura: true }; }); }}>Confirmar 0 m (só piso térreo)</button>}
               </Field>
             )}
-            {usaPisos && pisosDer !== null && (
-              <div className="field">
-                <span className="flex items-baseline justify-between gap-2"><span className="label">Pisos abaixo do plano de referência</span><span className="ref">{pisosCriterio ? info.quadro : 'RT-SCIE'}</span></span>
-                <span className="flex h-9 items-center justify-end border border-paper-3 bg-paper px-2.5 font-mono text-[13.5px]">{pisosDer}</span>
-                <span className="text-[11.5px] leading-snug text-ink-3">Calculado a partir do piso dos espaços{negativos.length ? `: ${negativos.map((n) => `piso ${n}`).join(', ')}` : ' (nenhum abaixo do piso 0)'}.{pisosCriterio ? '' : ` Não conta para a categoria (${info.quadro}); conta para as medidas.`}</span>
+            {usaPisos && (
+              <Field label="Pisos abaixo do plano de referência" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''}
+                hint={pisosCriterio ? NOTA_PISOS_TECNICOS.replace('(*) ', '') : `Não conta para a categoria (${info.quadro}). Conta para as medidas do RT-SCIE nos pisos abaixo do plano de referência.`}>
+                <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
+                {fPis && !pisosIncoerente && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
+                {pisosIncoerente && <span className="text-[11.5px] font-semibold text-alerta">{pisosIncoerente[0].toUpperCase() + pisosIncoerente.slice(1)}. Corrija, ou marque abaixo os pisos só técnicos (não contam).</span>}
                 {negativos.length > 0 && (
                   <span className="flex flex-wrap gap-1.5 pt-1">
                     {negativos.map((n) => {
                       const tec = (ut.pisosTecnicos ?? []).includes(n);
                       return <button key={n} type="button" className={`border px-2 py-0.5 text-[11.5px] ${tec ? 'border-ink bg-ink text-white' : 'border-paper-3 bg-white text-ink-2 hover:border-ink'}`} title="Os pisos só técnicos não contam (nota (*) dos quadros do anexo III)"
-                        onClick={() => upU((u) => { const t = new Set(u.pisosTecnicos ?? []); if (t.has(n)) t.delete(n); else t.add(n); u.pisosTecnicos = [...t]; })}>Piso {n}: {tec ? 'só técnico (não conta)' : 'conta'}</button>;
+                        onClick={(ev) => { ev.preventDefault(); upU((u) => { const t = new Set(u.pisosTecnicos ?? []); if (t.has(n)) t.delete(n); else t.add(n); u.pisosTecnicos = [...t]; }); }}>Piso {n}: {tec ? 'só técnico' : 'com espaços'}</button>;
                     })}
                   </span>
                 )}
-              </div>
-            )}
-            {usaPisos && pisosDer === null && (
-              <Field label="Pisos abaixo do plano de referência" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''}
-                hint={pisosCriterio ? NOTA_PISOS_TECNICOS.replace('(*) ', '') : `Não conta para a categoria (${info.quadro}). Conta para as medidas do RT-SCIE nos pisos abaixo do plano de referência.`}>
-                <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
-                {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
-                {pisosIncoerente && <span className="text-[11.5px] font-semibold text-alerta">Indicou 0, mas há espaços ou pisos abaixo do plano de referência ({pisosAbaixoIndicados(ut).join(', ')}). Corrija.</span>}
               </Field>
             )}
             {t === 2 && !ut.arLivre && (

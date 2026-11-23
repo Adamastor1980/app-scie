@@ -227,6 +227,8 @@ export interface Edificio {
   pisosAcima: number;
   /** o técnico indicou os pisos acima do plano de referência */
   pisosAcimaIndicado?: boolean;
+  /** o técnico indicou os pisos abaixo do plano de referência */
+  pisosAbaixoIndicado?: boolean;
   pisosAbaixo: number;
   independente: boolean;
   comunicacoesComuns: boolean; // utilização mista com comunicações interiores comuns

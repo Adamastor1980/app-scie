@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosAbaixoEdificio, pisosAcimaDerivado } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -261,7 +261,7 @@ export default function Relatorio() {
             <H2 n={`${sec}.${i + 1}`}>{ed.nome}</H2>
             <table className="tbl mb-2"><tbody>
               <tr><td className="w-[42%] font-semibold">Altura do edifício (RT-SCIE, anexo I)</td><td className="num">{fmt(alturaEdificio(ed), 2)} m — {classeAltura(alturaEdificio(ed)).toLowerCase()} altura</td></tr>
-              <tr><td className="font-semibold">Pisos acima / abaixo do plano de referência</td><td className="num">{pisosAcimaDerivado(ed) ?? ed.pisosAcima} / {pisosAbaixoEdificio(ed).n}</td></tr>
+              <tr><td className="font-semibold">Pisos acima / abaixo do plano de referência</td><td className="num">{ed.pisosAcima} / {ed.pisosAbaixo}</td></tr>
               <tr><td className="font-semibold">Utilização</td><td>{uts.length > 1 ? `Mista (${uts.map((u) => 'UT ' + ROMANO[u.ut.tipo]).join(', ')})${ed.comunicacoesComuns ? ', com comunicações interiores comuns' : ', sem comunicações interiores comuns'}` : uts.length ? `Exclusiva (UT ${ROMANO[uts[0].ut.tipo]})` : '—'}</td></tr>
               <tr><td className="font-semibold">Edifício independente (art. 2.º j))</td><td>{ed.independente ? 'Sim' : 'Não'}</td></tr>
             </tbody></table>

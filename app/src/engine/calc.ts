@@ -332,7 +332,15 @@ export function pisosAcimaDerivado(ed: Edificio): number | null {
   return ps.length ? Math.max(...ps) + 1 : null;
 }
 /** Pisos abaixo do plano de referência da UT: dos espaços, se tiverem piso; senão o indicado. */
-export const pisosAbaixoUT = (ut: UT) => pisosAbaixoDerivado(ut) ?? ut.pisosAbaixo;
+export const pisosAbaixoUT = (ut: UT) => ut.pisosAbaixo;
+/** Pisos abaixo do plano de referência com espaços (sem os pisos só técnicos). */
+export const negativosEspacos = (ut: UT) => pisosDosEspacos(ut).filter((n) => n < 0 && !(ut.pisosTecnicos ?? []).includes(n));
+/** Pisos abaixo indicados menores do que os pisos onde há espaços: mensagem de incoerência ou null. */
+export function incoerentePisos(ut: UT): string | null {
+  const neg = negativosEspacos(ut);
+  if (!ut.indicados?.pisos && !(ut.pisosAbaixo > 0)) return null;
+  return neg.length > ut.pisosAbaixo ? `indicou ${ut.pisosAbaixo}, mas há espaços em ${neg.length} ${neg.length === 1 ? 'piso' : 'pisos'} abaixo do plano de referência (${neg.map((n) => `piso ${n}`).join(', ')})` : null;
+}
 
 /** Mantém pisos abaixo da UT e pisos acima do edifício coerentes com o piso dos espaços. */
 export function sincronizarPisos(ed: Edificio) {
@@ -374,7 +382,12 @@ export function faltaEdificio(ed: Edificio): [string, string][] {
 /** Caracterização do edifício por preencher (memória descritiva, anexo IV, I-3) e dados das medidas. */
 export function faltaCaracterizacao(ed: Edificio): [string, string][] {
   const f = [...faltaEdificio(ed)];
-  if (!ed.pisosAcimaIndicado && pisosAcimaDerivado(ed) === null) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
+  const ac = pisosAcimaDerivado(ed);
+  if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
+  else if (ac !== null && ac > ed.pisosAcima) f.push(['Pisos acima', `indicou ${ed.pisosAcima}, mas há espaços até ao piso ${ac - 1} (${ac} pisos do 0 ao ${ac - 1}): corrija`]);
+  const ab = Math.max(0, ...ed.uts.map((u) => Math.max(u.pisosAbaixo || 0, negativosEspacos(u).length)));
+  if (!ed.pisosAbaixoIndicado && !(ed.pisosAbaixo > 0)) f.push(['Pisos abaixo', `n.º de pisos do edifício «${ed.nome}» abaixo do plano de referência; 0 tem de ser confirmado (caracterização do edifício)`]);
+  else if (ab > ed.pisosAbaixo) f.push(['Pisos abaixo', `indicou ${ed.pisosAbaixo}, mas há UT ou espaços em ${ab} ${ab === 1 ? 'piso' : 'pisos'} abaixo do plano de referência: corrija`]);
   return f;
 }
 
@@ -390,12 +403,12 @@ export function faltaParaMedidas(ut: UT): [string, string][] {
   const f: [string, string][] = [];
   const nomes = pisosAbaixoIndicados(ut);
   if (porConfirmar(ut, 'pisos')) f.push(['N.º de pisos abaixo do plano de referência', 'obrigatório em todas as UT: as exigências do RT-SCIE mudam nos pisos abaixo do plano de referência (vias de evacuação, saídas, câmaras corta-fogo, reação ao fogo); 0 tem de ser confirmado']);
-  else if (pisosAbaixoDerivado(ut) === null && ut.pisosAbaixo === 0 && nomes.length) f.push(['N.º de pisos abaixo do plano de referência', `indicou 0, mas há espaços ou pisos abaixo do plano de referência (${nomes.join(', ')}): corrija o número`]);
+  else if (incoerentePisos(ut)) f.push(['N.º de pisos abaixo do plano de referência', `${incoerentePisos(ut)}: corrija o número`]);
+  else if (!negativosEspacos(ut).length && ut.pisosAbaixo === 0 && nomes.length && !pisosDosEspacos(ut).length) f.push(['N.º de pisos abaixo do plano de referência', `indicou 0, mas a tabela de pisos tem pisos abaixo do plano de referência (${nomes.join(', ')}): corrija o número`]);
   return f;
 }
 
 export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
-  if (k === 'pisos' && pisosAbaixoDerivado(ut) !== null) return false; // calculado a partir dos espaços
   const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
   return !(v > 0) && !ut.indicados?.[k];
 }
@@ -516,7 +529,8 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
   // critérios obrigatórios por preencher: sem eles a categoria não é atribuída
   for (const x of f) {
     const por =
-      x.id === 'altura' || x.id === 'pisos' ? porConfirmar(ut, x.id) // 0 é válido, mas tem de ser indicado
+      x.id === 'altura' ? porConfirmar(ut, 'altura') // 0 é válido, mas tem de ser indicado
+      : x.id === 'pisos' ? porConfirmar(ut, 'pisos') || !!incoerentePisos(ut)
       : x.id === 'area' ? !(ut.areaBruta > 0)
       : x.id === 'efetivo' ? !(ef.total > 0)
       : x.id === 'carga' ? !(carga.S > 0)
