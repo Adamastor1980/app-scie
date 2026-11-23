@@ -216,8 +216,8 @@ export function mostrarNovo(id: string) {
 export function Faltas({ itens, titulo = 'Falta preencher para o cálculo' }: { itens: [string, string][]; titulo?: string }) {
   if (!itens.length) return null;
   return (
-    <div className="mt-3 border-l-[3px] border-warn bg-warn-soft px-4 py-3 text-[12.5px]">
-      <p className="mb-1 font-semibold">{titulo}:</p>
+    <div className="mt-3 border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[12.5px]">
+      <p className="mb-1 font-semibold text-alerta">{titulo}:</p>
       <ul className="flex flex-col gap-0.5">
         {itens.map(([c, s], i) => <li key={i}><b>{c}</b> <span className="text-ink-2">— {s}</span></li>)}
       </ul>

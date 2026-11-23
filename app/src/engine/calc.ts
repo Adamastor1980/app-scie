@@ -307,6 +307,31 @@ export const SIGNIFICADO_FATOR: Record<string, string> = {
   carga: 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)',
 };
 
+/** Pisos abaixo do plano de referência que constam da tabela de pisos (cota negativa) ou do piso dos espaços (ex.: «-1», «cave»). */
+export function pisosAbaixoIndicados(ut: UT): string[] {
+  const abaixoTxt = /(^|[^\d])-\s*\d|cave|sub-?solo|semi-?cave/i;
+  const nomes = new Set<string>();
+  for (const p of ut.pisos) if (p.cota < 0) nomes.add(p.nome);
+  for (const e of ut.espacos) if (e.piso && abaixoTxt.test(e.piso)) nomes.add(e.piso.trim());
+  return [...nomes];
+}
+
+/** UT ao ar livre: não tem pisos. */
+const semPisos = (ut: UT) => ut.arLivre && [2, 6, 9, 12].includes(ut.tipo);
+
+/**
+ * Dados obrigatórios para as medidas do RT-SCIE que não são critério da categoria da UT:
+ * os pisos abaixo do plano de referência contam em todas as UT (evacuação, câmaras corta-fogo, reação ao fogo…).
+ */
+export function faltaParaMedidas(ut: UT): [string, string][] {
+  if (semPisos(ut)) return [];
+  const f: [string, string][] = [];
+  const nomes = pisosAbaixoIndicados(ut);
+  if (porConfirmar(ut, 'pisos')) f.push(['N.º de pisos abaixo do plano de referência', 'obrigatório em todas as UT: as exigências do RT-SCIE mudam nos pisos abaixo do plano de referência (vias de evacuação, saídas, câmaras corta-fogo, reação ao fogo); 0 tem de ser confirmado']);
+  else if (ut.pisosAbaixo === 0 && nomes.length) f.push(['N.º de pisos abaixo do plano de referência', `indicou 0, mas há espaços ou pisos abaixo do plano de referência (${nomes.join(', ')}): corrija o número`]);
+  return f;
+}
+
 export function porConfirmar(ut: UT, k: 'altura' | 'pisos'): boolean {
   const v = k === 'altura' ? ut.altura : ut.pisosAbaixo;
   return !(v > 0) && !ut.indicados?.[k];

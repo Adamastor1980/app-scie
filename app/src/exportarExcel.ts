@@ -2,7 +2,7 @@ import type { Projeto } from './data/types';
 import { ROMANO } from './data/rjscie';
 import { contexto, gerarMedidas, secRotulo } from './engine/medidas';
 import { desconformidades, verDe } from './engine/verificacao';
-import { CAT_NOME } from './engine/calc';
+import { CAT_NOME, faltaParaMedidas } from './engine/calc';
 import { nomeUT } from './nome';
 import { entregarFicheiro } from './pdfDireto';
 
@@ -25,7 +25,7 @@ export async function exportarExcel(p: Projeto) {
   for (const ed of p.edificios) {
     for (const ut of ed.uts) {
       const ctx = contexto(ed, ut);
-      const med = ctx.cls.falta.length ? [] : gerarMedidas(ctx); // sem categoria atribuída não há medidas
+      const med = ctx.cls.falta.length || faltaParaMedidas(ut).length ? [] : gerarMedidas(ctx); // sem categoria atribuída não há medidas
       const nomeU = `UT ${ROMANO[ut.tipo]} — ${nomeUT(ut).nome}`;
       for (const d of desconformidades(ut, med)) {
         plano.push([++n, ed.nome, nomeU, (ctx.cls.falta.length ? 'Por atribuir' : CAT_NOME[ctx.cls.cat]), secRotulo(d.sec), d.medida.titulo, d.medida.base, d.ver.obs ?? '', d.ver.corretiva ?? '', d.ver.prazo ?? '', '', 'Por corrigir']);

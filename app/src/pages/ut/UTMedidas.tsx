@@ -1,4 +1,4 @@
-import { classificar } from '../../engine/calc';
+import { classificar, faltaParaMedidas } from '../../engine/calc';
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
 import NovaNC from './NovaNC';
 import { useP } from '../ProjetoShell';
@@ -20,16 +20,17 @@ const ESTADO: Record<Estado, { l: string; c: string }> = {
 
 export default function UTMedidas(props: UTProps) {
   const cls = classificar(props.ut);
-  if (cls.falta.length) return <SemCategoria falta={cls.falta} />;
+  const falta = [...new Set([...cls.falta, ...faltaParaMedidas(props.ut).map(([k]) => k)])];
+  if (falta.length) return <SemCategoria falta={falta} semCategoria={cls.falta.length > 0} />;
   return <Medidas {...props} />;
 }
 
 /** Sem categoria atribuída não há medidas: dependem da categoria de risco. */
-function SemCategoria({ falta }: { falta: string[] }) {
+function SemCategoria({ falta, semCategoria }: { falta: string[]; semCategoria: boolean }) {
   return (
-    <div className="border border-warn bg-warn-soft p-6">
-      <p className="font-display text-[20px] font-bold">Categoria por atribuir</p>
-      <p className="mt-1 max-w-3xl text-[13px] text-ink-2">As medidas de segurança exigidas dependem da categoria de risco da UT (RT-SCIE). Preencha primeiro os critérios em falta no passo «Fatores de risco»:</p>
+    <div className="border border-alerta bg-alerta-soft p-6">
+      <p className="font-display text-[20px] font-bold text-alerta">{semCategoria ? 'Categoria por atribuir' : 'Faltam dados para as medidas'}</p>
+      <p className="mt-1 max-w-3xl text-[13px] text-ink-2">As medidas de segurança exigidas dependem da categoria de risco e da localização da UT (RT-SCIE). Preencha primeiro no passo «Fatores de risco»:</p>
       <ul className="mt-3 list-disc pl-5 text-[13px] font-semibold">{falta.map((x) => <li key={x}>{x}</li>)}</ul>
       <a className="btn mt-4" href={location.hash.replace(/\/medidas$/, '/fatores')}>Ir para os fatores de risco →</a>
     </div>

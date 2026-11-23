@@ -27,3 +27,28 @@ describe('Espaços integrados — RJ-SCIE art. 8.º n.º 3', () => {
     expect(integracao(esp('Loja', 'venda-baixa', 100), novaUT(12))!.integrado).toBe(true);
   });
 });
+
+describe('Pisos abaixo do plano de referência — obrigatório em todas as UT', async () => {
+  const { faltaParaMedidas, pisosAbaixoIndicados } = await import('./calc');
+  it('UT III: não conta para a categoria, mas é obrigatório para as medidas', () => {
+    const ut = novaUT(3);
+    expect(faltaParaMedidas(ut)).toHaveLength(1);
+    ut.indicados = { pisos: true };
+    expect(faltaParaMedidas(ut)).toHaveLength(0);
+  });
+  it('0 indicado com espaços no piso -1 é incoerente', () => {
+    const ut = novaUT(3);
+    ut.indicados = { pisos: true };
+    ut.espacos = [esp('Sala de reuniões', 'reuniao', 100)];
+    ut.espacos[0].piso = 'Piso -1';
+    expect(pisosAbaixoIndicados(ut)).toEqual(['Piso -1']);
+    expect(faltaParaMedidas(ut)[0][1]).toMatch(/indicou 0/);
+    ut.pisosAbaixo = 1;
+    expect(faltaParaMedidas(ut)).toHaveLength(0);
+  });
+  it('UT ao ar livre não tem pisos', () => {
+    const ut = novaUT(6);
+    ut.arLivre = true;
+    expect(faltaParaMedidas(ut)).toHaveLength(0);
+  });
+});

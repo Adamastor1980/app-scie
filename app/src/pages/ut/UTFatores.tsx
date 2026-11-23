@@ -2,7 +2,7 @@ import type { UTProps } from '../UTPage';
 import { precisaCarga, precisaEfetivo } from '../UTPage';
 import { Field, Num, Section, Toggle } from '../../ui/primitives';
 import { NOTA_PISOS_TECNICOS, utInfo } from '../../data/rjscie';
-import { classificar, efetivoUT, fmt, porConfirmar } from '../../engine/calc';
+import { classificar, efetivoUT, fmt, pisosAbaixoIndicados, porConfirmar } from '../../engine/calc';
 import ClassPanel from './ClassPanel';
 import { novaUT } from '../../store';
 
@@ -14,10 +14,12 @@ export default function UTFatores({ ut, upU }: UTProps) {
   const cls = classificar(ut, ef);
   const temArLivre = t === 2 || t === 6 || t === 9 || t === 12;
   const usaAltura = !(ut.arLivre && temArLivre) && t !== 12;
-  const usaPisos = [1, 2, 6, 8, 9, 11, 12].includes(t) && !(ut.arLivre && temArLivre);
+  const pisosCriterio = [1, 2, 6, 8, 9, 11, 12].includes(t); // critério da categoria (quadros do anexo III)
+  const usaPisos = !(ut.arLivre && temArLivre); // em todas as UT cobertas: conta para as medidas do RT-SCIE
+  const pisosIncoerente = !porConfirmar(ut, 'pisos') && ut.pisosAbaixo === 0 && pisosAbaixoIndicados(ut).length > 0;
   const cargaV = precisaCarga(t) ? ((cls.fatores.find((f) => f.id === 'carga')?.valor as number) ?? 0) : 1;
   const fAlt = usaAltura && porConfirmar(ut, 'altura');
-  const fPis = usaPisos && porConfirmar(ut, 'pisos');
+  const fPis = usaPisos && (porConfirmar(ut, 'pisos') || pisosIncoerente);
 
 
   return (
@@ -46,9 +48,10 @@ export default function UTFatores({ ut, upU }: UTProps) {
               </Field>
             )}
             {usaPisos && (
-              <Field label="N.º de pisos abaixo do plano de referência" legal={info.quadro} className={fPis ? 'falta' : ''} hint={NOTA_PISOS_TECNICOS.replace('(*) ', '')}>
+              <Field label="N.º de pisos abaixo do plano de referência (obrigatório)" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''} hint={`${pisosCriterio ? '' : `Não conta para a categoria da UT ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][t - 1]} (${info.quadro}), mas conta para as medidas: evacuação, saídas, câmaras corta-fogo e reação ao fogo nos pisos abaixo do plano de referência. `}${NOTA_PISOS_TECNICOS.replace('(*) ', '')}`}>
                 <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
                 {fPis && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
+                {pisosIncoerente && <span className="text-[11.5px] font-semibold text-alerta">Indicou 0, mas há espaços ou pisos abaixo do plano de referência ({pisosAbaixoIndicados(ut).join(', ')}). Corrija.</span>}
               </Field>
             )}
             {t === 2 && !ut.arLivre && (
@@ -73,7 +76,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
           {(precisaEfetivo(t) || precisaCarga(t)) && (
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {precisaEfetivo(t) && (
-                <div className={`flex items-center justify-between border p-4 ${ef.total > 0 ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
+                <div className={`flex items-center justify-between border p-4 ${ef.total > 0 ? 'border-ink bg-white' : 'border-alerta bg-alerta-soft'}`}>
                   <div>
                     <p className="label">Efetivo da UT {t === 4 || t === 5 ? '· em locais D/E' : t === 7 ? '· em locais E' : ''}</p>
                     <p className="mt-1 font-display text-[28px] font-extrabold num">{fmt(ef.total)}{(t === 4 || t === 5) && <span className="text-ink-4"> · {fmt(ef.emDE)}</span>}{t === 7 && <span className="text-ink-4"> · {fmt(ef.emE)}</span>}</p>
@@ -83,7 +86,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
                 </div>
               )}
               {precisaCarga(t) && (
-                <div className={`flex items-center justify-between border p-4 ${cargaV > 0 ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
+                <div className={`flex items-center justify-between border p-4 ${cargaV > 0 ? 'border-ink bg-white' : 'border-alerta bg-alerta-soft'}`}>
                   <div>
                     <p className="label">Densidade de carga modificada</p>
                     <p className="mt-1 font-display text-[28px] font-extrabold num">{fmt(cls.fatores.find((f) => f.id === 'carga')?.valor as number)} <span className="font-mono text-[12px] text-ink-3">MJ/m²</span></p>

@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 import type { UT } from '../../data/types';
-import { classificar, CAT_NOME, CAT_RISCO, SIGNIFICADO_FATOR } from '../../engine/calc';
+import { classificar, CAT_NOME, CAT_RISCO, faltaParaMedidas, SIGNIFICADO_FATOR } from '../../engine/calc';
 import { CAT_COR } from '../../ui/primitives';
 import { integracao } from '../../engine/integrados';
 import { ROMANO } from '../../data/rjscie';
@@ -9,12 +9,13 @@ import { ROMANO } from '../../data/rjscie';
 export default function ClassPanel({ ut }: { ut: UT }) {
   const c = classificar(ut);
   const n = c.falta.length;
+  const fMed = faltaParaMedidas(ut).filter(([k]) => !c.fatores.some((f) => f.porPreencher && f.id === 'pisos' && k.startsWith('N.º de pisos')));
   const fora = ut.espacos.map((e) => ({ e, ig: integracao(e, ut) })).filter((x) => x.ig?.integrado === false);
   return (
     <aside className="order-first xl:order-none xl:sticky xl:top-[72px] xl:self-start">
-      <div className={`border ${n ? 'border-warn' : 'border-ink'} bg-white`}>
+      <div className={`border ${n ? 'border-alerta' : 'border-ink'} bg-white`}>
         {n ? (
-          <div className="bg-warn-soft p-5">
+          <div className="bg-alerta-soft p-5">
             <p className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">Critérios desta UT · {c.quadro} do anexo III</p>
             <p className="mt-2 font-display text-[24px] font-extrabold leading-tight">Categoria por atribuir</p>
             <p className="mt-1 text-[12.5px] text-ink-2">Falta preencher {n === 1 ? '1 critério' : `${n} critérios`}. A categoria só é atribuída com todos preenchidos (RJ-SCIE, art. 13.º).</p>
@@ -29,11 +30,11 @@ export default function ClassPanel({ ut }: { ut: UT }) {
         )}
         <ul className="divide-y divide-paper-3">
           {c.fatores.map((f) => (
-            <li key={f.id} className={`px-4 py-2.5 ${f.porPreencher ? 'bg-warn-soft/60' : ''}`}>
+            <li key={f.id} className={`px-4 py-2.5 ${f.porPreencher ? 'bg-alerta-soft/60' : ''}`}>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[12px] leading-tight text-ink-2">{f.rotulo}</span>
                 {f.porPreencher ? (
-                  <span className="shrink-0 border border-warn bg-warn-soft px-1.5 font-mono text-[11px] font-semibold text-warn">por preencher</span>
+                  <span className="shrink-0 border border-alerta bg-alerta-soft px-1.5 font-mono text-[11px] font-semibold text-alerta">por preencher</span>
                 ) : (
                   <span className="flex shrink-0 items-center gap-2">
                     <span className="num text-[12.5px] font-semibold">{typeof f.valor === 'number' ? f.valor.toLocaleString('pt-PT') : f.valor}{f.unidade && typeof f.valor === 'number' ? ` ${f.unidade}` : ''}</span>
@@ -45,6 +46,12 @@ export default function ClassPanel({ ut }: { ut: UT }) {
             </li>
           ))}
         </ul>
+        {fMed.length > 0 && (
+          <div className="border-t border-alerta bg-alerta-soft px-4 py-2.5 text-[12px]">
+            <p className="font-semibold text-alerta">Obrigatório para as medidas (não conta para a categoria):</p>
+            {fMed.map(([k, v]) => <p key={k} className="mt-0.5"><b>{k}</b> — <span className="text-ink-2">{v}</span></p>)}
+          </div>
+        )}
         {fora.length > 0 && (
           <div className="border-t border-alerta bg-alerta-soft px-4 py-2.5 text-[12px]">
             <p className="font-semibold text-alerta">⚠ Espaços que não podem ficar nesta UT (art. 8.º n.º 3):</p>

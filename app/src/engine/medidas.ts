@@ -5,7 +5,7 @@ import {
   quadroIX, quadroL, quadroLI, quadroX, quadroXI, quadroXII, quadroXIX, quadroXLI, quadroXLIX, quadroXXII,
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
-import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT } from './calc';
+import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
 
@@ -149,7 +149,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const temC = locais.has('C') || locais.has('Cag');
   const temCag = locais.has('Cag');
   const temF = locais.has('F');
-  const abaixo = ut.pisosAbaixo > 0;
+  const abaixo = ut.pisosAbaixo > 0 || pisosAbaixoIndicados(ut).length > 0; // tabela de pisos ou piso dos espaços
   const add = (m: Omit<Medida, 'id' | 'key'>) => M.push({ id: `${M.length + 1}`.padStart(3, '0'), key: `${m.tema}|${m.titulo}`, ...m });
 
   /* ------------------- Enquadramento e procedimento ------------------- */

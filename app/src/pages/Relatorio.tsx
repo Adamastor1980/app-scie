@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaParaMedidas } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -54,7 +54,7 @@ export default function Relatorio() {
     ed,
     uts: ed.uts.map((ut) => {
       const ctx = contexto(ed, ut);
-      return { ...ctx, carga: cargaUT(ut), medidas: ctx.cls.falta.length ? [] : gerarMedidas(ctx) }; // sem categoria não há medidas
+      return { ...ctx, carga: cargaUT(ut), medidas: ctx.cls.falta.length || faltaParaMedidas(ut).length ? [] : gerarMedidas(ctx) }; // sem categoria não há medidas
     }),
   })), [p]);
   const todas = dados.flatMap((d) => d.uts);
@@ -364,7 +364,7 @@ export default function Relatorio() {
         {todas.map(({ ut, ed, medidas, cls }, ui) => (
           <div key={ut.id} className="mb-8">
             <p className="avoid-break mb-3 border-b-2 border-ink pb-1 text-[14px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)} · {nomeCat(cls)}</p>
-            {cls.falta.length > 0 && <P>Medidas não determinadas: dependem da categoria de risco, que ainda não está atribuída.</P>}
+            {medidas.length === 0 && <P>Medidas não determinadas: {cls.falta.length ? 'a categoria de risco ainda não está atribuída' : `falta indicar ${faltaParaMedidas(ut).map(([k]) => k.toLowerCase()).join(', ')}`}.</P>}
             {GRUPOS.filter((g) => g !== 'Medidas de autoproteção').map((g) => {
               const secs = SECOES.filter((x) => x.g === g);
               const temAlgo = secs.some((x) => medidas.some((m) => m.tema === x.c));

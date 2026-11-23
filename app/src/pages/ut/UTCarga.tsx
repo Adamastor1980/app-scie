@@ -244,7 +244,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
               <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
                 onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
             </Field>
-            <div className={`flex min-h-9 flex-wrap items-center gap-x-1 border px-3 py-1 text-[13px] ${c.raiDet ? 'border-ink bg-white' : 'border-warn bg-warn-soft'}`}>
+            <div className={`flex min-h-9 flex-wrap items-center gap-x-1 border px-3 py-1 text-[13px] ${c.raiDet ? 'border-ink bg-white' : 'border-alerta bg-alerta-soft'}`}>
               {c.raiDet ? <>Rai = <b className="num mx-1">{fmt(c.raiDet, 1)}</b> ({RAI_NOME[c.raiDet === 2 ? 'A' : c.raiDet === 1.5 ? 'M' : 'B']}) — aplicado a todos os materiais</> : 'Escolha a atividade para obter o Rai'}
             </div>
           </div>

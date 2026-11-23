@@ -63,7 +63,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
     <main className="pb-24">
       <div className="border-b border-ink bg-white">
         <div className="mx-auto flex max-w-[1240px] items-stretch gap-3 sm:gap-6 px-4 pt-6 sm:px-8">
-          <div className={`flex w-[64px] shrink-0 flex-col items-center sm:w-[92px] justify-center self-stretch ${cls.falta.length ? 'border border-dashed border-warn bg-warn-soft text-ink-2' : `${CAT_COR[cls.cat]} text-white`}`}>
+          <div className={`flex w-[64px] shrink-0 flex-col items-center sm:w-[92px] justify-center self-stretch ${cls.falta.length ? 'border border-dashed border-alerta bg-alerta-soft text-ink-2' : `${CAT_COR[cls.cat]} text-white`}`}>
             <span className="font-display text-[30px] font-extrabold leading-none sm:text-[44px]">{cls.falta.length ? '—' : `${cls.cat}.ª`}</span>
             <span className="mt-1 px-1 text-center font-mono text-[9.5px] uppercase leading-tight tracking-wider">{cls.falta.length ? 'por atribuir' : 'categoria'}</span>
           </div>

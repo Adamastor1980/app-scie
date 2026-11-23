@@ -19,7 +19,7 @@ export default function UTCategoria({ ed, ut }: UTProps) {
   if (c.falta.length) {
     return (
       <div>
-        <div className="mb-10 border border-warn bg-warn-soft p-6">
+        <div className="mb-10 border border-alerta bg-alerta-soft p-6">
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink-3">UT {ROMANO[ut.tipo]} · {info.quadro}</p>
           <p className="mt-2 font-display text-[28px] font-extrabold">Categoria por atribuir</p>
           <p className="mt-1 max-w-3xl text-[13px] text-ink-2">A categoria só é atribuída com todos os critérios do {info.quadro} preenchidos (RJ-SCIE, art. 13.º). Falta preencher:</p>
