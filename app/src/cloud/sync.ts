@@ -30,7 +30,9 @@ const limpo = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
 let pararFns: (() => void)[] = [];
 let enviados = new Map<string, number>(); // pid → atualizadoEm enviado/recebido
-let imagensEnviadas = new Set<string>();
+/** imagens já na nuvem: id → assinatura do conteúdo (uma imagem editada tem a mesma id mas outro conteúdo) */
+let imagensEnviadas = new Map<string, string>();
+const assin = (s: string) => `${s.length}:${s.slice(-48)}`;
 /** imagens apagadas pelo utilizador NESTE aparelho (só estas são apagadas da nuvem) */
 let imagensApagar = new Set<string>();
 let perfilEnviado = '';
@@ -95,7 +97,7 @@ export async function iniciarSincronizacao(user: User) {
     const [sp, si, su] = await Promise.all([getDocs(colP), getDocs(colI), getDoc(docU)]);
     const imagens = new Map<string, string>();
     si.forEach((d) => imagens.set(d.id, (d.data() as { imagem: string }).imagem));
-    imagensEnviadas = new Set(imagens.keys());
+    imagensEnviadas = new Map([...imagens].map(([k, v]) => [k, assin(v)]));
     imagensApagar = new Set();
 
     const local = useStore.getState();
@@ -144,6 +146,7 @@ export async function iniciarSincronizacao(user: User) {
     // 3) ouve alterações feitas noutros dispositivos
     pararFns.push(onSnapshot(colI, (snap) => {
       let removidas = false;
+      const alteradas = new Set<string>();
       snap.docChanges().forEach((c) => {
         if (c.type === 'removed') {
           // apagada na nuvem: se este aparelho ainda a tiver (e não a apagou), volta a enviá-la
@@ -152,15 +155,18 @@ export async function iniciarSincronizacao(user: User) {
           removidas = true;
           return;
         }
-        imagens.set(c.doc.id, (c.doc.data() as { imagem: string }).imagem);
-        imagensEnviadas.add(c.doc.id);
+        const im = (c.doc.data() as { imagem: string }).imagem;
+        imagens.set(c.doc.id, im);
+        imagensEnviadas.set(c.doc.id, assin(im));
+        if (c.type === 'modified' && !c.doc.metadata.hasPendingWrites) alteradas.add(c.doc.id); // editada noutro aparelho
       });
       if (removidas) { if (timer) clearTimeout(timer); timer = setTimeout(() => { enviar(false).catch(falha); }, 1500); }
       // completa imagens que chegaram depois do projeto
       const st = useStore.getState();
-      if (st.projetos.some((p) => faltaImagem(p, imagens))) {
+      const temAlterada = (p: Projeto) => imagensDe(p).some((x) => alteradas.has(x.id) && x.imagem !== imagens.get(x.id));
+      if (st.projetos.some((p) => faltaImagem(p, imagens) || temAlterada(p))) {
         aplicarRemoto = true;
-        useStore.setState({ projetos: st.projetos.map((p) => (faltaImagem(p, imagens) ? comImagens(p, (id, atual) => atual || (imagens.get(id) ?? '')) : p)) });
+        useStore.setState({ projetos: st.projetos.map((p) => (faltaImagem(p, imagens) || temAlterada(p) ? comImagens(p, (id, atual) => (alteradas.has(id) ? imagens.get(id) ?? atual ?? '' : atual || (imagens.get(id) ?? ''))) : p)) });
         aplicarRemoto = false;
       }
     }));
@@ -292,8 +298,8 @@ async function enviar(inicial: boolean) {
   for (const p of st.projetos) {
     if (p.exemplo) continue;
     for (const pl of imagensDe(p)) {
-      if (!pl.imagem || imagensEnviadas.has(pl.id)) continue;
-      imagensEnviadas.add(pl.id);
+      if (!pl.imagem || imagensEnviadas.get(pl.id) === assin(pl.imagem)) continue;
+      imagensEnviadas.set(pl.id, assin(pl.imagem));
       tarefas.push(setDoc(doc(db, 'users', u.uid, 'plantas', pl.id), { pid: p.id, imagem: pl.imagem }).catch((e) => { imagensEnviadas.delete(pl.id); throw e; }));
     }
   }
@@ -346,7 +352,7 @@ export function pararSincronizacao() {
   pararFns = [];
   if (timer) clearTimeout(timer);
   enviados = new Map();
-  imagensEnviadas = new Set();
+  imagensEnviadas = new Map();
   perfilEnviado = '';
 }
 

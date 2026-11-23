@@ -13,7 +13,7 @@ export default function UTLevantamento({ ut, upU }: UTProps) {
   const estadoNuvem = useNuvem((x) => x.estado);
   const camRef = useRef<HTMLInputElement>(null);
   const galRef = useRef<HTMLInputElement>(null);
-  const [editor, setEditor] = useState<{ fundo?: string } | null>(null);
+  const [editor, setEditor] = useState<{ fundo?: string; id?: string } | null>(null);
   const [ver, setVer] = useState<Anexo | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -34,8 +34,12 @@ export default function UTLevantamento({ ut, upU }: UTProps) {
   };
 
   const guardarDesenho = async (img: string) => {
+    const id = editor?.id;
     setEditor(null);
-    juntar({ tipo: 'desenho', imagem: await caberNaNuvem(img, 800_000), legenda: '' });
+    const imagem = await caberNaNuvem(img, 800_000);
+    // editar: altera a própria imagem (não cria outra); novo desenho: acrescenta
+    if (id) upU((u) => { const x = u.levantamento?.find((y) => y.id === id); if (x) { x.imagem = imagem; x.data = Date.now(); } });
+    else juntar({ tipo: 'desenho', imagem, legenda: '' });
   };
 
   const dataPt = (t: number) => new Date(t).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -78,7 +82,7 @@ export default function UTLevantamento({ ut, upU }: UTProps) {
                 <div className="flex items-center justify-between">
                   <span className="ref">{dataPt(a.data)}</span>
                   <span className="flex">
-                    {a.imagem && <button className="btn-icon" title="Desenhar por cima (cria um novo desenho)" onClick={() => setEditor({ fundo: a.imagem })}><PenLine size={16} /></button>}
+                    {a.imagem && <button className="btn-icon" title="Editar (desenhar por cima)" onClick={() => setEditor({ fundo: a.imagem, id: a.id })}><PenLine size={16} /></button>}
                     <button className="btn-icon" title="Apagar" onClick={() => confirm('Apagar esta imagem do levantamento?') && upU((u) => { u.levantamento = (u.levantamento ?? []).filter((y) => y.id !== a.id); })}><Trash2 size={16} /></button>
                   </span>
                 </div>
