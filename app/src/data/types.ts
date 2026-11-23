@@ -220,6 +220,8 @@ export interface Edificio {
   nome: string;
   descricao: string;
   altura: number; // altura do edifício (anexo I RT-SCIE)
+  /** o técnico indicou a altura do edifício (0 também é válido, mas tem de ser indicado) */
+  alturaIndicada?: boolean;
   pisosAcima: number;
   pisosAbaixo: number;
   independente: boolean;

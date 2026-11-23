@@ -1,4 +1,4 @@
-import { classificar, faltaParaMedidas } from '../../engine/calc';
+import { classificar, faltaEdificio, faltaParaMedidas } from '../../engine/calc';
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
 import NovaNC from './NovaNC';
 import { useP } from '../ProjetoShell';
@@ -20,7 +20,7 @@ const ESTADO: Record<Estado, { l: string; c: string }> = {
 
 export default function UTMedidas(props: UTProps) {
   const cls = classificar(props.ut);
-  const falta = [...new Set([...cls.falta, ...faltaParaMedidas(props.ut).map(([k]) => k)])];
+  const falta = [...new Set([...cls.falta, ...faltaParaMedidas(props.ut).map(([k]) => k), ...faltaEdificio(props.ed).map(([k]) => `${k} «${props.ed.nome}» (página do edifício)`)])];
   if (falta.length) return <SemCategoria falta={falta} semCategoria={cls.falta.length > 0} />;
   return <Medidas {...props} />;
 }

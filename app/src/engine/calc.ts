@@ -1,4 +1,4 @@
-import type { Cat, Compartimento, Espaco, Risco, UT } from '../data/types';
+import type { Cat, Compartimento, Espaco, Risco, UT, Edificio } from '../data/types';
 import { ANEXO_III } from '../data/rjscie';
 import { QUADRO_XXVII, efetivoTipologia } from '../data/rtscie';
 
@@ -314,6 +314,24 @@ export function pisosAbaixoIndicados(ut: UT): string[] {
   for (const p of ut.pisos) if (p.cota < 0) nomes.add(p.nome);
   for (const e of ut.espacos) if (e.piso && abaixoTxt.test(e.piso)) nomes.add(e.piso.trim());
   return [...nomes];
+}
+
+/** Maior altura das UT do edifício (a altura do edifício não pode ser menor). */
+export const maiorAlturaUT = (ed: Edificio) => Math.max(0, ...ed.uts.map((u) => u.altura || 0));
+const alturaEdIndicada = (ed: Edificio) => !!ed.alturaIndicada || ed.altura > 0;
+/** Altura do edifício para as medidas do RT-SCIE (anexo I): a indicada ou, enquanto não houver, a maior altura das UT. */
+export const alturaEdificio = (ed: Edificio) => (alturaEdIndicada(ed) ? Math.max(ed.altura, maiorAlturaUT(ed)) : maiorAlturaUT(ed));
+/** Pisos abaixo do plano de referência do edifício: o maior das suas UT (calculado, não se escreve). */
+export function pisosAbaixoEdificio(ed: Edificio): { n: number; ut?: UT } {
+  let r: { n: number; ut?: UT } = { n: 0 };
+  for (const u of ed.uts) if ((u.pisosAbaixo || 0) > r.n) r = { n: u.pisosAbaixo, ut: u };
+  return r;
+}
+/** Dados do edifício em falta para as medidas do RT-SCIE. */
+export function faltaEdificio(ed: Edificio): [string, string][] {
+  if (!alturaEdIndicada(ed)) return [['Altura do edifício', `classe de altura do edifício «${ed.nome}» (RT-SCIE, anexo I): decide as exigências das vias de evacuação, câmaras corta-fogo, elevadores e meios de intervenção`]];
+  if (ed.altura < maiorAlturaUT(ed)) return [['Altura do edifício', `${ed.altura} m é menor do que a altura de uma das suas UT (${maiorAlturaUT(ed)} m): corrija`]];
+  return [];
 }
 
 /** UT ao ar livre: não tem pisos. */

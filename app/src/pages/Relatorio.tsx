@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaParaMedidas } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosAbaixoEdificio } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -54,7 +54,7 @@ export default function Relatorio() {
     ed,
     uts: ed.uts.map((ut) => {
       const ctx = contexto(ed, ut);
-      return { ...ctx, carga: cargaUT(ut), medidas: ctx.cls.falta.length || faltaParaMedidas(ut).length ? [] : gerarMedidas(ctx) }; // sem categoria não há medidas
+      return { ...ctx, carga: cargaUT(ut), medidas: ctx.cls.falta.length || faltaParaMedidas(ut).length || faltaEdificio(ed).length ? [] : gerarMedidas(ctx) }; // sem categoria não há medidas
     }),
   })), [p]);
   const todas = dados.flatMap((d) => d.uts);
@@ -259,8 +259,8 @@ export default function Relatorio() {
           <div key={ed.id} className="avoid-break mb-5">
             <H2 n={`${sec}.${i + 1}`}>{ed.nome}</H2>
             <table className="tbl mb-2"><tbody>
-              <tr><td className="w-[42%] font-semibold">Altura do edifício (RT-SCIE, anexo I)</td><td className="num">{fmt(ed.altura, 2)} m — {classeAltura(ed.altura).toLowerCase()} altura</td></tr>
-              <tr><td className="font-semibold">Pisos acima / abaixo do plano de referência</td><td className="num">{ed.pisosAcima} / {ed.pisosAbaixo}</td></tr>
+              <tr><td className="w-[42%] font-semibold">Altura do edifício (RT-SCIE, anexo I)</td><td className="num">{fmt(alturaEdificio(ed), 2)} m — {classeAltura(alturaEdificio(ed)).toLowerCase()} altura</td></tr>
+              <tr><td className="font-semibold">Pisos acima / abaixo do plano de referência</td><td className="num">{ed.pisosAcima} / {pisosAbaixoEdificio(ed).n}</td></tr>
               <tr><td className="font-semibold">Utilização</td><td>{uts.length > 1 ? `Mista (${uts.map((u) => 'UT ' + ROMANO[u.ut.tipo]).join(', ')})${ed.comunicacoesComuns ? ', com comunicações interiores comuns' : ', sem comunicações interiores comuns'}` : uts.length ? `Exclusiva (UT ${ROMANO[uts[0].ut.tipo]})` : '—'}</td></tr>
               <tr><td className="font-semibold">Edifício independente (art. 2.º j))</td><td>{ed.independente ? 'Sim' : 'Não'}</td></tr>
             </tbody></table>
@@ -364,7 +364,7 @@ export default function Relatorio() {
         {todas.map(({ ut, ed, medidas, cls }, ui) => (
           <div key={ut.id} className="mb-8">
             <p className="avoid-break mb-3 border-b-2 border-ink pb-1 text-[14px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)} · {nomeCat(cls)}</p>
-            {medidas.length === 0 && <P>Medidas não determinadas: {cls.falta.length ? 'a categoria de risco ainda não está atribuída' : `falta indicar ${faltaParaMedidas(ut).map(([k]) => k.toLowerCase()).join(', ')}`}.</P>}
+            {medidas.length === 0 && <P>Medidas não determinadas: {cls.falta.length ? 'a categoria de risco ainda não está atribuída' : `falta indicar ${[...faltaParaMedidas(ut), ...faltaEdificio(ed)].map(([k]) => k.toLowerCase()).join(', ')}`}.</P>}
             {GRUPOS.filter((g) => g !== 'Medidas de autoproteção').map((g) => {
               const secs = SECOES.filter((x) => x.g === g);
               const temAlgo = secs.some((x) => medidas.some((m) => m.tema === x.c));

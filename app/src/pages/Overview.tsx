@@ -1,7 +1,7 @@
 import { nomeUT } from '../nome';
 import { ArrowRight, CheckCircle2, Circle, FileText } from 'lucide-react';
 import { useP } from './ProjetoShell';
-import { classificar, efetivoUT, CAT_NOME, fmt } from '../engine/calc';
+import { classificar, efetivoUT, CAT_NOME, fmt, faltaEdificio } from '../engine/calc';
 import { ROMANO } from '../data/rjscie';
 import { CatBadge, Stat, Empty } from '../ui/primitives';
 import { go } from '../router';
@@ -25,6 +25,7 @@ export default function Overview() {
     { ok: !!p.autor.nome, t: 'Autor técnico («A minha empresa»)', to: '#/empresa' },
     { ok: linhas.length > 0, t: 'Pelo menos uma utilização-tipo', to: '' },
     { ok: linhas.length > 0 && linhas.every((l) => l.c.falta.length === 0), t: 'Fatores de risco completos em todas as UT', to: '' },
+    { ok: p.edificios.length > 0 && p.edificios.every((e) => !faltaEdificio(e).length), t: 'Altura de todos os edifícios (RT-SCIE, anexo I)', to: p.edificios.find((e) => faltaEdificio(e).length) ? `/e/${p.edificios.find((e) => faltaEdificio(e).length)!.id}` : '' },
     { ok: p.plantas.length > 0, t: 'Peças desenhadas (plantas)', to: '/plantas' },
   ];
 

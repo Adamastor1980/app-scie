@@ -5,12 +5,14 @@ import { go } from '../router';
 import { Area, CatBadge, Empty, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
 import { classeAltura } from '../data/rtscie';
 import { ROMANO, utInfo } from '../data/rjscie';
-import { classificar, efetivoUT, fmt } from '../engine/calc';
+import { classificar, efetivoUT, faltaEdificio, fmt, maiorAlturaUT, pisosAbaixoEdificio } from '../engine/calc';
 
 export default function EdificioPage({ eid }: { eid: string }) {
   const { p, up, pedirUT } = useP();
   const e = p.edificios.find((x) => x.id === eid);
   if (!e) return <div className="p-8">Edifício não encontrado.</div>;
+  const fAlt = faltaEdificio(e);
+  const pisosAb = pisosAbaixoEdificio(e);
   const ue = (fn: (x: NonNullable<typeof e>) => void) => up((pp) => { const x = pp.edificios.find((y) => y.id === eid); if (x) fn(x); });
 
   return (
@@ -30,14 +32,19 @@ export default function EdificioPage({ eid }: { eid: string }) {
       </div>
 
       <Section n="01" title="Caracterização" sub="Anexo IV, I-3: caracterização e descrição do edifício.">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-4 md:[&>.field>span:first-child]:min-h-[30px] md:[&>.field>span:first-child]:items-end md:[&>div>.field>span:first-child]:min-h-[30px] md:[&>div>.field>span:first-child]:items-end md:[&>div>.field>span:first-child]:flex">
           <Field label="Designação" className="md:col-span-2"><Text value={e.nome} onChange={(v) => ue((x) => { x.nome = v; })} /></Field>
-          <Field label="Altura do edifício" legal="RT-SCIE, anexo I, n.º 1" hint={`Classe: ${classeAltura(e.altura)} altura`}>
-            <Num value={e.altura} onChange={(v) => ue((x) => { x.altura = v; })} suffix="m" />
+          <Field label="Altura do edifício" legal="RT-SCIE" className={fAlt.length ? 'falta' : ''} hint={fAlt.length ? (e.altura > 0 ? fAlt[0][1] : 'Define a classe de altura e as medidas do RT-SCIE.') : `Classe: ${classeAltura(e.altura)} altura`}>
+            <Num value={e.altura} mostrarZero={!!e.alturaIndicada} onChange={(v, t) => ue((x) => { x.altura = v; x.alturaIndicada = t.trim() !== ''; })} suffix="m" />
+            {fAlt.length > 0 && !(e.altura > 0) && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(ev) => { ev.preventDefault(); ue((x) => { x.altura = maiorAlturaUT(x); x.alturaIndicada = true; }); }}>{maiorAlturaUT(e) > 0 ? `Usar ${fmt(maiorAlturaUT(e), 1)} m (maior altura das UT)` : 'Confirmar 0 m (só piso térreo)'}</button>}
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Pisos acima"><Num value={e.pisosAcima} onChange={(v) => ue((x) => { x.pisosAcima = v; })} /></Field>
-            <Field label="Pisos abaixo"><Num value={e.pisosAbaixo} onChange={(v) => ue((x) => { x.pisosAbaixo = v; })} /></Field>
+            <div className="field">
+              <span className="label">Pisos abaixo</span>
+              <span className="flex h-9 items-center justify-end border border-paper-3 bg-paper px-2.5 font-mono text-[13.5px]">{pisosAb.n}</span>
+              <span className="text-[11.5px] leading-snug text-ink-3">{pisosAb.ut ? `Da UT ${ROMANO[pisosAb.ut.tipo]} «${nomeUT(pisosAb.ut).nome}»` : 'Calculado a partir das UT'}</span>
+            </div>
           </div>
           <Field label="Descrição funcional" className="md:col-span-4" hint="Sistema construtivo, envolvente, acessos, ocupação. Entra na memória descritiva.">
             <Area value={e.descricao} onChange={(v) => ue((x) => { x.descricao = v; })} rows={4} />

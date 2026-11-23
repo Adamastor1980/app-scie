@@ -5,7 +5,7 @@ import {
   quadroIX, quadroL, quadroLI, quadroX, quadroXI, quadroXII, quadroXIX, quadroXLI, quadroXLIX, quadroXXII,
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
-import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados } from './calc';
+import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
 
@@ -121,7 +121,7 @@ export const FACTOS: Facto[] = [
 export const factosVisiveis = (c: Contexto) => FACTOS.filter((f) => !f.mostrar || f.mostrar(c));
 
 function camarasExigidas(c: Contexto) {
-  const H = c.ed.altura || c.ut.altura;
+  const H = alturaEdificio(c.ed) || c.ut.altura;
   return H > 28 || c.ut.pisosAbaixo > 0 || c.ut.espacos.some((e) => e.local === 'Cag');
 }
 
@@ -140,7 +140,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const cat: Cat = cls.cat;
   const t = ut.tipo;
   const R = ROMANO[t];
-  const H = ed.altura || ut.altura;
+  const H = alturaEdificio(ed) || ut.altura;
   const classe = classeAltura(H);
   const locais = new Set(ut.espacos.map((e) => e.local));
   const temD = locais.has('D');

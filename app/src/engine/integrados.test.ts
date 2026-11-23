@@ -52,3 +52,21 @@ describe('Pisos abaixo do plano de referência — obrigatório em todas as UT',
     expect(faltaParaMedidas(ut)).toHaveLength(0);
   });
 });
+
+describe('Edifício: altura obrigatória e pisos abaixo calculados', async () => {
+  const { faltaEdificio, pisosAbaixoEdificio, alturaEdificio } = await import('./calc');
+  const { novoEdificio } = await import('../store');
+  it('altura por indicar, depois coerente com as UT', () => {
+    const ed = novoEdificio(1);
+    const a = novaUT(3); a.altura = 9; a.pisosAbaixo = 0;
+    const b = novaUT(3); b.altura = 3; b.pisosAbaixo = 1;
+    ed.uts = [a, b];
+    expect(faltaEdificio(ed)).toHaveLength(1);
+    expect(alturaEdificio(ed)).toBe(9); // enquanto não é indicada, usa a maior das UT
+    ed.altura = 6; ed.alturaIndicada = true;
+    expect(faltaEdificio(ed)[0][1]).toMatch(/menor/);
+    ed.altura = 12;
+    expect(faltaEdificio(ed)).toHaveLength(0);
+    expect(pisosAbaixoEdificio(ed)).toEqual({ n: 1, ut: b });
+  });
+});
