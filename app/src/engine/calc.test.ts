@@ -252,7 +252,16 @@ describe('Locais de risco: coerência (art. 10.º) e reflexo nas medidas', () =>
     const b = novoEspaco(3);
     b.local = 'A'; b.criterio = 'declarado' as never; (b as { n?: number }).n = 150;
     normalizarLocal(b);
-    expect(['A', 'B']).toContain(b.local);
+    expect(b.local).toBe('B');
+    // o efetivo desce: B automático volta a A
+    (b as { n?: number }).n = 50;
+    normalizarLocal(b, JSON.parse(JSON.stringify(b)));
+    expect(b.local).toBe('A');
+    // B escolhido pelo técnico (ex.: art. 10.º n.º 2) mantém-se
+    const antesB = JSON.parse(JSON.stringify(b));
+    b.local = 'B';
+    normalizarLocal(b, antesB);
+    expect(b.local).toBe('B');
   });
   it('cada local escolhido gera as medidas respetivas', async () => {
     const { novaUT, novoEdificio, novoEspaco } = await import('../store');

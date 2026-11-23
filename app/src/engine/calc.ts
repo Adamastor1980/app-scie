@@ -473,5 +473,8 @@ export function normalizarLocal(e: Espaco, antes?: Espaco) {
   if (mudouLocal && e.local === 'D') e.mobilidadeReduzida = true;
   else if (mudouLocal && antes!.local === 'D' && (e.local === 'A' || e.local === 'B' || e.local === 'E')) e.mobilidadeReduzida = false;
   if (mudouLimitadas && e.mobilidadeReduzida && (e.local === 'A' || e.local === 'B' || e.local === 'E')) e.local = 'D';
-  if (e.local === 'A' && (efetivoEspaco(e).valor > 100 || (e.efetivoPublico ?? 0) > 50)) e.local = 'B';
+  if (mudouLocal) e.localAuto = false; // escolha do técnico
+  const excede = efetivoEspaco(e).valor > 100 || (e.efetivoPublico ?? 0) > 50;
+  if (e.local === 'A' && excede) { e.local = 'B'; e.localAuto = true; } // art. 10.º n.º 1 b)
+  else if (e.local === 'B' && e.localAuto && !excede) { e.local = 'A'; e.localAuto = false; } // voltou aos limites do local A (art. 10.º n.º 1 a))
 }

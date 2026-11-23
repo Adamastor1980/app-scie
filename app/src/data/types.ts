@@ -79,6 +79,8 @@ export interface Espaco {
   desportivoTipo?: 'apoio' | 'patinagem' | 'agua';
   espectadores?: number;
   efetivoPublico?: number;
+  /** local B atribuído automaticamente pelo efetivo (volta a A se o efetivo descer); B escolhido à mão fica B */
+  localAuto?: boolean;
   mobilidadeReduzida?: boolean; // fator 1,3 (art. 51.º n.º 5 / art. 232.º)
   naoSimultaneo?: boolean; // art. 51.º n.º 9
   justificacao?: string;
