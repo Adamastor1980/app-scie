@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { entrar } from '../cloud/firebase';
-import { NomeApp, Simbolo } from '../ui/Marca';
+import { Lema, NomeApp, Simbolo } from '../ui/Marca';
 
 const CATS = [
   { n: '1.ª', l: 'Risco reduzido', c: 'bg-cat1' },
@@ -54,20 +54,21 @@ export default function Entrar() {
         <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-3 sm:block">Segurança contra incêndio em edifícios</span>
       </header>
 
-      <main className="relative flex flex-1 items-center px-6 sm:px-12">
+      <main className="relative flex flex-1 items-center px-6 py-8 sm:px-12">
         <div className="w-full max-w-[880px]">
           <div className="mb-8 h-[6px] w-20 bg-fire" />
-          <h1 className="font-display text-[clamp(44px,9vw,112px)] font-extrabold leading-[0.9] tracking-[-0.04em]">
+          <h1 className="font-display text-[clamp(44px,8vw,96px)] font-extrabold leading-[0.9] tracking-[-0.04em]">
             Classificar.<br />Calcular.<br /><span className="text-fire">Cumprir.</span>
           </h1>
           <p className="mt-8 max-w-[520px] text-[15px] leading-relaxed text-ink-3">
             Categorias de risco, efetivo, carga de incêndio modificada e medidas de autoproteção — tudo com base no RJ-SCIE, no RT-SCIE e no Despacho n.º 8954/2020.
           </p>
+          <Lema grande className="mt-6 max-w-[560px]" />
 
           <button
             onClick={go}
             disabled={busy}
-            className="group mt-10 inline-flex h-11 items-center gap-3 border border-ink bg-ink pl-3.5 pr-4 text-[13.5px] font-medium text-white transition-colors hover:border-ink-2 hover:bg-ink-2 disabled:opacity-60"
+            className="group mt-8 inline-flex h-11 items-center gap-3 border border-ink bg-ink pl-3.5 pr-4 text-[13.5px] font-medium text-white transition-colors hover:border-ink-2 hover:bg-ink-2 disabled:opacity-60"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <span className="grid h-6 w-6 place-items-center bg-white"><Google /></span>}
             <span className="mr-2">{busy ? 'A entrar…' : 'Entrar com Google'}</span>
