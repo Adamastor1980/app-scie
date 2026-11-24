@@ -114,6 +114,7 @@ export const FACTOS: Facto[] = [
   { id: 'liquidosGases', pergunta: 'Existem líquidos ou gases combustíveis (armazenados ou em utilização)?', base: 'RT-SCIE, arts. 106.º e 107.º', mostrar: (c) => !((c.ut.liquidosInflamaveisL ?? 0) > 0 || c.ut.temGas) },
   { id: 'guardas', pergunta: 'Existem vias de evacuação elevadas ou terraços acessíveis?', base: 'RT-SCIE, art. 67.º' },
   { id: 'lugaresFixos', pergunta: 'Existem lugares fixos para espectadores?', base: 'RT-SCIE, art. 53.º', mostrar: (c) => c.ut.tipo === 6 || c.ut.tipo === 9 },
+  { id: 'tendas', pergunta: 'O recinto está alojado em tenda ou estrutura insuflável?', base: 'RT-SCIE, art. 46.º', mostrar: (c) => [6, 9].includes(c.ut.tipo) },
   { id: 'patio', pergunta: 'Existem pátios interiores ou poços de luz?', base: 'RT-SCIE, art. 19.º', mostrar: (c) => !c.ut.arLivre },
   { id: 'patio20', pergunta: 'Existem pátios interiores cobertos com altura superior a 20 m?', base: 'RT-SCIE, art. 173.º n.º 1 e)', mostrar: (c) => !c.ut.arLivre },
   { id: 'descargas', pergunta: 'As descargas atmosféricas constituem risco significativo de incêndio para o edifício?', base: 'RT-SCIE, art. 191.º', mostrar: (c) => !c.ut.arLivre },
@@ -396,17 +397,16 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
 
   /* ---------------------------- Reação ao fogo ------------------------- */
-  const q23 = quadroXXIII(H);
   const q24 = quadroXXIV(H);
   const isentoRF = t === 1;
   add({
     tema: 'IV.1a', titulo: 'Revestimentos de vias horizontais de evacuação',
-    exigencia: `${q23.faixa}: paredes e tetos ${q23.paredes}; pavimentos ${q23.pavimentos}.${abaixo && H <= 28 ? ' Nos pisos abaixo do plano de referência: paredes e tetos A2-s1, d0; pavimentos Cfl-s1.' : ''}`,
+    exigencia: [quadroXXIII(9), ...(H > 9 ? [quadroXXIII(28)] : []), ...(H > 28 || abaixo ? [quadroXXIII(29)] : [])].map((q) => `${q.faixa}: paredes e tetos ${q.paredes}; pavimentos ${q.pavimentos}`).join('. ') + (t === 1 ? '. Só nos espaços comuns da UT I (art. 38.º n.º 2).' : '.'),
     base: 'RT-SCIE, art. 39.º, quadro XXIII', estado: 'aplica',
   });
   add({
     tema: 'IV.1b', titulo: 'Revestimentos de vias verticais',
-    exigencia: `${q24.faixa}: paredes e tetos ${q24.paredes}; pavimentos ${q24.pavimentos}. Vias exteriores: B-s3, d0 e Cfl-s2.`,
+    exigencia: `${q24.faixa}: paredes e tetos ${q24.paredes}; pavimentos ${q24.pavimentos}. Vias exteriores: paredes e tetos B-s3, d0; pavimentos Cfl-s2.`,
     base: 'RT-SCIE, art. 40.º, quadro XXIV', estado: 'aplica',
   });
   add({
@@ -418,14 +418,20 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const linhasRF = [...new Set(locaisRF)].sort().map((l) => `local ${l}: paredes e tetos ${QUADRO_XXV[l].paredes}, pavimentos ${QUADRO_XXV[l].pavimentos}`);
   add({
     tema: 'IV.2', titulo: 'Revestimentos de locais de risco',
-    exigencia: linhasRF.length ? linhasRF.join('; ') + '.' : 'Classes do quadro XXV em função do local de risco.',
-    base: 'RT-SCIE, art. 41.º, quadro XXV', estado: isentoRF && !linhasRF.length ? 'nao' : 'aplica',
-    motivo: isentoRF ? 'Espaços não comuns da UT I isentos (art. 38.º n.º 2).' : undefined,
+    exigencia: (linhasRF.length ? linhasRF.join('; ') + '.' : 'Classes do quadro XXV em função do local de risco.') + ' Materiais de correção acústica com as mesmas classes (classe E admitida se protegidos por elementos resistentes ao fogo ou A1 sem rasgos, art. 48.º).' + (isentoRF ? ' Só nos espaços comuns: os espaços não comuns da UT I estão isentos (art. 38.º n.º 2).' : ''),
+    base: 'RT-SCIE, arts. 41.º e 48.º, quadro XXV', estado: 'aplica',
   });
   add({
     tema: 'IV.3', titulo: 'Tetos falsos, mobiliário fixo e elementos suspensos',
-    exigencia: 'Tetos falsos ≥ C-s2, d0 com fixações A1; difusores ≤ 25 % da área e ≥ D-s2, d0; mobiliário fixo em locais B ou D ≥ C-s2, d0; elementos em relevo ou suspensos em vias de evacuação ≤ 20 % da área e ≥ B-s1, d0.',
-    base: 'RT-SCIE, arts. 43.º a 45.º', estado: 'aplica',
+    exigencia: 'Tetos falsos ≥ C-s2, d0 com fixações e suspensões A1; difusores de luz ≤ 25 % da área e ≥ D-s2, d0 (art. 43.º). Mobiliário fixo em locais B ou D ≥ C-s2, d0 (enchimento D-s3, d0 com forro C-s1, d0); cadeiras, poltronas e bancos para o público C-s2, d0 (estofados: estrutura D-s2, d0 e enchimento D-s3, d0 com invólucro C-s1, d0) (art. 44.º). Elementos em relevo ou suspensos em vias de evacuação ≤ 20 % da área da parede ou teto e ≥ B-s1, d0 (C-s1, d0 em locais B); proibidos reposteiros ou elementos suspensos transversais ao sentido da evacuação nas vias e saídas de locais B a F (art. 45.º). Caixas de elevadores, condutas, ductos e outras comunicações verticais, e os seus septos, em A1 (art. 42.º). Decoração temporária afastada de fontes de calor; materiais sem classe só em festas ou exposições, sobre suportes D-s1, d0 / Dfl-s1, com as medidas do art. 195.º (art. 49.º).'
+      + ([6, 9].includes(t) ? ' Palcos, estrados, bancadas e pavimentos elevados ≥ C-s2, d0 sobre estrutura A1, com pavimentos contínuos, degraus com espelho e zonas subjacentes fechadas lateralmente com D-s1 (art. 47.º).' : ''),
+    base: 'RT-SCIE, arts. 42.º a 45.º, 47.º e 49.º', estado: 'aplica',
+  });
+
+  if ([6, 9].includes(t)) add({
+    tema: 'IV.3', titulo: 'Tendas e estruturas insufláveis',
+    exigencia: 'Cobertura, cobertura dupla e paredes ≥ C-s2, d0; claraboias e faixas transparentes ≥ D-s2, d0 (rígidas) ou D-s3, d0 (flexíveis ≤ 5 mm), no máximo 20 % da área e afastadas > 3,5 m entre si; arts. 44.º e 45.º aplicáveis aos insufláveis. Locais de risco C no exterior, a ≥ 5 m da envolvente (art. 21.º n.º 4).',
+    base: 'RT-SCIE, arts. 46.º e 21.º n.º 4', ...porFacto(ut, 'tendas', 'O recinto não está em tenda nem em estrutura insuflável.'),
   });
 
   /* ------------------------------ Evacuação ---------------------------- */
@@ -443,7 +449,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     if (!ut.arLivre && ev > 50 && pisoE && (pisoAbaixo(pisoE) || (H > 28 && (pisoE.cota ?? pisoE.n) > 0))) { upMin = Math.max(upMin, 2); extras.push(pisoAbaixo(pisoE) ? 'saídas com ≥ 2 UP (efetivo > 50 abaixo do nível de saída, art. 56.º n.º 4 b))' : 'saídas com ≥ 2 UP (efetivo > 50 acima do plano de referência, H > 28 m, art. 56.º n.º 4 b))'); }
     if (e.local === 'D') extras.push('saídas para vias protegidas ou exterior (art. 60.º); 2 UP onde se evacuem pessoas em camas, ou 1,1 m se forem menos de três (art. 56.º n.º 4 c))');
     if (ev > 200) extras.push('barras antipânico nas portas (art. 62.º n.º 7 a))');
-    if (ev > 50) extras.push('portas a abrir no sentido da evacuação (art. 62.º n.º 1)');
+    if (ev > 50) extras.push(t === 1 ? 'portas sem trancamento durante o funcionamento e com sinalização do modo de operar (art. 62.º n.os 1 b), c) e 3)' : 'portas a abrir no sentido da evacuação, sem trancamento durante o funcionamento e com sinalização do modo de operar (art. 62.º n.º 1)');
     const semQ29 = t === 1 || t === 2; // art. 54.º n.º 1: o quadro XXIX não se aplica às UT I e II
     const conforme = (semQ29 || e.saidasExistentes === undefined || e.saidasExistentes >= s.n) && (e.upExistentes === undefined || e.upExistentes >= upMin);
     const verif = e.saidasExistentes !== undefined || e.upExistentes !== undefined;
@@ -470,8 +476,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   }
   add({
     tema: 'V.2', titulo: 'Distâncias nas vias horizontais de evacuação',
-    exigencia: `Até saída para o exterior ou via vertical protegida: ≤ ${temDE ? '10 m em impasse (vias que servem locais D ou E)' : '15 m em impasse'}; ≤ ${H > 28 || (abaixo && t !== 2) || temD ? 20 : 30} m fora de impasse; dobro em vias exteriores.`,
-    base: 'RT-SCIE, art. 61.º n.os 2 a 4', estado: 'aplica',
+    exigencia: `Conduzem, diretamente ou por câmaras corta-fogo, a vias verticais ou ao exterior. Até saída para o exterior ou via vertical protegida: ≤ ${temDE ? '10 m em impasse (vias que servem locais D ou E)' : '15 m em impasse'}; ≤ ${H > 28 || (abaixo && t !== 2) || temD ? 20 : 30} m fora de impasse${H > 28 || (abaixo && t !== 2) || temD ? ' (20 m em pisos acima de 28 m, abaixo do plano de referência salvo UT II, ou vias que servem locais D)' : ''}; dobro em vias exteriores.${t === 1 || t === 2 ? '' : ' Largura útil pelos quadros XXXI/XXXII com o efetivo dos locais servidos; troços entre vias verticais e o exterior com o maior entre o efetivo do piso de saída e o das vias verticais.'} Largura variável: conta a menor; só pode aumentar no sentido da saída.`,
+    base: 'RT-SCIE, art. 61.º', estado: 'aplica',
   });
   // vias verticais
   const pisosOrd = [...ef.porPiso];
@@ -483,23 +489,22 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const upV = Math.max(Math.ceil(maxDois / 70), H > 28 ? 2 : 1);
   add({
     tema: 'V.3', titulo: 'Vias verticais de evacuação',
-    exigencia: `${H > 28 ? 'Pelo menos duas vias verticais (H > 28 m), com acessos afastados ≥ 10 m. ' : ''}Largura útil ≥ 1 UP por 70 utilizadores, considerando a maior soma dos efetivos de dois pisos consecutivos${maxDois ? `: ${maxDois} → ${upV} UP (verificar a ordem dos pisos)` : ''}${H > 28 ? ', mínimo 2 UP' : ''}. Barras antipânico nos acessos utilizáveis por mais de 50 pessoas. Vias abaixo do plano de referência não comunicam diretamente com as de cima (exceto 1.ª/2.ª categoria com ≤ 3 pisos).`,
-    base: 'RT-SCIE, art. 64.º n.os 2, 3, 6, 7, 11 e 12; art. 62.º n.º 7 b)', estado: 'aplica',
-    motivo: t === 1 || t === 2 ? 'Vias que servem exclusivamente UT I e II: não se aplica a regra de 1 UP por 70 utilizadores (n.º 11).' : undefined,
+    exigencia: `${H > 28 ? 'Pelo menos duas vias verticais (H > 28 m); acessos às escadas ou às câmaras afastados ≥ 10 m e ligados por comunicação horizontal comum. ' : 'Número imposto pelas distâncias a percorrer; com duas ou mais vias a servir os mesmos pisos, acessos afastados ≥ 10 m. '}${t === 1 || t === 2 ? 'Vias que servem exclusivamente UT I e II: sem a regra de 1 UP por 70 utilizadores (n.º 11). ' : `Largura útil ≥ 1 UP por 70 utilizadores ou fração, considerando a maior soma dos efetivos de dois pisos consecutivos${maxDois ? `: ${maxDois} → ${upV} UP (verificar a ordem dos pisos)` : ''}${H > 28 ? ', mínimo 2 UP' : ''}. `}Contínuas até ao piso do plano de referência; se não, ligações horizontais simples, < 10 m e com a mesma proteção. Barras antipânico nos acessos utilizáveis por mais de 50 pessoas. Vias abaixo do plano de referência não comunicam diretamente com as de cima (exceto 1.ª/2.ª categoria com ≤ 3 pisos). Controlo de fumo${H <= 9 ? '; proteção dispensável com um só piso abaixo do plano de referência, se não forem a única via de locais B, D, E ou F (n.º 9)' : ''}. Comunicação com locais C só por câmara corta-fogo.`,
+    base: 'RT-SCIE, art. 64.º; art. 62.º n.º 7 b)', estado: 'aplica',
   });
   add({
     tema: 'V.3', titulo: 'Escadas e rampas',
-    exigencia: 'No máximo dois lanços consecutivos sem mudança de direção; 3 a 25 degraus por lanço; degraus iguais em cada lanço; patamares com ≥ 1 m; rampas com inclinação e revestimento antiderrapante nos termos dos arts. 65.º a 67.º.',
-    base: 'RT-SCIE, arts. 65.º a 67.º', estado: 'aplica',
+    exigencia: 'Escadas: no máximo dois lanços consecutivos sem mudança de direção; 3 a 25 degraus por lanço, iguais em cada lanço; sem espelho, sobreposição ≥ 50 mm; patamares ≥ 1 m; curvas com declive constante, cobertor ≥ 0,28 m a 0,6 m da face interior e ≤ 0,42 m na face exterior (com menos de 2 UP só entre dois pisos acima do plano de referência, sem locais D/E e com outra via); corrimão contínuo (dos dois lados e degraus antiderrapantes com ≥ 3 UP; intermédios com > 5 UP). Rampas: declive ≤ 10 % (≤ 6 % para mobilidade condicionada), patamares ≥ 2 m, piso antiderrapante. Escadas mecânicas e tapetes rolantes só com outras vias de ≥ 70 % da capacidade exigida, no sentido da saída, com paragem nos topos e patamares ≥ 5 m (3 m com 1 UP).',
+    base: 'RT-SCIE, arts. 65.º e 66.º', estado: 'aplica',
   });
   if (t === 6 || t === 9) {
     add({
       tema: 'V.1b', titulo: 'Lugares destinados ao público',
-      exigencia: 'Filas com ≤ 16 cadeiras entre coxias (8 entre coxia e parede); espaçamento ≥ 0,4 m; bancadas com ≤ 40 lugares entre coxias (20 junto a parede); 3.ª/4.ª categoria: coxias transversais de 2 UP, uma por 1 000 pessoas.',
+      exigencia: `Lugares em filas, cadeiras fixas ao pavimento (rebatíveis com contrapeso); espaçamento ≥ 0,4 m; filas com ≤ ${ut.arLivre ? 24 : ut.factos?.tendas ? 8 : 16} cadeiras entre coxias (${ut.arLivre ? 12 : ut.factos?.tendas ? 4 : 8} entre coxia e parede) e bancadas com ≤ ${ut.arLivre ? 60 : ut.factos?.tendas ? 20 : 40} lugares entre coxias (${ut.arLivre ? 30 : ut.factos?.tendas ? 10 : 20} junto a parede)${ut.arLivre ? ' (+50 % ao ar livre)' : ut.factos?.tendas ? ' (metade em tendas e insufláveis)' : ''}; mais cadeiras só com espaçamento agravado n × 0,02 m (até 0,6 m), coxias de 2 UP e mais uma saída, ou filas até 40 com 0,6 m, coxias laterais de 2 UP e uma saída de 2 UP por cinco filas; bancadas com lugares de 50 cm marcados, altura ≥ 40 cm e profundidade 75 cm.${cat >= 3 ? ' 3.ª/4.ª categoria: coxias transversais de 2 UP, uma por 1 000 pessoas ou fração.' : ''}`,
       base: 'RT-SCIE, art. 53.º' + (t === 9 ? '; art. 284.º' : ''), ...porFacto(ut, 'lugaresFixos', 'Não existem lugares fixos para espectadores.'),
     });
     if (ef.total > (ut.arLivre ? 15000 : 1000)) {
-      add({ tema: 'V.1b', titulo: 'Lugares para espectadores com mobilidade condicionada', exigencia: 'Locais reservados servidos por caminhos de evacuação de locais D, com lugar para acompanhante.', base: 'RT-SCIE, art. 60.º n.º 3', estado: 'aplica' });
+      add({ tema: 'V.1b', titulo: 'Lugares para espectadores com mobilidade condicionada', exigencia: 'Locais reservados servidos por caminhos de evacuação adequados a locais D, sempre que possível com acesso direto a esses caminhos, e com lugar sentado para acompanhante junto a cada um.', base: 'RT-SCIE, art. 60.º n.º 3', estado: 'aplica' });
     }
   }
 
@@ -699,6 +704,23 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     exigencia: `Cablagens elétricas, de fibra ótica e de energia ou sinal que sirvam os sistemas de segurança ou sejam indispensáveis aos locais de risco F: embebidas, em ducto próprio ou com classe P/PH. Escalões mínimos (quadro XXXIV): alarme, deteção e retenção de portas ${esc(15, 30)} min; iluminação de emergência e comandos de extinção ${esc(30, 60)} min; controlo de fumo, pressurização de água, ascensores de bombeiros e comunicações ${esc(60, 90)} min${temF ? '; locais de risco F 90 min' : ''}.`,
     base: 'RT-SCIE, art. 16.º; art. 77.º n.º 3, quadro XXXIV', estado: 'aplica',
   });
+  {
+    const amplos = t === 2 || ([3, 6, 7, 8, 9, 10, 11, 12].includes(t) && ut.espacos.some((e) => (e.area ?? 0) > 800));
+    add({
+      tema: 'V.1b', titulo: 'Evacuação dos locais',
+      exigencia: 'Mobiliário, equipamentos e decoração dispostos de modo a que os percursos até às saídas sejam claros (art. 58.º).'
+        + (locais.has('B') || temE ? ' Locais B e E: mobiliário junto aos percursos fixado ao pavimento ou às paredes se puder ser arrastado ou derrubado (art. 59.º n.º 2).' : '')
+        + (amplos ? ` Espaços amplos${t === 2 ? '' : ' com mais de 800 m²'}: caminhos de evacuação claramente evidenciados, com largura em UP adequada ao efetivo${t === 9 ? ' (exceto espaços só de prática desportiva)' : ''} (art. 59.º n.º 3).` : '')
+        + (locais.has('B') ? ' Locais B fechados com zona de mesas > 50 m²: mesas fixas com circulações ≥ 1,5 m; mesas soltas com soma das áreas ≤ 25 % da zona; percursos de eventos em sentido único sempre que possível (art. 59.º n.os 4 a 6).' : '')
+        + (temD ? ' Locais D: saídas, diretamente ou através de outro local D, para vias protegidas ou para o exterior (art. 60.º n.º 2).' : ''),
+      base: 'RT-SCIE, arts. 58.º a 60.º', estado: 'aplica',
+    });
+  }
+  add({
+    tema: 'V.1b', titulo: 'Características das portas',
+    exigencia: `Portas usadas por mais de 50 pessoas: ${t === 1 ? '' : 'abrir no sentido da evacuação, '}sem trancamento durante o funcionamento e com sinalização do modo de operar (exceções: vigilância permanente com abertura imediata${[6, 7, 8, 9, 10, 11].includes(t) ? ', ou comando automático e manual sinalizado nesta UT' : ''}); saídas diretas para o exterior com percurso livre da largura da saída e sem obstáculos até 3 m. Barras antipânico sinalizadas na saída de locais, UT ou edifícios usados por mais de 200 pessoas e nos acessos a vias verticais usados por mais de 50 (salvo vãos mantidos abertos sem fecho automático ou portas sem trinco). Portas que abram para vias de evacuação recolhidas (ou a reduzir ≤ 10 % da largura). Vaivém de duas folhas com visores, batentes protegidos e sinalização da folha da direita.${temD ? ' Vias de evacuação de pessoas em camas: portas com superfícies transparentes à altura da visão.' : ''}${temCag ? ' Locais C agravado: portas a abrir no sentido da saída.' : ''}`,
+    base: 'RT-SCIE, art. 62.º', estado: 'aplica',
+  });
   add({
     tema: 'V.1b', titulo: 'Distribuição e localização das saídas',
     exigencia: 'Saídas distintas, afastadas entre si e distribuídas pelo perímetro dos locais, repartindo o efetivo na proporção das capacidades e minimizando impasses; em espaços com pavimento inclinado e mais de 12 filas, pelo menos metade da capacidade de evacuação abaixo do nível médio do pavimento. Portas giratórias, de correr não motorizadas e motorizadas sem abertura em caso de falha não contam como saídas.',
@@ -706,15 +728,15 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
   add({
     tema: 'V.3', titulo: 'Guardas das vias elevadas e terraços',
-    exigencia: 'Altura mínima das guardas: 1,0 m para diferenças de cota até 6 m; 1,2 m acima de 6 m (quadro XXXIII).',
+    exigencia: 'Altura mínima das guardas: 1,0 m para diferenças de cota até 6 m; 1,2 m acima de 6 m (quadro XXXIII); contínuas nas escadas, pelo menos entre espelhos e cobertores; prumos com afastamento ≤ 0,12 m.',
     base: 'RT-SCIE, art. 67.º, quadro XXXIII', ...porFacto(ut, 'guardas', 'Não existem vias elevadas nem terraços acessíveis.'),
   });
-  const refugio = H > 50 || (cat === 4 && H > 28) || (t === 3 && cat === 3 && H > 28);
+  const refugio = H > 50 || ((cat === 4 || (t === 3 && cat === 3)) && Math.max(ut.altura || 0) > 28);
   add({
     tema: 'V.4', titulo: 'Zonas de refúgio',
-    exigencia: 'No piso imediatamente abaixo de 28 m e de 10 em 10 pisos acima; paredes com a resistência das vias horizontais protegidas (art. 25.º); comunicação por câmara corta-fogo com uma via vertical protegida e com o elevador prioritário de bombeiros; meios de 1.ª e 2.ª intervenção.',
+    exigencia: `No piso imediatamente abaixo de 28 m e de 10 em 10 pisos acima; paredes com a resistência das vias horizontais protegidas (art. 25.º); comunicação por câmara corta-fogo com uma via vertical protegida e com o elevador prioritário de bombeiros, ambos até saída direta ao exterior; meios de 1.ª e 2.ª intervenção; comunicação de emergência com o posto de segurança e com a rede telefónica pública. Área ≥ 0,2 m² por pessoa servida${ef.total ? ` (efetivo da UT ${ef.total} → ${fmt(Math.ceil(ef.total * 0.2 * 10) / 10)} m², repartidos pelas zonas)` : ''}. Admitidas ao ar livre a > 8 m de vãos (ou vãos E 30 até 4 m). Alternativa: em cada piso, dois compartimentos ligados por câmara corta-fogo com os mesmos meios.`,
     base: 'RT-SCIE, art. 68.º', estado: refugio ? 'aplica' : 'nao',
-    motivo: refugio ? undefined : 'Exigidas em edifícios de muito grande altura e em UT da 4.ª categoria (ou UT III da 3.ª) com pisos acima de 28 m.',
+    motivo: refugio ? undefined : 'Exigidas em edifícios de muito grande altura e em UT da 4.ª categoria (ou UT III da 3.ª) que ocupem pisos acima de 28 m.',
   });
 
   // VI — Instalações técnicas

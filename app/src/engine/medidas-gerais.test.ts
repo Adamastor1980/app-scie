@@ -207,3 +207,91 @@ describe('B — Vias de evacuação e circulações (arts. 25.º a 28.º, 34.º 
     expect(med(U(1), 2, 'Atravessamentos').estado).toBe('verificar');
   });
 });
+
+describe('C — Reação ao fogo (arts. 38.º a 49.º)', () => {
+  it('quadro XXIII por altura do piso: até 9 m C-s3, d1 / Dfl-s2; 9 a 28 m C-s2, d0 / Cfl-s2; > 28 m ou abaixo A2-s1, d0 / Cfl-s1', () => {
+    const p = med(U(3), 2, 'Revestimentos de vias horizontais').exigencia;
+    expect(p).toContain('C-s3, d1');
+    expect(p).not.toContain('A2-s1, d0');
+    const g = med(U(3), 2, 'Revestimentos de vias horizontais', { altura: 30 }).exigencia;
+    for (const v of ['C-s3, d1', 'C-s2, d0', 'A2-s1, d0']) expect(g).toContain(v);
+  });
+  it('quadro XXIV: A2-s1, d0 (pequena/média), A1 (grande/muito grande); exteriores B-s3, d0', () => {
+    expect(med(U(3), 2, 'Revestimentos de vias verticais').exigencia).toContain('A2-s1, d0');
+    expect(med(U(3), 2, 'Revestimentos de vias verticais', { altura: 30 }).exigencia).toContain('paredes e tetos A1');
+    expect(med(U(3), 2, 'Revestimentos de vias verticais').exigencia).toContain('B-s3, d0');
+  });
+  it('quadro XXV: locais A D-s2, d2 / Efl; B A2-s1, d0 / Cfl-s2; C A1 / A1fl; D, E, F A1 / Cfl-s2', () => {
+    const u = U(4); u.espacos = [espaco('A'), espaco('B'), espaco('C'), espaco('D')];
+    const e = med(u, 2, 'Revestimentos de locais de risco').exigencia;
+    for (const v of ['local A: paredes e tetos D-s2, d2, pavimentos Efl', 'local B: paredes e tetos A2-s1, d0, pavimentos Cfl-s2', 'local C: paredes e tetos A1, pavimentos A1fl', 'local D: paredes e tetos A1, pavimentos Cfl-s2']) expect(e).toContain(v);
+  });
+  it('arts. 42.º a 45.º, 47.º e 49.º', () => {
+    const e = med(U(6), 2, 'Tetos falsos').exigencia;
+    for (const v of ['C-s2, d0', '25 %', '20 %', 'B-s1, d0', 'reposteiros', 'A1 (art. 42.º)', 'art. 47.º', 'art. 49.º']) expect(e).toContain(v);
+    expect(med(U(3), 2, 'Tetos falsos').exigencia).not.toContain('art. 47.º');
+  });
+  it('art. 46.º: tendas e insufláveis só nas UT VI e IX, conforme a resposta', () => {
+    const u = U(6); u.factos = { tendas: true };
+    expect(med(u, 2, 'Tendas e estruturas').exigencia).toContain('C-s2, d0');
+    expect(tem(U(3), 2, 'Tendas e estruturas')).toBe(false);
+  });
+});
+
+describe('C — Evacuação (arts. 53.º, 58.º a 68.º)', () => {
+  it('art. 53.º: 16/8 cadeiras e 40/20 lugares; +50 % ao ar livre; metade em tendas; coxias transversais na 3.ª/4.ª', () => {
+    const s = U(6); s.factos = { lugaresFixos: true };
+    expect(med(s, 2, 'Lugares destinados').exigencia).toContain('≤ 16 cadeiras');
+    expect(med(s, 3, 'Lugares destinados').exigencia).toContain('uma por 1 000');
+    const r = U(9); r.arLivre = true; r.factos = { lugaresFixos: true };
+    expect(med(r, 2, 'Lugares destinados').exigencia).toContain('≤ 24 cadeiras');
+    const t = U(6); t.factos = { lugaresFixos: true, tendas: true };
+    expect(med(t, 2, 'Lugares destinados').exigencia).toContain('≤ 8 cadeiras');
+  });
+  it('art. 59.º: espaços amplos (UT II sempre; outras > 800 m²) e mesas em locais B', () => {
+    expect(med(U(2), 2, 'Evacuação dos locais').exigencia).toContain('art. 59.º n.º 3');
+    const u = U(3); u.espacos = [{ ...espaco('B'), area: 900 }];
+    const e = med(u, 2, 'Evacuação dos locais').exigencia;
+    expect(e).toContain('mais de 800 m²');
+    expect(e).toContain('1,5 m');
+    expect(med(U(3), 2, 'Evacuação dos locais').exigencia).not.toContain('art. 59.º n.º 3');
+  });
+  it('art. 62.º: UT I dispensada de abrir no sentido da evacuação (n.º 3); barras antipânico > 200 / > 50', () => {
+    expect(med(U(1), 3, 'Características das portas').exigencia).not.toContain('abrir no sentido');
+    const e = med(U(3), 2, 'Características das portas').exigencia;
+    expect(e).toContain('abrir no sentido da evacuação');
+    expect(e).toContain('mais de 200 pessoas');
+    expect(e).toContain('3 m');
+  });
+  it('art. 61.º: 10 m em impasse com locais D/E; 20 m acima de 28 m, abaixo (exceto UT II) ou com locais D; 30 m nos outros', () => {
+    expect(med(U(3), 2, 'Distâncias nas vias horizontais').exigencia).toContain('≤ 30 m fora');
+    const d = U(5); d.espacos = [espaco('D')];
+    const m = med(d, 2, 'Distâncias nas vias horizontais').exigencia;
+    expect(m).toContain('10 m em impasse');
+    expect(m).toContain('≤ 20 m fora');
+    expect(med(U(3), 2, 'Distâncias nas vias horizontais', { altura: 30 }).exigencia).toContain('≤ 20 m fora');
+    const p = U(2); p.pisosAbaixo = 1; p.indicados = { pisos: true };
+    expect(med(p, 2, 'Distâncias nas vias horizontais').exigencia).toContain('≤ 30 m fora');
+  });
+  it('art. 64.º: 1 UP por 70 (maior soma de dois pisos consecutivos), mín. 2 UP com H > 28 m; não nas UT I e II', () => {
+    const u = U(3); u.espacos = [{ ...espaco('B', 100, 'Piso 1') }, { ...espaco('B', 50, 'Piso 2') }];
+    expect(med(u, 2, 'Vias verticais de evacuação').exigencia).toContain('150 → 3 UP');
+    expect(med(U(3), 2, 'Vias verticais de evacuação', { altura: 30 }).exigencia).toContain('Pelo menos duas vias');
+    expect(med(U(1), 3, 'Vias verticais de evacuação').exigencia).not.toContain('Largura útil ≥ 1 UP');
+  });
+  it('arts. 65.º a 67.º: escadas 3 a 25 degraus; rampas ≤ 10 % (6 %); guardas 1,0 / 1,2 m', () => {
+    const e = med(U(3), 2, 'Escadas e rampas').exigencia;
+    for (const v of ['3 a 25 degraus', '≤ 10 %', '≤ 6 %', '50 mm', '0,28 m', '70 %']) expect(e).toContain(v);
+    const g = U(3); g.factos = { guardas: true };
+    const m = med(g, 2, 'Guardas').exigencia;
+    for (const v of ['1,0 m', '1,2 m', '0,12 m']) expect(m).toContain(v);
+  });
+  it('art. 68.º: zonas de refúgio — muito grande altura; 4.ª cat. ou UT III da 3.ª que ocupem pisos acima de 28 m; 0,2 m²/pessoa', () => {
+    expect(med(U(4), 2, 'Zonas de refúgio', { altura: 60 }).estado).toBe('aplica');
+    const u = U(4); u.altura = 30;
+    expect(med(u, 4, 'Zonas de refúgio', { altura: 40 }).estado).toBe('aplica');
+    const v = U(4); v.altura = 10;
+    expect(med(v, 4, 'Zonas de refúgio', { altura: 40 }).estado).toBe('nao');
+    expect(med(U(4), 4, 'Zonas de refúgio', { altura: 60 }).exigencia).toContain('0,2 m²');
+  });
+});
