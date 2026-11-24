@@ -5,9 +5,9 @@ import type { Cat } from '../data/types';
 export function Field({ label, hint, children, className = '', legal }: { label: string; hint?: string; children: ReactNode; className?: string; legal?: string }) {
   return (
     <label className={`field ${className}`}>
-      <span className="flex items-baseline justify-between gap-2">
+      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <span className="label">{label}</span>
-        {legal && <span className="ref">{legal}</span>}
+        {legal && <span className="ref whitespace-nowrap">{legal}</span>}
       </span>
       {children}
       {hint && <span className="text-[11.5px] leading-snug text-ink-3">{hint}</span>}

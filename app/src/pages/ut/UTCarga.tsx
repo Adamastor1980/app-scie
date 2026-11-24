@@ -247,7 +247,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
       {c.metodo === 'deterministico' ? (
         <div className="p-4">
           <div className="mb-5 grid items-end gap-3 md:grid-cols-[1.6fr_1fr]">
-            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="Despacho n.º 8954/2020, n.º 7.º" className={ff(!c.raiDet)}>
+            <Field label="1. Atividade do compartimento — dá o Rai" legal="Despacho n.º 8954/2020, quadro II" className={ff(!c.raiDet)}>
               <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
                 onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
             </Field>
@@ -257,7 +257,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           </div>
           <p className="-mt-3 mb-5 text-[11.5px] text-ink-3">A atividade escolhida serve <b>apenas para obter o Rai</b>. Não soma carga de incêndio: o qsi/qvi do quadro II não entra no método determinístico. A carga resulta só dos materiais da tabela abaixo (Mi × Hi × Ci × Rai).</p>
           <p className="label mb-2">2. Materiais combustíveis — material, massa e Ci</p>
-          <table className="tbl">
+          <div className="overflow-x-auto"><table className="tbl !table min-w-[640px]">
             <thead><tr><th>Material (quadro I)</th><th className="w-[120px] text-right">Hi (MJ/kg)</th><th className="w-[170px] text-right">Massa Mi (kg ou litros)</th><th className="w-[150px]">Ci</th><th className="w-[140px] text-right">Mi·Hi·Ci·Rai (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.itens.map((it, k) => {
@@ -294,14 +294,14 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
           <button className="btn-fire mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Adicionar material a este compartimento</button>
           
         </div>
       ) : (
         <div className="p-4">
           <p className="label mb-2">Zonas do compartimento — para cada zona escolha se é de fabrico/reparação ou de armazenamento</p>
-          <table className="tbl">
+          <div className="overflow-x-auto"><table className="tbl !table min-w-[640px]">
             <thead><tr><th className="w-[200px]">Tipo de zona</th><th>Atividade / produto (quadro II)</th><th className="w-[100px] text-right">qsi / qvi</th>{temArm && <th className="w-[110px] text-right">Altura hi (m)</th>}<th className="w-[120px] text-right">Área Si (m²)</th><th className="w-[145px]">Ci</th><th className="w-[70px] text-right">Rai</th><th className="w-[120px] text-right">Parcela (MJ)</th><th className="w-8" /></tr></thead>
             <tbody>
               {c.atividades.map((z, k) => (
@@ -331,7 +331,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="btn-fire" onClick={() => set((x) => { x.armazens.push({ id: uid(), nome: '', qv: 0, altura: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de armazenamento</button>
             <button className="btn-fire" onClick={() => set((x) => { x.atividades.push({ id: uid(), nome: '', qs: 0, area: livre(), ci: 1, rai: 1 }); })}><Plus size={14} /> Zona de fabrico/reparação</button>
