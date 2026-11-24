@@ -9,6 +9,7 @@ import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, mostrarNo
 import Combo from '../../ui/Combo';
 import { novoCompartimento, uid } from '../../store';
 import { QuadroIView, QuadroIIView } from '../Tabelas';
+import GuiaCi from './GuiaCi';
 
 const CI_OPTS = CI_OPCOES.map((c) => ({ v: c.v, l: `${c.v.toFixed(2).replace('.', ',')} ${c.rotulo.split(' — ')[0].replace('Risco ', '')}` }));
 
@@ -78,14 +79,14 @@ export default function UTCarga({ ut, upU }: UTProps) {
 const SIMB_DET: [string, string][] = [
   ['Mi', 'massa do material (i), em kg'],
   ['Hi', 'poder calorífico inferior do material, em MJ/kg (quadro I, n.º 5.º)'],
-  ['Ci', 'coeficiente de combustibilidade do material (n.º 6.º)'],
+  ['Ci', 'coeficiente de combustibilidade do material (n.º 6.º): ver «Como escolher o Ci»'],
   ['Rai', 'coeficiente de ativação, conforme a atividade do compartimento (quadro II, n.º 7.º)'],
   ['S', 'área útil do compartimento corta-fogo, em m²'],
 ];
 const SIMB_FAB: [string, string][] = [
   ['qsi', 'densidade de carga de incêndio da atividade, em MJ/m² (quadro II)'],
   ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
-  ['Ci', 'coeficiente de combustibilidade do material de maior risco na zona (n.º 6.º)'],
+  ['Ci', 'coeficiente de combustibilidade do material de maior risco na zona (n.º 6.º): ver «Como escolher o Ci»'],
   ['Rai', 'coeficiente de ativação da atividade (quadro II, n.º 7.º)'],
   ['S', 'área útil do compartimento corta-fogo, em m²'],
 ];
@@ -93,7 +94,7 @@ const SIMB_ARM: [string, string][] = [
   ['qvi', 'carga de incêndio por volume do produto armazenado, em MJ/m³ (quadro II)'],
   ['hi', 'altura de armazenagem da zona, em m'],
   ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
-  ['Ci', 'coeficiente de combustibilidade do produto armazenado (n.º 6.º)'],
+  ['Ci', 'coeficiente de combustibilidade do produto armazenado (n.º 6.º): ver «Como escolher o Ci»'],
   ['Rai', 'coeficiente de ativação do produto armazenado (quadro II, n.º 7.º)'],
   ['S', 'área útil do compartimento corta-fogo, em m²'],
 ];
@@ -129,6 +130,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
   const r = cargaCompartimento(c);
   const outro = cargaCompartimento({ ...c, metodo: c.metodo === 'deterministico' ? 'probabilistico' : 'deterministico' });
   const [verQuadro, setVerQuadro] = useState(false);
+  const [verCi, setVerCi] = useState(false);
   const [aviso, setAviso] = useState('');
   const pickHi = (i: number) => {
     const p = QUADRO_I_HI[i];
@@ -225,9 +227,13 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </div>
           </>
         )}
-        <button className={`${verQuadro ? 'btn-primary' : 'btn'} mt-3`} onClick={() => setVerQuadro((v) => !v)}>
-          {verQuadro ? 'Ocultar' : 'Abrir'} {c.metodo === 'deterministico' ? 'quadro I — poder calorífico Hi' : 'quadro II — qsi, qvi e Rai por atividade'}
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button className={verQuadro ? 'btn-primary' : 'btn'} onClick={() => setVerQuadro((v) => !v)}>
+            {verQuadro ? 'Ocultar' : 'Abrir'} {c.metodo === 'deterministico' ? 'quadro I — poder calorífico Hi' : 'quadro II — qsi, qvi e Rai por atividade'}
+          </button>
+          <button className={verCi ? 'btn-primary' : 'btn'} onClick={() => setVerCi((v) => !v)}>{verCi ? 'Ocultar' : 'Como escolher o'} Ci</button>
+        </div>
+        {verCi && <div className="mt-3"><GuiaCi /></div>}
         {verQuadro && (
           <div className="mt-3">
             <p className="mb-2 text-[12px] text-ink-2">{c.metodo === 'deterministico' ? 'Clique num produto para o adicionar como constituinte deste compartimento.' : 'Use «+ Atividade» (fabrico/reparação, qsi) ou «+ Armazém» (armazenamento, qvi) para adicionar a este compartimento.'}</p>

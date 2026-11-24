@@ -5,6 +5,7 @@ import { ENVOLVENTE_LOCAIS, MAP_INFO, QUADRO_XXV, QUADRO_XXVII, QUADRO_XXXVI, QU
 import { classificar, fmt, RAI, RAI_NOME } from '../engine/calc';
 import { novaUT } from '../store';
 import QuadroAnexo from './ut/QuadroAnexo';
+import GuiaCi from './ut/GuiaCi';
 import type { UTNum } from '../data/types';
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -122,6 +123,7 @@ export default function Tabelas() {
         <div className="flex flex-col gap-6">
           <QuadroIIView />
           <QuadroIView />
+          <GuiaCi />
         </div>
       )}
 
