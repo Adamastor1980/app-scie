@@ -90,6 +90,8 @@ export interface Espaco {
 
 export interface Piso {
   id: string;
+  /** número do piso (0 = plano de referência; negativo = abaixo); liga a tabela de pisos ao piso dos espaços */
+  n?: number;
   nome: string;
   cota: number; // m relativamente ao plano de referência (negativo = abaixo)
   area: number; // área de pavimento do piso afeta à UT (m²)

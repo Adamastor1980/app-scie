@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, catAtribuida, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, catAtribuida, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosUT } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -266,19 +266,19 @@ export default function Relatorio() {
               <tr><td className="font-semibold">Edifício independente (art. 2.º j))</td><td>{ed.independente ? 'Sim' : 'Não'}</td></tr>
             </tbody></table>
             {ed.descricao && <P>{ed.descricao}</P>}
-            {uts.some(({ ut }) => ut.pisos.length) && (
+            {(() => { const comP = uts.map(({ ut }) => ({ ut, ps: pisosUT(ut) })).filter((x) => x.ps.some((p) => p.area > 0)); return comP.length > 0 && (
               <table className="tbl mb-3"><thead><tr><th>Utilização-tipo</th><th>Piso</th><th className="text-right">Cota (m)</th><th className="text-right">Área (m²)</th><th className="text-right">Área por UT (m²)</th></tr></thead>
                 <tbody>
-                  {uts.filter(({ ut }) => ut.pisos.length).map(({ ut }) => ut.pisos.map((pi, k) => (
-                    <tr key={pi.id}>
-                      {k === 0 && <td rowSpan={ut.pisos.length} className="text-[11px]"><b>UT {ROMANO[ut.tipo]}</b> «{utInfo(ut.tipo).nome}»<br />{nomeUT(ut).nome}</td>}
-                      <td>{pi.nome}{pi.tecnico ? ' (técnico)' : ''}</td><td className="num text-right">{fmt(pi.cota, 2)}</td><td className="num text-right">{fmt(pi.area, 2)}</td>
-                      {k === 0 && <td rowSpan={ut.pisos.length} className="num text-right font-semibold">{fmt(ut.pisos.reduce((a, x) => a + x.area, 0), 2)}</td>}
+                  {comP.map(({ ut, ps }) => ps.map((pi, k) => (
+                    <tr key={ut.id + pi.n}>
+                      {k === 0 && <td rowSpan={ps.length} className="text-[11px]"><b>UT {ROMANO[ut.tipo]}</b> «{utInfo(ut.tipo).nome}»<br />{nomeUT(ut).nome}</td>}
+                      <td>{pi.nome}{pi.tecnico ? ' (técnico)' : ''}</td><td className="num text-right">{pi.cota === undefined ? '—' : fmt(pi.cota, 2)}</td><td className="num text-right">{pi.area > 0 ? fmt(pi.area, 2) : '—'}</td>
+                      {k === 0 && <td rowSpan={ps.length} className="num text-right font-semibold">{fmt(ps.reduce((a, x) => a + x.area, 0), 2)}</td>}
                     </tr>
                   )))}
-                  <tr><td colSpan={4} className="text-right font-bold">Total do edifício</td><td className="num text-right font-bold">{fmt(uts.reduce((a, { ut }) => a + ut.pisos.reduce((x, y) => x + y.area, 0), 0), 2)}</td></tr>
+                  <tr><td colSpan={4} className="text-right font-bold">Total do edifício</td><td className="num text-right font-bold">{fmt(comP.reduce((a, { ps }) => a + ps.reduce((x, y) => x + y.area, 0), 0), 2)}</td></tr>
                 </tbody></table>
-            )}
+            ); })()}
             {uts.map(({ ut }) => (
               <div key={ut.id} className="mb-3 border-l-[3px] border-ink pl-3">
                 <p className="text-[12.5px] font-bold">{tituloUT(ut)}</p>

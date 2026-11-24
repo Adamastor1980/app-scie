@@ -7,7 +7,7 @@ import { precisaEfetivo } from '../UTPage';
 import type { CriterioEfetivo, Espaco, LocalRisco } from '../../data/types';
 import { QUADRO_XXVII } from '../../data/rtscie';
 import { LOCAIS, ROMANO, SUBTIPOS_C } from '../../data/rjscie';
-import { efetivoEspaco, efetivoUT, fmt, normalizarLocal, nPiso, rotuloPiso } from '../../engine/calc';
+import { efetivoEspaco, efetivoUT, fmt, normalizarLocal, nPiso, pisosUT, rotuloPiso } from '../../engine/calc';
 import { Empty, Faltas, Field, Note, Num, Section, Select, Stat, Text, Toggle, mostrarNovo } from '../../ui/primitives';
 import { novoEspaco, uid } from '../../store';
 import { useP } from '../ProjetoShell';
@@ -85,7 +85,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
         {ut.espacos.length > 0 && (() => {
           // apoio ao levantamento: área já introduzida, para comparar com as notas de campo e com a área dos pisos
           const area = ut.espacos.reduce((t, e) => t + (e.area ?? 0), 0);
-          const pisos = ut.pisos.reduce((t, x) => t + (x.area ?? 0), 0);
+          const pisos = pisosUT(ut).reduce((t, x) => t + x.area, 0);
           const n = ut.espacos.length;
           return <Stat label="Área útil introduzida" value={fmt(area, 1)} unit="m²" sub={`${n} ${n === 1 ? 'espaço' : 'espaços'}${pisos > 0 ? ` · pisos da UT: ${fmt(pisos, 1)} m²` : ''}`} />;
         })()}

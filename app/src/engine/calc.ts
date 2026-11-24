@@ -1,4 +1,4 @@
-import type { Cat, Compartimento, Espaco, Risco, UT, Edificio } from '../data/types';
+import type { Cat, Compartimento, Espaco, Piso, Risco, UT, Edificio } from '../data/types';
 import { ANEXO_III } from '../data/rjscie';
 import { QUADRO_XXVII, efetivoTipologia } from '../data/rtscie';
 
@@ -320,6 +320,33 @@ export function nPiso(s?: string): number | null {
 export const rotuloPiso = (n: number) => `Piso ${n}`;
 /** Pisos onde a UT tem espaços (números, por ordem). */
 export const pisosDosEspacos = (ut: UT) => [...new Set(ut.espacos.map((e) => nPiso(e.piso)).filter((n): n is number => n !== null))].sort((a, b) => a - b);
+/** Número de uma linha da tabela de pisos (campo n ou, em dados antigos, lido do nome). */
+export const numPiso = (p: Piso): number | null => (p.n ?? nPiso(p.nome));
+/** Piso da UT: uma só lista, feita dos pisos dos espaços e das linhas da tabela de pisos, ligadas pelo número. */
+export interface PisoUT { n: number; nome: string; cota?: number; area: number; tecnico: boolean; comEspacos: boolean; linha?: Piso }
+export function pisosUT(ut: UT): PisoUT[] {
+  const ns = new Set<number>(pisosDosEspacos(ut));
+  for (const p of ut.pisos) { const n = numPiso(p); if (n !== null) ns.add(n); }
+  const comE = new Set(pisosDosEspacos(ut));
+  return [...ns].sort((a, b) => a - b).map((n) => {
+    const linha = ut.pisos.find((p) => numPiso(p) === n);
+    return { n, nome: rotuloPiso(n), cota: linha && (linha.cota !== 0 || n === 0) ? linha.cota : undefined, area: linha?.area ?? 0, tecnico: (ut.pisosTecnicos ?? []).includes(n) || !!linha?.tecnico, comEspacos: comE.has(n), linha };
+  });
+}
+/** Linhas da tabela de pisos antigas sem número de piso reconhecível (têm de ser identificadas). */
+export const pisosSemNumero = (ut: UT) => ut.pisos.filter((p) => numPiso(p) === null);
+/** Dados antigos da tabela de pisos: grava o número do piso e passa «só técnico» para a lista única da UT. */
+export function normalizarPisos(ut: UT) {
+  for (const p of ut.pisos) {
+    const n = numPiso(p);
+    if (n === null) continue;
+    p.n = n; p.nome = rotuloPiso(n);
+    if (p.tecnico) { ut.pisosTecnicos = [...new Set([...(ut.pisosTecnicos ?? []), n])]; delete p.tecnico; }
+  }
+}
+/** O piso fica abaixo do plano de referência: pela cota, se indicada, senão pelo número. */
+export const pisoAbaixo = (p: PisoUT) => (p.cota ?? p.n) < 0;
+
 /** Pisos abaixo do plano de referência calculados a partir dos espaços (sem os pisos só técnicos); null se a UT não tiver espaços com piso. */
 export function pisosAbaixoDerivado(ut: UT): number | null {
   const ps = pisosDosEspacos(ut);
@@ -356,7 +383,7 @@ export function sincronizarPisos(ed: Edificio) {
 export function pisosAbaixoIndicados(ut: UT): string[] {
   const abaixoTxt = /(^|[^\d])-\s*\d|cave|sub-?solo|semi-?cave/i;
   const nomes = new Set<string>();
-  for (const p of ut.pisos) if (p.cota < 0) nomes.add(p.nome);
+  for (const p of pisosUT(ut)) if (pisoAbaixo(p)) nomes.add(p.nome);
   for (const e of ut.espacos) if (e.piso && abaixoTxt.test(e.piso)) nomes.add(e.piso.trim());
   return [...nomes];
 }

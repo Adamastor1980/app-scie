@@ -1,5 +1,5 @@
 import type { Espaco, UT, UTNum } from '../data/types';
-import { efetivoEspaco } from './calc';
+import { efetivoEspaco, pisosUT } from './calc';
 
 /**
  * Espaços integrados numa UT — RJ-SCIE, art. 8.º n.º 3.
@@ -68,7 +68,7 @@ export function integracao(e: Espaco, ut: UT): Integracao | null {
         : `Integrado na UT ${ROM[ut.tipo]}: área ≤ 200 m² (RJ-SCIE, art. 8.º n.º 3 c)), desde que gerido pela entidade que explora a UT.`;
   } else {
     const pct = [8, 10, 12].includes(ut.tipo) ? 20 : 10;
-    const areaUT = ut.pisos.reduce((t, x) => t + (x.area ?? 0), 0) || (ut.areaBruta ?? 0);
+    const areaUT = pisosUT(ut).reduce((t, x) => t + x.area, 0) || (ut.areaBruta ?? 0);
     if (!areaUT) {
       integrado = null;
       motivo = `Só fica integrado se a área bruta não passar de ${pct} % da área bruta da UT ${ROM[ut.tipo]} e não for acessível ao público (RJ-SCIE, art. 8.º n.º 3 a)). Indique a área dos pisos da UT para verificar.`;

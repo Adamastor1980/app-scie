@@ -3,10 +3,10 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import { get, set, del } from 'idb-keyval';
 import type { Autoprotecao, Compartimento, Edificio, Espaco, Piso, Projeto, UT, UTNum } from './data/types';
 import { utInfo } from './data/rjscie';
-import { normalizarLocal } from './engine/calc';
+import { normalizarLocal, normalizarPisos } from './engine/calc';
 
 /** Local A com efetivo > 100 ou público > 50 passa sempre a B (RJ-SCIE art. 10.º n.º 1 b)), seja qual for o ecrã onde se editou. */
-const locaisCoerentes = (p: Projeto) => p.edificios.forEach((ed) => { ed.uts.forEach((u) => u.espacos.forEach((e) => normalizarLocal(e))); });
+const locaisCoerentes = (p: Projeto) => p.edificios.forEach((ed) => { ed.uts.forEach((u) => { u.espacos.forEach((e) => normalizarLocal(e)); normalizarPisos(u); }); });
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 

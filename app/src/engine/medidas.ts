@@ -5,7 +5,7 @@ import {
   quadroIX, quadroL, quadroLI, quadroX, quadroXI, quadroXII, quadroXIX, quadroXLI, quadroXLIX, quadroXXII,
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
-import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT } from './calc';
+import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT, pisosUT, pisoAbaixo, nPiso } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
 
@@ -211,7 +211,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     add({ tema: 'II.2', titulo: 'Fachada acessível', exigencia: 'Pelo menos uma fachada acessível aos veículos de socorro nas condições do art. 5.º.', base: 'RT-SCIE, art. 6.º n.º 6', estado: 'aplica' });
   }
   if (!ut.arLivre) {
-    const areaMax = Math.max(0, ...ut.pisos.map((p) => p.area));
+    const areaMax = Math.max(0, ...pisosUT(ut).map((p) => p.area));
     add({
       tema: 'II.2', titulo: 'Pontos de penetração nas fachadas',
       exigencia: 'Pontos de penetração em todos os pisos até 50 m de altura, à razão mínima de um por cada 800 m² de piso ou fração, com dimensões mínimas de 1,2 × 0,6 m e abertura fácil a partir do exterior.'
@@ -234,7 +234,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
 
   /* --------------- Resistência ao fogo e compartimentação -------------- */
   const q9 = quadroIX(t, cat);
-  const umPisoPR = ut.pisos.length === 1 && ut.pisos[0].cota === 0;
+  const umPisoPR = pisosUT(ut).length === 1 && pisosUT(ut)[0].n === 0;
   const isentoEstr = (t === 1 && cat === 1) || (t !== 1 && cat === 1 && umPisoPR);
   add({
     tema: 'III.1', titulo: 'Resistência ao fogo dos elementos estruturais',
@@ -410,8 +410,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     const extras: string[] = [];
     if (!ut.arLivre && ev >= 200) { upMin = Math.max(upMin, 2); extras.push('saídas com ≥ 2 UP (efetivo ≥ 200, art. 56.º n.º 2 a))'); }
     if (ut.arLivre && ev >= 600) { upMin = Math.max(upMin, 2); extras.push('saídas com ≥ 2 UP (efetivo ≥ 600 ao ar livre, art. 56.º n.º 2 b))'); }
-    const pisoE = ut.pisos.find((p) => p.nome === e.piso);
-    if (!ut.arLivre && ev > 50 && pisoE && (pisoE.cota < 0 || (H > 28 && pisoE.cota > 0))) { upMin = Math.max(upMin, 2); extras.push(pisoE.cota < 0 ? 'saídas com ≥ 2 UP (efetivo > 50 abaixo do nível de saída, art. 56.º n.º 4 b))' : 'saídas com ≥ 2 UP (efetivo > 50 acima do plano de referência, H > 28 m, art. 56.º n.º 4 b))'); }
+    const pisoE = pisosUT(ut).find((p) => p.n === nPiso(e.piso));
+    if (!ut.arLivre && ev > 50 && pisoE && (pisoAbaixo(pisoE) || (H > 28 && (pisoE.cota ?? pisoE.n) > 0))) { upMin = Math.max(upMin, 2); extras.push(pisoAbaixo(pisoE) ? 'saídas com ≥ 2 UP (efetivo > 50 abaixo do nível de saída, art. 56.º n.º 4 b))' : 'saídas com ≥ 2 UP (efetivo > 50 acima do plano de referência, H > 28 m, art. 56.º n.º 4 b))'); }
     if (e.local === 'D') extras.push('saídas para vias protegidas ou exterior (art. 60.º); 2 UP onde se evacuem pessoas em camas, ou 1,1 m se forem menos de três (art. 56.º n.º 4 c))');
     if (ev > 200) extras.push('barras antipânico nas portas (art. 62.º n.º 7 a))');
     if (ev > 50) extras.push('portas a abrir no sentido da evacuação (art. 62.º n.º 1)');
@@ -534,8 +534,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
 
   /* ---------------------------- Controlo de fumo ----------------------- */
   const cf: string[] = ['vias verticais enclausuradas', 'câmaras corta-fogo', 'vias horizontais protegidas (art. 25.º n.º 1)'];
-  const areaAbaixo = ut.pisos.filter((p) => p.cota < 0).reduce((s, p) => Math.max(s, p.area), 0);
-  const efAbaixo = ef.porPiso.filter((p) => ut.pisos.find((x) => x.nome === p.piso && x.cota < 0)).reduce((s, p) => s + p.efetivo, 0);
+  const areaAbaixo = pisosUT(ut).filter(pisoAbaixo).reduce((s, p) => Math.max(s, p.area), 0);
+  const efAbaixo = ef.porPiso.filter((p) => pisosUT(ut).some((x) => x.n === nPiso(p.piso) && pisoAbaixo(x))).reduce((s, p) => s + p.efetivo, 0);
   if (abaixo && (efAbaixo > 200 || areaAbaixo > 400)) cf.push('pisos no subsolo (efetivo > 200 ou área > 400 m²)');
   const bGrandes = ut.espacos.filter((e) => e.local === 'B' && efetivoEspaco(e).valor > 500);
   if (bGrandes.length) cf.push(`locais de risco B com efetivo > 500 (${bGrandes.map((e) => e.nome).join(', ')})`);
@@ -556,7 +556,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
 
   /* --------------------------- Meios de intervenção -------------------- */
   const extIsento = t === 1 && cat <= 2;
-  const extPisos = ut.pisos.map((p) => `${p.nome}: ${Math.max(Math.ceil(p.area / 200), 2)} extintores (1 por 200 m², mín. 2) e ${Math.ceil(p.area / 500) * 18} L de agente padrão (18 L por 500 m²)`);
+  const extPisos = pisosUT(ut).map((p) => p.area > 0 ? `${p.nome}: ${Math.max(Math.ceil(p.area / 200), 2)} extintores (1 por 200 m², mín. 2) e ${Math.ceil(p.area / 500) * 18} L de agente padrão (18 L por 500 m²)` : `${p.nome}: área do piso por indicar (dados complementares)`);
   add({
     tema: 'VII.5', titulo: 'Extintores portáteis',
     exigencia: `Distância ≤ 15 m de qualquer saída de local de risco até ao extintor mais próximo; manípulo ≤ 1,2 m; em todos os locais C e F.${extPisos.length ? ' Dimensionamento por piso — ' + extPisos.join('; ') + '.' : ' Por piso: 1 extintor por 200 m² ou fração (mínimo 2) e 18 L de agente extintor padrão por 500 m² ou fração.'}${temC ? ' Cozinhas e laboratórios C: manta ignífuga; extintor 25F com óleos ou gorduras.' : ''}`,
