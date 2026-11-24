@@ -114,6 +114,7 @@ export const FACTOS: Facto[] = [
   { id: 'liquidosGases', pergunta: 'Existem líquidos ou gases combustíveis (armazenados ou em utilização)?', base: 'RT-SCIE, arts. 106.º e 107.º', mostrar: (c) => !((c.ut.liquidosInflamaveisL ?? 0) > 0 || c.ut.temGas) },
   { id: 'guardas', pergunta: 'Existem vias de evacuação elevadas ou terraços acessíveis?', base: 'RT-SCIE, art. 67.º' },
   { id: 'lugaresFixos', pergunta: 'Existem lugares fixos para espectadores?', base: 'RT-SCIE, art. 53.º', mostrar: (c) => c.ut.tipo === 6 || c.ut.tipo === 9 },
+  { id: 'patio', pergunta: 'Existem pátios interiores ou poços de luz?', base: 'RT-SCIE, art. 19.º', mostrar: (c) => !c.ut.arLivre },
   { id: 'patio20', pergunta: 'Existem pátios interiores cobertos com altura superior a 20 m?', base: 'RT-SCIE, art. 173.º n.º 1 e)', mostrar: (c) => !c.ut.arLivre },
   { id: 'descargas', pergunta: 'As descargas atmosféricas constituem risco significativo de incêndio para o edifício?', base: 'RT-SCIE, art. 191.º', mostrar: (c) => !c.ut.arLivre },
   { id: 'dominante', pergunta: 'O edifício tem posição dominante na volumetria urbana ou natural envolvente?', base: 'RT-SCIE, art. 192.º', mostrar: (c) => (c.ed.altura || c.ut.altura) > 28 },
@@ -154,26 +155,29 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const add = (m: Omit<Medida, 'id' | 'key'>) => M.push({ id: `${M.length + 1}`.padStart(3, '0'), key: `${m.tema}|${m.titulo}`, ...m });
 
   /* ------------------- Enquadramento e procedimento ------------------- */
+  // competência, autoria e vistorias referem-se ao edifício ou recinto: conta a categoria mais alta das suas UT
+  const catEd = Math.max(cat, ...ed.uts.filter((u) => u.id !== ut.id).map((u) => classificar(u).cat)) as Cat;
+  const notaEd = catEd > cat ? ` (o edifício tem UT da ${catEd}.ª categoria)` : '';
   add({
     tema: '0', titulo: 'Entidade competente',
-    exigencia: cat === 1 ? 'Município da área do edifício ou recinto (1.ª categoria de risco).' : 'Autoridade Nacional de Emergência e Proteção Civil (ANEPC).',
+    exigencia: catEd === 1 ? 'Município da área do edifício ou recinto (1.ª categoria de risco).' : `Autoridade Nacional de Emergência e Proteção Civil (ANEPC)${notaEd}.`,
     base: 'RJ-SCIE, art. 5.º n.º 1, art. 21.º n.º 2 e art. 24.º n.º 1', estado: 'aplica',
   });
   add({
     tema: '0', titulo: 'Peça de SCIE da operação urbanística',
-    exigencia: cat === 1
+    exigencia: catEd === 1
       ? 'Ficha de segurança por utilização-tipo, segundo modelo da ANEPC, com o conteúdo do anexo V.' + (t === 4 || t === 5 ? ' Nas UT IV e V a ficha é complementada com as peças desenhadas do art. 2.º n.º 2 do anexo V.' : '')
-      : 'Projeto da especialidade de SCIE com memória descritiva e justificativa e peças desenhadas, com o conteúdo do anexo IV.',
-    base: cat === 1 ? 'RJ-SCIE, art. 17.º n.º 2 e anexo V' : 'RJ-SCIE, art. 17.º n.º 1 e anexo IV', estado: 'aplica',
+      : `Projeto da especialidade de SCIE com memória descritiva e justificativa e peças desenhadas, com o conteúdo do anexo IV${notaEd}.`,
+    base: catEd === 1 ? 'RJ-SCIE, art. 17.º n.º 2 e anexo V' : 'RJ-SCIE, art. 17.º n.º 1 e anexo IV', estado: 'aplica',
   });
   add({
     tema: '0', titulo: 'Autor do projeto e das medidas de autoproteção',
     exigencia: 'Arquiteto (OA), engenheiro (OE) ou engenheiro técnico (OET) com certificação de especialização em SCIE, registado na ANEPC.',
-    base: 'RJ-SCIE, art. 15.º-A', estado: sim(cat >= 2), motivo: cat === 1 ? 'Exigência aplicável às 2.ª, 3.ª e 4.ª categorias.' : undefined,
+    base: 'RJ-SCIE, art. 15.º-A n.º 1', estado: sim(catEd >= 2), motivo: catEd === 1 ? 'Exigência aplicável às 2.ª, 3.ª e 4.ª categorias.' : undefined,
   });
   add({
     tema: '0', titulo: 'Inspeções regulares',
-    exigencia: `Inspeção regular no prazo máximo de ${INSPECOES[cat]} anos, a pedido do responsável de segurança, pela ${cat === 1 ? 'câmara municipal' : 'ANEPC ou entidade por ela credenciada'}.`,
+    exigencia: `Inspeção regular no prazo máximo de ${INSPECOES[cat]} anos, a pedido das entidades responsáveis (art. 6.º n.os 3 e 4), pela ${cat === 1 ? 'câmara municipal' : 'ANEPC ou entidade por ela credenciada'}.`,
     base: 'RJ-SCIE, art. 19.º n.os 1, 2 e 4',
     estado: (cat === 1 && t !== 4 && t !== 5) || (t === 1 && cat === 2 && ed.uts.length === 1) ? 'nao' : 'aplica',
     motivo: cat === 1 && t !== 4 && t !== 5
@@ -183,7 +187,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   add({
     tema: '0', titulo: 'Vistoria com representante da ANEPC',
     exigencia: 'As vistorias para autorização de utilização integram um representante da ANEPC ou de entidade por ela credenciada.',
-    base: 'RJ-SCIE, art. 18.º n.º 3', estado: sim(cat >= 2), motivo: cat === 1 ? 'Aplicável às 2.ª, 3.ª e 4.ª categorias.' : undefined,
+    base: 'RJ-SCIE, art. 18.º n.º 3', estado: sim(catEd >= 2), motivo: catEd === 1 ? 'Aplicável às 2.ª, 3.ª e 4.ª categorias.' : undefined,
   });
   add({
     tema: '0', titulo: 'Grau de prontidão do socorro',
@@ -194,7 +198,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   /* ------------------------ Condições exteriores ----------------------- */
   if (ut.arLivre) {
     const vias = cat === 1 ? 'Uma via com 3,5 m de largura útil' : cat === 2 ? 'Duas vias, tão afastadas quanto possível, com 3,5 m de largura útil' : 'Duas vias, tão afastadas quanto possível, com 7,0 m de largura útil';
-    add({ tema: 'II.1', titulo: 'Vias de acesso a recinto ao ar livre', exigencia: `${vias}; corredor livre para operações de socorro com comprimento ≥ metade do perímetro, largura útil ≥ 3,5 m e altura útil ≥ 4 m.`, base: 'RT-SCIE, art. 4.º n.os 5 e 6, quadro I', estado: 'aplica' });
+    add({ tema: 'II.1', titulo: 'Vias de acesso a recinto ao ar livre', exigencia: `${vias}; estacionamento dos veículos de socorro a ≤ 30 m de uma saída; altura útil 4 m; raio de curvatura mínimo 11 m ao eixo; inclinação máxima 15 %; capacidade para veículo de 130 kN (40 kN + 90 kN); corredor permanentemente livre para operações de socorro com comprimento ≥ metade do perímetro do recinto, largura útil ≥ 3,5 m e altura útil ≥ 4 m.`, base: 'RT-SCIE, art. 4.º n.os 1, 3, 5 e 6, quadro I', estado: 'aplica' });
     add({ tema: 'II.4', titulo: 'Hidrantes exteriores (recinto ao ar livre)', exigencia: cat <= 2 ? 'Boca ou marco de incêndio a distância ≤ 150 m.' : 'Marco de incêndio a distância ≤ 100 m.', base: 'RT-SCIE, art. 12.º n.º 6, quadro VIII', estado: 'aplica' });
   } else if (H <= 9) {
     add({
@@ -217,18 +221,20 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
       tema: 'II.2', titulo: 'Pontos de penetração nas fachadas',
       exigencia: 'Pontos de penetração em todos os pisos até 50 m de altura, à razão mínima de um por cada 800 m² de piso ou fração, com dimensões mínimas de 1,2 × 0,6 m e abertura fácil a partir do exterior.'
         + (areaMax > 0 ? ` Piso de maior área: ${fmt(areaMax)} m² → mínimo ${Math.ceil(areaMax / 800)} ponto(s) nesse piso.` : '')
-        + (areaMax > 800 ? ' Pisos com mais de 800 m²: pontos distribuídos por, no mínimo, duas fachadas acessíveis.' : ''),
-      base: 'RT-SCIE, art. 6.º n.os 2, 5 e 7', estado: 'aplica',
+        + (areaMax > 800 ? ' Pisos com mais de 800 m²: pontos distribuídos uniformemente por, no mínimo, duas fachadas acessíveis, salvo impossibilidade justificada pela inserção urbana.' : '')
+        + (H <= 9 ? ' Vãos de janela: pano de peito com espessura ≤ 0,3 m numa extensão de 0,5 m abaixo do peitoril (engate das escadas de ganchos).' : '')
+        + ' Fachadas cortina ou envidraçadas contínuas com vãos abertos só para penetração: sinalização ótica automática ou sinalização indelével da prumada acessível.',
+      base: `RT-SCIE, art. 6.º n.os 2, ${H <= 9 ? '3, ' : ''}4, 5 e 7`, estado: 'aplica',
     });
     add({
       tema: 'II.4', titulo: 'Hidrantes exteriores',
-      exigencia: 'Marcos de incêndio (preferencialmente) ou bocas de incêndio, segundo a EN 14384, a ≤ 30 m das saídas do edifício nas fachadas acessíveis e das bocas de alimentação das redes secas ou húmidas. Sem rede pública: depósito ≥ 60 m³ garantindo 20 l/s por marco (8 l/s DN 70; 4 l/s DN 50) a 150 kPa.' + (cat === 1 ? ' Na 1.ª categoria, sem rede pública e sem possibilidade de cumprir o anterior, admite-se o abastecimento pelas reservas de água do edifício (poços, tanques, cisternas).' : ''),
-      base: 'RT-SCIE, art. 12.º n.os 1 a 5, 7' + (cat === 1 ? ' e 8' : ''), estado: 'aplica',
+      exigencia: 'Marcos de incêndio (preferencialmente) ou bocas de incêndio, segundo a EN 14384, a ≤ 30 m das saídas do edifício nas fachadas de acesso às viaturas de socorro e das bocas de alimentação das redes secas ou húmidas; marcos junto ao lancil; bocas em caixa própria, a 0,4–0,8 m do pavimento quando em paredes ou muros. Sem rede pública: depósito ≥ 60 m³ garantindo, em cada hidrante e com um máximo de dois, a 150 kPa, 20 l/s por marco (8 l/s bocas DN 70; 4 l/s DN 50).' + (catEd === 1 ? ' Na 1.ª categoria, sem rede pública e sem possibilidade de cumprir o anterior, admite-se o abastecimento pelas reservas de água do edifício (poços, tanques, cisternas).' : ''),
+      base: 'RT-SCIE, art. 12.º n.os 1 a 5, 7' + (catEd === 1 ? ' e 8' : ''), estado: 'aplica',
     });
   }
   add({
     tema: 'II.3', titulo: 'Limitação da propagação pelo exterior',
-    exigencia: 'Elementos de fachada entre vãos sobrepostos, paredes de empena, coberturas, revestimentos exteriores e ETICS nas condições dos arts. 7.º a 11.º e quadros II a VI (por classe de altura do edifício).',
+    exigencia: 'Elementos de fachada entre vãos sobrepostos, paredes de empena, coberturas, revestimentos exteriores e ETICS nas condições dos arts. 7.º a 10.º e quadros II a VI (por classe de altura do edifício). Zonas de segurança em relação a postos de abastecimento de combustíveis, segundo a regulamentação aplicável (art. 11.º).',
     base: 'RT-SCIE, arts. 7.º a 11.º', estado: ut.arLivre ? 'nao' : 'aplica',
     motivo: ut.arLivre ? 'Recinto ao ar livre.' : undefined,
   });
@@ -255,8 +261,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
   add({
     tema: 'III.2', titulo: 'Isolamento entre utilizações-tipo distintas',
-    exigencia: `Paredes e pavimentos EI/REI ${quadroX(t, cat)} (valor desta UT; adotar o mais gravoso das UT confinantes); vãos de comunicação com vias de evacuação protegidas: ${quadroXI(t, cat)}.`,
-    base: 'RT-SCIE, art. 17.º n.º 2, quadros X e XI', estado: ed.uts.length > 1 ? 'aplica' : 'nao',
+    exigencia: `Paredes e pavimentos EI/REI ${quadroX(t, cat)} (valor desta UT; adotar o mais gravoso das UT confinantes); separação das vias de evacuação protegidas com a classe mais gravosa dos quadros X, XIX, XX e XXI; vãos de comunicação com vias de evacuação protegidas: ${quadroXI(t, cat)} (ou o mais exigente dos quadros XIX a XXI).${abaixo ? ' Espaços de UT distintas abaixo do plano de referência servidos por via enclausurada não exclusiva: via protegida desses espaços por câmaras corta-fogo (alínea d)).' : ''}`,
+    base: 'RT-SCIE, art. 17.º n.º 2 a) a d), quadros X e XI', estado: ed.uts.length > 1 ? 'aplica' : 'nao',
     motivo: ed.uts.length > 1 ? undefined : 'Edifício de utilização exclusiva.',
   });
   // art. 17.º: categorias das outras UT do edifício calculadas (sem pedir confirmação)
@@ -270,6 +276,12 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
       base: 'RT-SCIE, art. 17.º n.º 2 e)', estado: 'aplica',
     });
   }
+  const xii34 = outrasUT.filter((o) => o.u.tipo === 12 && o.cat >= 3);
+  if (t !== 12 && t !== 2 && t !== 8 && cat >= 2 && xii34.length) add({
+    tema: 'III.2', titulo: 'Coexistência com outras UT',
+    exigencia: `Não é admitida a coexistência no mesmo edifício de UT XII das 3.ª/4.ª categorias com outras UT das 2.ª à 4.ª categorias (exceto UT II e VIII e UT I da 1.ª categoria destinada a proprietários ou funcionários). Neste edifício existe UT XII da ${xii34[0].cat}.ª categoria.`,
+    base: 'RT-SCIE, art. 17.º n.º 1', estado: 'aplica',
+  });
   if (t === 12 && cat >= 3) {
     const proibidas = outrasUT.filter((o) => o.cat >= 2 && o.u.tipo !== 2 && o.u.tipo !== 8);
     if (proibidas.length) add({
@@ -291,15 +303,20 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     const isento = t === 1 && cat === 1;
     add({
       tema: 'III.3', titulo: 'Compartimentação geral corta-fogo',
-      exigencia: `Cada piso constitui, em regra, compartimento corta-fogo distinto. Área máxima por compartimento: ${fmt(q12.acima)} m² acima/no plano de referência; ${fmt(q12.abaixo)} m² abaixo${q12.nota ? ` (${q12.nota})` : ''}. Isolamento EI/REI ${t === 1 || (t >= 3 && t <= 10) ? 30 : 60} com vãos E 30 (fixos) ou E 30 C. Áreas duplicáveis com sprinklers de cobertura total, exceto UT I e locais D (n.º 6).`,
-      base: 'RT-SCIE, art. 18.º n.os 1, 2, 6 e 7, quadro XII', estado: isento ? 'nao' : 'aplica',
+      exigencia: `Cada piso constitui, em regra, compartimento corta-fogo distinto. Área máxima por compartimento: ${fmt(q12.acima)} m² acima/no plano de referência; ${fmt(q12.abaixo)} m² abaixo${q12.nota ? ` (${q12.nota})` : ''}. Isolamento EI/REI ${t === 1 || (t >= 3 && t <= 10) ? 30 : 60} com vãos E 30 (fixos) ou E 30 C. Áreas duplicáveis com sprinklers de cobertura total, exceto UT I e locais D (n.º 6).${H <= 9 && [3, 4, 5, 7, 8].includes(t) ? ` Edifício de pequena altura: até três pisos podem constituir um só compartimento, se a área total não exceder o quadro XII, nenhum piso exceder 800 m² nem estiver mais de um piso abaixo do plano de referência${t === 4 || t === 5 ? ' e os locais D estiverem só no piso do plano de referência' : ''} (n.º 4).` : ''}${[6, 8, 9, 10].includes(t) ? ' Espaços amplos cobertos: áreas ampliáveis com controlo de fumo e altura livre de fumo ≥ 4 m, mediante justificação (n.º 5).' : ''} Interligações entre pisos que não sejam vias de evacuação (rampas, escadas rolantes, pátios abertos) dispensam elementos fixos se os compartimentos respeitarem o quadro XII, não houver habitação nem locais D ou E e o controlo de fumo for por hierarquia de pressões (n.º 8).`,
+      base: 'RT-SCIE, art. 18.º n.os 1, 2, 4 a 8, quadro XII', estado: isento ? 'nao' : 'aplica',
       motivo: isento ? 'Espaços da UT I da 1.ª categoria (art. 18.º n.º 3).' : undefined,
     });
   }
+  if (!ut.arLivre) add({
+    tema: 'III.3', titulo: 'Pátios interiores e poços de luz',
+    exigencia: 'Em planta, inscrever um cilindro de diâmetro ≥ H (H ≤ 7 m, mínimo 4 m) ou ≥ √(7H) (H > 7 m); paredes confinantes com as condições do art. 7.º; pátios cobertos com tetos e paredes A2-s1, d0 e pavimentos Cfl-s2; obturação dos vãos dos tetos ≥ B-s1, d0; envolvente de pátios cobertos fechados EI 30 junto a locais D ou E ou a caminhos que sirvam locais D (nos que sirvam locais E, admite-se controlo de fumo ativo com painéis de cantonamento ou telas).',
+    base: 'RT-SCIE, art. 19.º', ...porFacto(ut, 'patio', 'Não existem pátios interiores nem poços de luz.'),
+  });
   add({
     tema: 'III.5e', titulo: 'Atravessamentos e condutas',
-    exigencia: 'Selagem dos atravessamentos com a resistência do elemento atravessado; condutas > 75 mm ou de efluentes de combustão com meios de isolamento; ductos > 0,2 m² em A1; portas de ductos E 30 C (H ≤ 28 m) ou E 60 C.',
-    base: 'RT-SCIE, art. 14.º n.os 5 e 8, arts. 29.º a 33.º', estado: 'aplica',
+    exigencia: `Selagem dos atravessamentos com a resistência do elemento atravessado (registos corta-fogo, ou metade do tempo se em ductos com porta de igual valor); em ductos as canalizações com DN > 315 mm${H > 28 ? ' e as que atravessem compartimentação corta-fogo (edifício de grande altura)' : ''}; meios de isolamento nas condutas com DN > 75 mm que atravessem compartimentação ou separação entre entidades e nas de efluentes de combustão; ductos > 0,2 m² em A1, seccionados por septos A1 (exceto os de líquidos e gases combustíveis, ventilados na base e no topo com ≥ 0,1 m²); portas de ductos ${H <= 28 ? 'E 30 C' : 'E 60 C'}; portinholas com fecho C; obturadores comandados por deteção automática e manual. Vias interiores protegidas, comunicações verticais não seláveis (condutas de lixo, courettes de gás, caixas de elevador) e locais C e F constituem compartimentos corta-fogo.`,
+    base: 'RT-SCIE, art. 14.º n.os 5, 8, 10 a 12; arts. 29.º a 33.º e 37.º', estado: t === 1 ? 'verificar' : 'aplica', motivo: t === 1 ? 'Ductos e condutas em espaços exclusivamente da UT I segundo a NP 1037 estão excluídos (art. 14.º n.º 9 e art. 29.º n.º 3).' : undefined,
   });
 
   /* ---------------- Isolamento e proteção de locais de risco ------------ */
@@ -311,7 +328,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
       tema: 'III.4', titulo: `Envolvente de locais de risco ${nome}`,
       exigencia: `Paredes sem função de suporte ${q.paredes}; pavimentos e paredes com função de suporte ${q.suporte}; portas ${q.portas}.`
         + (k === 'D' ? ' Locais D com área útil > 400 m² subcompartimentados com as mesmas classes, permitindo evacuação horizontal.' : '')
-        + (k === 'C' ? ' Cozinhas ligadas a salas de refeições: admite-se que só a envolvente do conjunto cumpra, com controlo de fumo.' : ''),
+        + (k === 'C' ? ' Cozinhas ligadas a salas de refeições: admite-se que só a envolvente do conjunto cumpra, com controlo de fumo (n.º 2).' : '')
+        + ((k === 'C' || k === 'Cag') && ut.arLivre ? ' Recintos ao ar livre: portas E 30 C admitidas a mais de 5 m de locais com público ou de caminhos de evacuação (art. 21.º n.os 5 e 6).' : ''),
       base: `RT-SCIE, art. ${q.artigo}, quadro ${q.quadro}`, estado: sim(existe), motivo: existe ? undefined : `Sem locais de risco ${nome} registados.`,
     });
   }
@@ -342,13 +360,16 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   viasProt.push('galerias fechadas de ligação entre edifícios independentes ou entre corpos do mesmo edifício');
   add({
     tema: 'III.5a', titulo: 'Proteção das vias horizontais de evacuação',
-    exigencia: `Vias protegidas: ${viasProt.join('; ')}. Envolvente (altura ${classe.toLowerCase()}): paredes ${q19.paredes}, paredes de suporte ${q19.suporte}, portas ${q19.portas}. Vias com acesso direto a locais D ou E: a classe mais gravosa dos quadros XIV a XIX.`,
+    exigencia: `Vias protegidas: ${viasProt.join('; ')}. Envolvente (altura ${classe.toLowerCase()}): paredes ${q19.paredes}, paredes de suporte ${q19.suporte}, portas ${q19.portas}. Vias com acesso direto a locais D ou E: a classe mais gravosa dos quadros XIV a XIX (n.º 5). Vias exteriores em impasse a menos de 2 m para cada lado e 8 m à frente de um vão: vão ou via E 30, salvo vão a mais de 6 m acima da via (n.os 3 e 4).`,
     base: 'RT-SCIE, art. 25.º, quadro XIX', estado: 'aplica',
   });
   const vertIsenta = (t === 1 && cat === 1);
+  const n4art18 = H <= 9 && [3, 4, 5, 7, 8].includes(t);
+  const q20 = H <= 28 ? 'saída direta ao exterior ou em átrio com acesso direto ao exterior: sem exigências; restantes: portas E 30 C' : 'saída direta ao exterior: sem exigências; em átrio com acesso direto ao exterior (sem ligação a outros espaços, salvo caixas de elevador protegidas): portas E 30 C; restantes: portas EI 60 C';
+  const q21 = H <= 28 ? 'via enclausurada — do interior portas E 30 C, do exterior E 15 C; via ao ar livre — do interior portas E 30 C' : 'via enclausurada — do interior câmara corta-fogo, do exterior portas E 15 C; via ao ar livre — do interior portas EI 60 C';
   add({
     tema: 'III.5b', titulo: 'Proteção das vias verticais de evacuação',
-    exigencia: `Separação por paredes e pavimentos com escalão de tempo ≥ ao dos elementos estruturais (${q9.compartimentacao}). Acessos: quadros XX (piso de saída) e XXI (restantes pisos)${H > 28 ? '; H > 28 m: câmaras corta-fogo nos acessos interiores a vias enclausuradas' : ''}${abaixo ? '; vias abaixo do plano de referência: câmaras corta-fogo nos acessos interiores, exceto se derem acesso direto ao exterior' : ''}.`,
+    exigencia: `Paredes e pavimentos com escalão de tempo ≥ ao dos elementos estruturais (${q9.compartimentacao}). Acessos no piso de saída (quadro XX): ${q20}. Acessos nos restantes pisos acima do plano de referência (quadro XXI): ${q21}.${abaixo ? ' Vias abaixo do plano de referência: no piso de saída portas E 30 C; nos restantes pisos, enclausurada — câmara corta-fogo do interior e portas E 15 C do exterior; ao ar livre — portas EI 30 C do interior; dispensam câmara se derem acesso direto ao exterior (n.º 5).' : ''} Vias exteriores com as distâncias de segurança do art. 25.º n.º 3. Dispensadas as escadas que ligam níveis do mesmo compartimento corta-fogo${n4art18 ? ' e as que servem em exclusivo os espaços do art. 18.º n.º 4 (três pisos num compartimento)' : ''}.`,
     base: 'RT-SCIE, art. 26.º, quadros XX e XXI', estado: vertIsenta ? 'nao' : 'aplica',
     motivo: vertIsenta ? 'Vias que sirvam em exclusivo UT I da 1.ª categoria (art. 26.º n.º 1 a)).' : undefined,
   });
@@ -360,17 +381,17 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
   add({
     tema: 'III.5d', titulo: 'Caixas dos elevadores',
-    exigencia: `${H > 28 || pisosAbaixoUT(ut) > 1 ? 'Paredes EI/REI 60 e portas de patamar E 30 C (servem mais de um piso abaixo do plano de referência ou H > 28 m).' : `Paredes ${q22.paredes} / ${q22.suporte} e portas ${q22.portas} (quadro XXII).`} Portas de patamar de funcionamento automático.${t === 2 && abaixo ? ' UT II abaixo do plano de referência: acesso aos elevadores por câmara corta-fogo.' : ''}${H > 28 ? ' Elevador prioritário de bombeiros servido por câmara corta-fogo.' : ''}`,
+    exigencia: `${H > 28 || Math.max(pisosAbaixoUT(ut), ed.pisosAbaixo ?? 0) > 1 ? 'Paredes EI/REI 60 e portas de patamar E 30 C (servem mais de um piso abaixo do plano de referência ou H > 28 m).' : `Paredes ${q22.paredes} / ${q22.suporte} e portas ${q22.portas} (quadro XXII).`} Portas de patamar de funcionamento automático.${t === 2 && abaixo ? ' UT II abaixo do plano de referência: acesso aos elevadores por câmara corta-fogo, que pode ser comum à da escada (n.º 2).' : ''}${H > 28 ? ' Elevador prioritário de bombeiros servido por câmara corta-fogo.' : ''}`,
     base: 'RT-SCIE, art. 28.º', ...porFacto(ut, 'elevadores', 'Não existem elevadores.'),
   });
   add({
     tema: 'III.5b', titulo: 'Câmaras corta-fogo',
-    exigencia: 'Envolvente EI 60 / REI 60, portas E 30 C; área ≥ 3 m² (≥ 6 m² se utilizáveis por mais de 50 pessoas); distância entre portas ≥ 1,2 m; pé-direito ≥ 2 m; dimensão linear ≥ 1,40 m; controlo de fumo.',
+    exigencia: 'Envolvente EI 60 / REI 60, portas E 30 C; área ≥ 3 m² (≥ 6 m² se utilizáveis por mais de 50 pessoas); distância entre portas ≥ 1,2 m; pé-direito ≥ 2 m; dimensão linear ≥ 1,40 m; portas a abrir no sentido da saída se integrada em caminho de evacuação, para o interior nos restantes casos; controlo de fumo. Sem ductos, acessos a ductos, canalizações de gases ou líquidos combustíveis, instalações elétricas (salvo as de segurança da câmara) nem objetos (salvo extintores, bocas de incêndio e sinalização). Sinal «Câmara corta-fogo. Manter esta porta fechada» na face exterior das portas.',
     base: 'RT-SCIE, arts. 35.º e 63.º', ...(camarasExigidas(ctx) ? { estado: 'aplica' as Estado } : porFacto(ut, 'camarasCF', 'Não são exigidas nem existem câmaras corta-fogo.')),
   });
   add({
     tema: 'III.5a', titulo: 'Portas resistentes ao fogo',
-    exigencia: 'Escalão de tempo igual a metade do da parede onde se inserem; dispositivos de fecho automático (classe C); retenção magnética libertada em caso de incêndio quando mantidas abertas, com sinalização.',
+    exigencia: `Escalão de tempo igual a metade do da parede onde se inserem, salvo casos particulares; portas em caminhos de evacuação com fecho automático (classe C); se mantidas abertas, retenção libertada em caso de incêndio, com seletor de fecho nas de duas folhas e sinal «Porta corta-fogo. Não colocar obstáculos que impeçam o fecho».${t === 1 || t === 2 ? ' Nas UT I e II, as portas de câmaras corta-fogo e de acesso a vias verticais não podem estar normalmente abertas.' : ''}`,
     base: 'RT-SCIE, arts. 34.º e 36.º', estado: 'aplica',
   });
 
