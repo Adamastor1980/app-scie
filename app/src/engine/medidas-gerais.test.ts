@@ -295,3 +295,61 @@ describe('C — Evacuação (arts. 53.º, 58.º a 68.º)', () => {
     expect(med(U(4), 4, 'Zonas de refúgio', { altura: 60 }).exigencia).toContain('0,2 m²');
   });
 });
+
+describe('D — Instalações técnicas (arts. 69.º a 107.º)', () => {
+  it('art. 72.º: fonte central nos edifícios com UT da 3.ª/4.ª cat.; nas 1.ª/2.ª conforme a resposta', () => {
+    expect(med(U(3), 3, 'a) Fontes centrais').estado).toBe('aplica');
+    expect(med(U(3), 2, 'a) Fontes centrais').estado).toBe('verificar');
+    expect(med(U(3), 3, 'a) Fontes centrais').exigencia).toContain('15 s');
+  });
+  it('arts. 70.º, 71.º, 74.º e 75.º: grupos geradores 15 l / 50 l / 500 l; UPS com botoneira', () => {
+    const u = U(3); u.factos = { servEletricos: true };
+    const e = med(u, 2, 'c) Locais de serviços').exigencia;
+    for (const v of ['1000 VAh', '40 kVA', '28 m', '15 l', '50 l', '500 l', 'botoneira']) expect(e).toContain(v);
+  });
+  it('arts. 76.º e 77.º, quadro XXXIV: 15/30/60 min (1.ª/2.ª) e 30/60/90 min (3.ª/4.ª); botoneiras no posto nas UT II a XII da 3.ª/4.ª', () => {
+    expect(med(U(3), 2, 'd) Quadros').exigencia).toContain('cortinas 15 min');
+    const g = med(U(3), 3, 'd) Quadros').exigencia;
+    expect(g).toContain('cortinas 30 min');
+    expect(g).toContain('drenagem 90 min');
+    expect(g).toContain('posto de segurança');
+    expect(med(U(1), 3, 'd) Quadros').exigencia).not.toContain('art. 76.º n.º 4');
+  });
+  it('arts. 80.º a 84.º: central térmica > 40 kW; quadros XIV (≤ 70 kW) / XV; > 2000 kW interdito', () => {
+    const u = U(3); u.factos = { centralTermica: true };
+    const e = med(u, 2, 'a) Centrais térmicas').exigencia;
+    for (const v of ['40 kW', '70 kW', '2000 kW', '0,1 m']) expect(e).toContain(v);
+  });
+  it('arts. 85.º a 87.º: aquecimento autónomo — < 500 pessoas; ≤ 25 kW; sólidos ≤ 200 pessoas', () => {
+    const u = U(3); u.factos = { aquecimento: true };
+    const e = med(u, 2, 'b) Aparelhagem').exigencia;
+    for (const v of ['< 500', '25 kW', '400 W/m²', '1,25 m', '200 pessoas']) expect(e).toContain(v);
+  });
+  it('arts. 88.º a 91.º: cozinhas > 20 kW isoladas; bares < 4 kW; frio > 70 kW', () => {
+    const u = U(7); u.temCozinhaC = true;
+    const e = med(u, 2, 'Cozinhas').exigencia;
+    for (const v of ['20 kW', '4 kW', '2 m', '70 kW', 'A1']) expect(e).toContain(v);
+  });
+  it('arts. 92.º e 93.º: condutas A1; coletivas ≤ 5 (7) locais; escape ≥ 0,5 m acima da cobertura, máx. 10 m', () => {
+    const u = U(3); u.factos = { combustao: true };
+    const e = med(u, 2, 'Condutas e aberturas').exigencia;
+    for (const v of ['A1', '≤ 5 locais', '≤ 7', '0,5 m', '10 m']) expect(e).toContain(v);
+  });
+  it('arts. 94.º a 99.º: 120 °C; 110 °C; 10 000 m³/h; grelha ≤ 10 mm', () => {
+    const u = U(3); u.factos = { avac: true };
+    const e = med(u, 2, 'Ventilação e condicionamento').exigencia;
+    for (const v of ['120 °C', '110 °C', '10 000 m³/h', '10 mm', '200 kW', 'BL-s2, d0']) expect(e).toContain(v);
+  });
+  it('arts. 101.º a 105.º: ascensor de bombeiros com H > 28 m ou mais de dois pisos abaixo (do edifício)', () => {
+    expect(med(U(3), 2, 'b) Ascensor para uso dos bombeiros').estado).toBe('nao');
+    expect(med(U(3), 2, 'b) Ascensor para uso dos bombeiros', { altura: 30 }).estado).toBe('aplica');
+    expect(med(U(3), 2, 'b) Ascensor para uso dos bombeiros', { pisosAbaixo: 3, pisosAbaixoIndicado: true }).estado).toBe('aplica');
+    const e = med(U(3), 2, 'b) Ascensor para uso dos bombeiros', { altura: 30 }).exigencia;
+    for (const v of ['630 kg', '1000 kg', '1,1 × 1,4 m', '60 s', '70 °C']) expect(e).toContain(v);
+  });
+  it('arts. 106.º e 107.º: quadro XXXV (20/100/500 l; 106 dm³); garrafas de GPL até quatro; 40 kW → local C', () => {
+    const u = U(3); u.temGas = true;
+    const e = med(u, 2, 'Líquidos e gases').exigencia;
+    for (const v of ['20 l', '100 l', '500 l', '106 dm³', 'quatro garrafas', '40 kW', '1 %']) expect(e).toContain(v);
+  });
+});
