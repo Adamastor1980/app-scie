@@ -296,6 +296,10 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             </tbody>
           </table></div>
           <button className="btn-fire mt-3" onClick={() => set((x) => { x.itens.push({ id: uid(), produto: '', hi: 0, massa: 0, ci: 1, rai: 1 }); })}><Plus size={14} /> Adicionar material a este compartimento</button>
+          <div className="mt-3 border-l-[3px] border-fire bg-fire-soft px-3 py-2 text-[12px] leading-relaxed">
+            <b>Líquidos: converter litros em quilos</b> — <span className="font-mono">massa (kg) = volume (L) × densidade (kg/L)</span>. Escolha «litros» e a app faz a conta.
+            <span className="block text-ink-2">A densidade está na FDS do produto, secção 9. Em g/cm³ ou g/mL o valor é o mesmo em kg/L; em kg/m³, divida por 1000 (ex.: 840 kg/m³ = 0,84 kg/L). Exemplo: 200 L × 0,84 kg/L = 168 kg.</span>
+          </div>
           
         </div>
       ) : (
