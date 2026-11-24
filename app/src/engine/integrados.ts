@@ -57,27 +57,27 @@ export function integracao(e: Espaco, ut: UT): Integracao | null {
     const lim = ut.arLivre ? 1000 : 200;
     integrado = ef <= lim;
     motivo = integrado
-      ? `Integrado na UT ${ROM[ut.tipo]}: efetivo ${ef} ≤ ${lim} (art. 8.º n.º 3 b)), desde que gerido pela entidade que explora a UT.`
-      : `Efetivo ${ef} > ${lim}: não pode ficar integrado na UT ${ROM[ut.tipo]} (art. 8.º n.º 3 b)). Deve ser uma ${nomeUT} própria.`;
+      ? `Integrado na UT ${ROM[ut.tipo]}: efetivo ${ef} ≤ ${lim} (RJ-SCIE, art. 8.º n.º 3 b)), desde que gerido pela entidade que explora a UT.`
+      : `Efetivo ${ef} > ${lim}: não pode ficar integrado na UT ${ROM[ut.tipo]} (RJ-SCIE, art. 8.º n.º 3 b)). Deve ser uma ${nomeUT} própria.`;
   } else if (r.alinea === 'c') {
     integrado = area <= 200 ? (area > 170 ? null : true) : false; // a lei usa a área bruta: área útil perto de 200 m² tem de ser confirmada
     motivo = integrado === false
-      ? `Área ${area} m² > 200 m²: não pode ficar integrado na UT ${ROM[ut.tipo]} (art. 8.º n.º 3 c)). Deve ser uma ${nomeUT} própria.`
+      ? `Área ${area} m² > 200 m²: não pode ficar integrado na UT ${ROM[ut.tipo]} (RJ-SCIE, art. 8.º n.º 3 c)). Deve ser uma ${nomeUT} própria.`
       : integrado === null
-        ? `Área útil ${area} m² perto do limite: a lei usa a área bruta (com paredes), que não pode passar de 200 m² (art. 8.º n.º 3 c)). Confirme.`
-        : `Integrado na UT ${ROM[ut.tipo]}: área ≤ 200 m² (art. 8.º n.º 3 c)), desde que gerido pela entidade que explora a UT.`;
+        ? `Área útil ${area} m² perto do limite: a lei usa a área bruta (com paredes), que não pode passar de 200 m² (RJ-SCIE, art. 8.º n.º 3 c)). Confirme.`
+        : `Integrado na UT ${ROM[ut.tipo]}: área ≤ 200 m² (RJ-SCIE, art. 8.º n.º 3 c)), desde que gerido pela entidade que explora a UT.`;
   } else {
     const pct = [8, 10, 12].includes(ut.tipo) ? 20 : 10;
     const areaUT = ut.pisos.reduce((t, x) => t + (x.area ?? 0), 0) || (ut.areaBruta ?? 0);
     if (!areaUT) {
       integrado = null;
-      motivo = `Só fica integrado se a área bruta não passar de ${pct} % da área bruta da UT ${ROM[ut.tipo]} e não for acessível ao público (art. 8.º n.º 3 a)). Indique a área dos pisos da UT para verificar.`;
+      motivo = `Só fica integrado se a área bruta não passar de ${pct} % da área bruta da UT ${ROM[ut.tipo]} e não for acessível ao público (RJ-SCIE, art. 8.º n.º 3 a)). Indique a área dos pisos da UT para verificar.`;
     } else {
       const lim = (areaUT * pct) / 100;
       integrado = area <= lim;
       motivo = integrado
-        ? `Integrado na UT ${ROM[ut.tipo]}: ${area} m² ≤ ${pct} % de ${Math.round(areaUT)} m² (art. 8.º n.º 3 a)), desde que não acessível ao público.`
-        : `Área ${area} m² > ${pct} % da área da UT (${Math.round(lim)} m²): não pode ficar integrado na UT ${ROM[ut.tipo]} (art. 8.º n.º 3 a)). Deve ser uma ${nomeUT} própria.`;
+        ? `Integrado na UT ${ROM[ut.tipo]}: ${area} m² ≤ ${pct} % de ${Math.round(areaUT)} m² (RJ-SCIE, art. 8.º n.º 3 a)), desde que não acessível ao público.`
+        : `Área ${area} m² > ${pct} % da área da UT (${Math.round(lim)} m²): não pode ficar integrado na UT ${ROM[ut.tipo]} (RJ-SCIE, art. 8.º n.º 3 a)). Deve ser uma ${nomeUT} própria.`;
     }
   }
   return { alinea: r.alinea, uso: r.uso, utPropria: r.ut, usoQuadro, integrado, motivo };

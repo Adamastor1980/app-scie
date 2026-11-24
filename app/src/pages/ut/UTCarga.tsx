@@ -29,11 +29,11 @@ export default function UTCarga({ ut, upU }: UTProps) {
   return (
     <div>
       {!precisaCarga(ut.tipo) && (
-        <div className="mb-6"><Note>A densidade de carga de incêndio modificada só é fator de risco nas UT XI e XII (art. 12.º n.º 2 h) e i)). Nesta UT, use o cálculo da carga de incêndio modificada (Qs) para verificar se um local é de risco C (&gt; 10 000 MJ, art. 10.º n.º 3 n)) ou C agravado (&gt; 20 000 MJ, art. 11.º n.º 3).</Note></div>
+        <div className="mb-6"><Note>A densidade de carga de incêndio modificada só é fator de risco nas UT XI e XII (RJ-SCIE, art. 12.º n.º 2 h) e i)). Nesta UT, use o cálculo da carga de incêndio modificada (Qs) para verificar se um local é de risco C (&gt; 10 000 MJ, RJ-SCIE, art. 10.º n.º 3 n)) ou C agravado (&gt; 20 000 MJ, RJ-SCIE, art. 11.º n.º 3).</Note></div>
       )}
       <div className="mb-8 grid gap-3 md:grid-cols-4">
-        <Stat label="Densidade q da UT" value={fmt(total.q, 1)} unit="MJ/m²" sub="N.º 4.º, 2 do Despacho" accent />
-        <Stat label="Carga Q da UT" value={fmt(total.Q)} unit="MJ" sub="N.º 4.º, 1 do Despacho" />
+        <Stat label="Densidade q da UT" value={fmt(total.q, 1)} unit="MJ/m²" sub="Despacho n.º 8954/2020, n.º 4.º, 2" accent />
+        <Stat label="Carga Q da UT" value={fmt(total.Q)} unit="MJ" sub="Despacho n.º 8954/2020, n.º 4.º, 1" />
         <Stat label="Área útil ΣSk" value={fmt(total.S, 1)} unit="m²" />
         <Stat label="Compartimentos" value={total.n} />
       </div>
@@ -41,10 +41,10 @@ export default function UTCarga({ ut, upU }: UTProps) {
       <div className="mb-8 border border-ink bg-white px-5 py-4 text-[12.5px]">
         <span className="label mr-3">Resultado da UT</span>
         <span className="font-mono">q = Σ qsk · Sk / Σ Sk</span>
-        <span className="ml-2 text-ink-3">— média das densidades dos compartimentos corta-fogo ponderada pelas áreas (n.º 4.º do Despacho). Em cada compartimento escolha o método: determinístico ou probabilístico (n.º 2.º).</span>
+        <span className="ml-2 text-ink-3">— média das densidades dos compartimentos corta-fogo ponderada pelas áreas (Despacho n.º 8954/2020, n.º 4.º). Em cada compartimento escolha o método: determinístico ou probabilístico (Despacho n.º 8954/2020, n.º 2.º).</span>
       </div>
 
-      <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
+      <Section n="3.1" title="Compartimentos corta-fogo" sub="O Despacho n.º 8954/2020 manda calcular a carga de incêndio por compartimento corta-fogo (n.º 3.º): o espaço delimitado por paredes, pavimentos e portas resistentes ao fogo (ex.: um armazém separado da produção por parede corta-fogo). Se a UT não tiver compartimentação interior, é um único compartimento com a área útil total. Em cada um escolha o método." right={
         <button className="btn" title="Só para outro espaço separado por paredes e portas resistentes ao fogo" onClick={() => { const n = novoCompartimento(ut.compartimentos.length + 1); upU((u) => { u.compartimentos.push(n); }); mostrarNovo(n.id); }}><Plus size={15} /> Outro compartimento corta-fogo</button>
       }>
         {ut.compartimentos.length === 0 && (
@@ -58,7 +58,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
         </div>
       </Section>
 
-      <Section n="3.2" title="Coeficientes" sub="N.º 6.º (Ci) e n.º 7.º (Rai) do Despacho.">
+      <Section n="3.2" title="Coeficientes" sub="Despacho n.º 8954/2020: n.º 6.º (Ci) e n.º 7.º (Rai).">
         <div className="grid gap-px border border-ink bg-ink md:grid-cols-2">
           <div className="bg-white p-4">
             <p className="font-display text-[15px] font-bold">Ci — coeficiente de combustibilidade</p>
@@ -67,7 +67,7 @@ export default function UTCarga({ ut, upU }: UTProps) {
           <div className="bg-white p-4">
             <p className="font-display text-[15px] font-bold">Rai — coeficiente de ativação</p>
             <p className="mt-2 text-[12px]">Alto 2,0 · Médio 1,5 · Baixo 1,0, consoante o risco de ativação da atividade (quadro II).</p>
-            <p className="mt-2 text-[12px] leading-snug text-ink-3">Várias atividades no mesmo compartimento (n.º 7.º, 3): a) o Rai da atividade de maior risco, se ocupar ≥ 10 % da área útil; b) caso contrário, a média dos Rai ponderada pelas áreas.</p>
+            <p className="mt-2 text-[12px] leading-snug text-ink-3">Várias atividades no mesmo compartimento (Despacho n.º 8954/2020, n.º 7.º, 3): a) o Rai da atividade de maior risco, se ocupar ≥ 10 % da área útil; b) caso contrário, a média dos Rai ponderada pelas áreas.</p>
           </div>
         </div>
       </Section>
@@ -76,27 +76,28 @@ export default function UTCarga({ ut, upU }: UTProps) {
 }
 
 /** Significado de cada símbolo, como definido no n.º 3.º do Despacho n.º 8954/2020. */
+const DESP = 'Despacho n.º 8954/2020';
 const SIMB_DET: [string, string][] = [
-  ['Mi', 'massa do material (i), em kg'],
-  ['Hi', 'poder calorífico inferior do material, em MJ/kg (quadro I, n.º 5.º)'],
-  ['Ci', 'coeficiente de combustibilidade do material (n.º 6.º): ver «Como escolher o Ci»'],
-  ['Rai', 'coeficiente de ativação, conforme a atividade do compartimento (quadro II, n.º 7.º)'],
-  ['S', 'área útil do compartimento corta-fogo, em m²'],
+  ['Mi', `massa do material (i), em kg — ${DESP}, n.º 3.º, 1`],
+  ['Hi', `poder calorífico inferior do material, em MJ/kg — quadro I do ${DESP} (n.º 5.º)`],
+  ['Ci', `coeficiente de combustibilidade do material — ${DESP}, n.º 6.º (ver «Como escolher o Ci»)`],
+  ['Rai', `coeficiente de ativação, conforme a atividade do compartimento — quadro II do ${DESP} (n.º 7.º)`],
+  ['S', `área útil do compartimento corta-fogo, em m² — ${DESP}, n.º 3.º, 1`],
 ];
 const SIMB_FAB: [string, string][] = [
-  ['qsi', 'densidade de carga de incêndio da atividade, em MJ/m² (quadro II)'],
-  ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
-  ['Ci', 'coeficiente de combustibilidade do material de maior risco na zona (n.º 6.º): ver «Como escolher o Ci»'],
-  ['Rai', 'coeficiente de ativação da atividade (quadro II, n.º 7.º)'],
-  ['S', 'área útil do compartimento corta-fogo, em m²'],
+  ['qsi', `densidade de carga de incêndio da atividade, em MJ/m² — quadro II do ${DESP} (n.º 7.º)`],
+  ['Si', `área ocupada pela zona, em m² (uma só zona: Si = S) — ${DESP}, n.º 3.º, 2`],
+  ['Ci', `coeficiente de combustibilidade do material de maior risco na zona — ${DESP}, n.º 6.º (ver «Como escolher o Ci»)`],
+  ['Rai', `coeficiente de ativação da atividade — quadro II do ${DESP} (n.º 7.º)`],
+  ['S', `área útil do compartimento corta-fogo, em m² — ${DESP}, n.º 3.º, 2`],
 ];
 const SIMB_ARM: [string, string][] = [
-  ['qvi', 'carga de incêndio por volume do produto armazenado, em MJ/m³ (quadro II)'],
-  ['hi', 'altura de armazenagem da zona, em m'],
-  ['Si', 'área ocupada pela zona, em m² (uma só zona: Si = S)'],
-  ['Ci', 'coeficiente de combustibilidade do produto armazenado (n.º 6.º): ver «Como escolher o Ci»'],
-  ['Rai', 'coeficiente de ativação do produto armazenado (quadro II, n.º 7.º)'],
-  ['S', 'área útil do compartimento corta-fogo, em m²'],
+  ['qvi', `carga de incêndio por volume do produto armazenado, em MJ/m³ — quadro II do ${DESP} (n.º 7.º)`],
+  ['hi', `altura de armazenagem da zona, em m — ${DESP}, n.º 3.º, 2`],
+  ['Si', `área ocupada pela zona, em m² (uma só zona: Si = S) — ${DESP}, n.º 3.º, 2`],
+  ['Ci', `coeficiente de combustibilidade do produto armazenado — ${DESP}, n.º 6.º (ver «Como escolher o Ci»)`],
+  ['Rai', `coeficiente de ativação do produto armazenado — quadro II do ${DESP} (n.º 7.º)`],
+  ['S', `área útil do compartimento corta-fogo, em m² — ${DESP}, n.º 3.º, 2`],
 ];
 function Simbolos({ l }: { l: [string, string][] }) {
   return (
@@ -147,7 +148,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
       setAviso(`Adicionado o armazenamento «${a.a}» (qvi = ${fmt(a.qv)} MJ/m³). Preencha a altura hi e a área Si nas zonas de armazenamento.`);
     }
   };
-  const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (art. 10.º n.º 3 n))' : '';
+  const locC = r.Qs > 20000 ? 'Qs > 20 000 MJ: se o espaço for local de risco C, é C agravado (RJ-SCIE, art. 11.º n.º 3); com materiais facilmente inflamáveis é local C (RJ-SCIE, art. 10.º n.º 3 n))' : r.Qs > 10000 ? 'Qs > 10 000 MJ: local de risco C se associado a materiais facilmente inflamáveis ou riscos de explosão (RJ-SCIE, art. 10.º n.º 3 n))' : '';
   const somaZonas = [...c.atividades, ...c.armazens].reduce((s, z) => s + z.area, 0);
   // campos obrigatórios por preencher (ficam a âmbar e são listados com o seu significado)
   const ff = (b: boolean) => (b ? 'falta' : '');
@@ -189,7 +190,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         <Field label="Compartimento corta-fogo"><Text value={c.nome} onChange={(v) => set((x) => { x.nome = v; })} /></Field>
         <Field label="Área útil S do compartimento" className={ff(!(c.area > 0))}><Num value={c.area} onChange={(v) => set((x) => { const zs = [...x.atividades, ...x.armazens]; if (zs.length === 1 && (zs[0].area === 0 || zs[0].area === x.area)) zs[0].area = v; x.area = v; })} suffix="m²" /></Field>
         <div className="field">
-          <span className="label">Método (n.º 2.º do Despacho)</span>
+          <span className="label">Método (Despacho n.º 8954/2020, n.º 2.º)</span>
           <div className="grid grid-cols-2 border border-ink">
             {(['deterministico', 'probabilistico'] as const).map((m) => (
               <button key={m} className={`h-9 text-[12.5px] font-semibold ${c.metodo === m ? 'bg-ink text-white' : 'bg-white hover:bg-paper'}`} onClick={() => { set((x) => aproveitarDados(x, m)); setAviso(''); }}>
@@ -206,7 +207,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
           <>
             <p className="font-display text-[16px] font-bold">Método determinístico — «sei o que lá está e quanto pesa»</p>
             <p className="mt-1 max-w-4xl text-[12.5px] leading-relaxed text-ink-2">Usa-se quando se conhecem os materiais e as quantidades (inventário, fichas técnicas, pesagens).</p>
-            <p className="mt-2 font-mono text-[13px]">qs = Σ (Mi × Hi × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 1, b) do Despacho</span></p>
+            <p className="mt-2 font-mono text-[13px]">qs = Σ (Mi × Hi × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— Despacho n.º 8954/2020, n.º 3.º, 1, b)</span></p>
             <Simbolos l={SIMB_DET} />
           </>
         ) : (
@@ -216,12 +217,12 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
             <div className="mt-3 grid gap-5 md:grid-cols-2">
               <div>
                 <p className="text-[12.5px] font-bold">a) Zonas de fabrico ou reparação</p>
-                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 2, b1)</span></p>
+                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qsi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— Despacho n.º 8954/2020, n.º 3.º, 2, b1)</span></p>
                 <Simbolos l={SIMB_FAB} />
               </div>
               <div>
                 <p className="text-[12.5px] font-bold">b) Zonas de armazenamento</p>
-                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— n.º 3.º, 2, b2)</span></p>
+                <p className="mt-0.5 font-mono text-[13px]">qs = Σ (qvi × hi × Si × Ci × Rai) / S <span className="font-sans text-[11px] text-ink-3">— Despacho n.º 8954/2020, n.º 3.º, 2, b2)</span></p>
                 <Simbolos l={SIMB_ARM} />
               </div>
             </div>
@@ -246,7 +247,7 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
       {c.metodo === 'deterministico' ? (
         <div className="p-4">
           <div className="mb-5 grid items-end gap-3 md:grid-cols-[1.6fr_1fr]">
-            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="n.º 3.º, 1 e n.º 7.º" className={ff(!c.raiDet)}>
+            <Field label="1. Atividade exercida no compartimento (quadro II) — define o Rai" legal="Despacho n.º 8954/2020, n.º 7.º" className={ff(!c.raiDet)}>
               <Combo items={ITENS_ALL} value={ITENS_ALL.find((i) => i.key === c.atividadeDetId)?.label ?? ''} placeholder="Escolher a atividade do compartimento"
                 onPick={(o) => set((x) => { const k = o.key as number; const a = QUADRO_II.find((y) => y.id === Math.floor(k / 2))!; x.atividadeDetId = k; x.raiDet = RAI[(k % 2 ? a.rv : a.rs)!]; })} />
             </Field>

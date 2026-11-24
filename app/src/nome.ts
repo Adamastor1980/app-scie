@@ -53,16 +53,16 @@ export function justificacaoLocal(e: Espaco, efetivo: number): string {
   switch (e.local) {
     case 'A':
       return efetivo > 100 || pub > 50
-        ? `INCOERENTE: efetivo ${efetivo}${pub ? `, público ${pub}` : ''} excede os limites do local A — deve ser local B (art. 10.º n.º 1 b))`
-        : `Efetivo ${efetivo} ≤ 100${pub ? ` e público ${pub} ≤ 50` : ''}, sem riscos agravados — art. 10.º n.º 1 a)`;
+        ? `INCOERENTE: efetivo ${efetivo}${pub ? `, público ${pub}` : ''} excede os limites do local A — deve ser local B (RJ-SCIE, art. 10.º n.º 1 b))`
+        : `Efetivo ${efetivo} ≤ 100${pub ? ` e público ${pub} ≤ 50` : ''}, sem riscos agravados — RJ-SCIE, art. 10.º n.º 1 a)`;
     case 'B':
       return efetivo > 100 || pub > 50
-        ? `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: ${efetivo > 100 ? 'efetivo > 100' : 'público > 50'} — art. 10.º n.º 1 b)`
-        : `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: conjunto de locais A no mesmo compartimento corta-fogo acima dos limites — art. 10.º n.º 2`;
-    case 'C': return c ? `Art. 10.º n.º 3 ${c}` : 'Riscos agravados de eclosão e desenvolvimento de incêndio — art. 10.º n.º 1 c)';
-    case 'Cag': return `Local C nas condições do art. 11.º n.º 3 (C agravado)${c ? `; ${c}` : ''}`;
-    case 'D': return 'Pessoas acamadas, crianças ≤ 3 anos ou limitadas na mobilidade/perceção — art. 10.º n.º 1 d)';
-    case 'E': return 'Local destinado a dormida — art. 10.º n.º 1 e)';
-    case 'F': return 'Meios e sistemas essenciais à continuidade de atividades relevantes — art. 10.º n.º 1 f)';
+        ? `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: ${efetivo > 100 ? 'efetivo > 100' : 'público > 50'} — RJ-SCIE, art. 10.º n.º 1 b)`
+        : `Efetivo ${efetivo}${pub ? `, público ${pub}` : ''}: conjunto de locais A no mesmo compartimento corta-fogo acima dos limites — RJ-SCIE, art. 10.º n.º 2`;
+    case 'C': return c ? `Art. 10.º n.º 3 ${c}` : 'Riscos agravados de eclosão e desenvolvimento de incêndio — RJ-SCIE, art. 10.º n.º 1 c)';
+    case 'Cag': return `Local C nas condições do RJ-SCIE, art. 11.º n.º 3 (C agravado)${c ? `; ${c}` : ''}`;
+    case 'D': return 'Pessoas acamadas, crianças ≤ 3 anos ou limitadas na mobilidade/perceção — RJ-SCIE, art. 10.º n.º 1 d)';
+    case 'E': return 'Local destinado a dormida — RJ-SCIE, art. 10.º n.º 1 e)';
+    case 'F': return 'Meios e sistemas essenciais à continuidade de atividades relevantes — RJ-SCIE, art. 10.º n.º 1 f)';
   }
 }

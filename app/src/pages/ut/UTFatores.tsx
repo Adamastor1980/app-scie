@@ -36,7 +36,7 @@ export default function UTFatores({ ut, upU }: UTProps) {
           <div className="grid gap-4 md:grid-cols-2 md:[&>.field>span:first-child]:min-h-[30px] md:[&>.field>span:first-child]:items-end">
             {temArLivre && (
               <div className="md:col-span-2">
-                <Toggle checked={ut.arLivre} onChange={(v) => upU((u) => { u.arLivre = v; })} label="Espaço ao ar livre" legal={`RJ-SCIE, art. 12.º n.º 2; ${info.quadro}`}
+                <Toggle checked={ut.arLivre} onChange={(v) => upU((u) => { u.arLivre = v; })} label="Espaço ao ar livre" legal={`RJ-SCIE, art. 12.º n.º 2; anexo III, ${info.quadro.replace('Quadro', 'quadro')}`}
                   hint={t === 2 ? 'Recinto ao ar livre: o quadro II só admite a 1.ª categoria.' : t === 12 ? 'Ao ar livre: só conta a densidade de carga de incêndio modificada (coluna «ao ar livre» do quadro X).' : 'Ao ar livre: só conta o efetivo (coluna «ao ar livre» do quadro V).'} />
               </div>
             )}
@@ -49,8 +49,8 @@ export default function UTFatores({ ut, upU }: UTProps) {
               </Field>
             )}
             {usaPisos && (
-              <Field label="Pisos abaixo do plano de referência" legal={pisosCriterio ? info.quadro : 'RT-SCIE'} className={fPis ? 'falta' : ''}
-                hint={pisosCriterio ? NOTA_PISOS_TECNICOS.replace('(*) ', '') : `Não conta para a categoria (${info.quadro}). Conta para as medidas do RT-SCIE nos pisos abaixo do plano de referência.`}>
+              <Field label="Pisos abaixo do plano de referência" legal={pisosCriterio ? `RJ-SCIE, anexo III, ${info.quadro.replace('Quadro', 'quadro')}` : 'RT-SCIE'} className={fPis ? 'falta' : ''}
+                hint={pisosCriterio ? NOTA_PISOS_TECNICOS.replace('(*) ', '') : `Não conta para a categoria (RJ-SCIE, anexo III, ${info.quadro.replace('Quadro', 'quadro')}). Conta para as medidas do RT-SCIE nos pisos abaixo do plano de referência.`}>
                 <Num value={ut.pisosAbaixo} mostrarZero={!!ut.indicados?.pisos} onChange={(v, t) => upU((u) => { u.pisosAbaixo = Math.round(v); u.indicados = { ...u.indicados, pisos: t.trim() !== '' }; })} />
                 {fPis && !pisosIncoerente && <button type="button" className="self-start text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={(e) => { e.preventDefault(); upU((u) => { u.pisosAbaixo = 0; u.indicados = { ...u.indicados, pisos: true }; }); }}>Confirmar 0 (nenhum piso abaixo)</button>}
                 {pisosIncoerente && <span className="text-[11.5px] font-semibold text-alerta">{pisosIncoerente[0].toUpperCase() + pisosIncoerente.slice(1)}. Corrija, ou marque abaixo os pisos só técnicos (não contam).</span>}
@@ -72,14 +72,14 @@ export default function UTFatores({ ut, upU }: UTProps) {
             )}
             {(t === 11 || t === 12) && (
               <div className="md:col-span-2">
-                <Toggle checked={ut.exclusivoArmazem} onChange={(v) => upU((u) => { u.exclusivoArmazem = v; })} label="Destinada exclusivamente a armazém" legal={`Nota (**) do ${info.quadro}`} hint="Os limites da densidade de carga de incêndio modificada passam a ser 10 vezes superiores." />
+                <Toggle checked={ut.exclusivoArmazem} onChange={(v) => upU((u) => { u.exclusivoArmazem = v; })} label="Destinada exclusivamente a armazém" legal={`RJ-SCIE, anexo III, nota (**) do ${info.quadro.replace('Quadro', 'quadro')}`} hint="Os limites da densidade de carga de incêndio modificada passam a ser 10 vezes superiores." />
               </div>
             )}
             {((t === 4 || t === 5) && ef.temD || t === 7 && ef.temE) && (
               <div className="md:col-span-2">
                 <Toggle checked={ut.saidaIndependenteD} onChange={(v) => upU((u) => { u.saidaIndependenteD = v; })}
                   label={t === 7 ? 'Todos os locais de risco E com saídas independentes diretas ao exterior, no plano de referência' : 'Todos os locais de risco D com saídas independentes diretas ao exterior, no plano de referência'}
-                  legal={`RJ-SCIE, art. 12.º n.º 2 d); ${info.quadro}`} hint="Condição exigida apenas para a 1.ª categoria (art. 12.º n.º 2 d))." />
+                  legal={`RJ-SCIE, art. 12.º n.º 2 d); anexo III, ${info.quadro.replace('Quadro', 'quadro')}`} hint="Condição exigida apenas para a 1.ª categoria (RJ-SCIE, art. 12.º n.º 2 d))." />
               </div>
             )}
           </div>

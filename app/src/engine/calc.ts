@@ -44,18 +44,18 @@ export function efetivoEspaco(e: Espaco): EfetivoCalc {
       const i = q?.indice ?? 0;
       bruto = A * i;
       formula = `${fmt(A, 2)} m² × ${fmt(i, 2)} pessoas/m²`;
-      base = `Art. 51.º n.º 3, quadro XXVII — ${q?.espaco ?? 'índice por definir'}`;
+      base = `RT-SCIE, art. 51.º n.º 3, quadro XXVII — ${q?.espaco ?? 'índice por definir'}`;
       break;
     }
     case 'camas':
       bruto = n;
       formula = `${n} ocupantes em camas`;
-      base = 'Art. 51.º n.º 2 a) — ocupantes em camas (UT IV, V e VII)';
+      base = 'RT-SCIE, art. 51.º n.º 2 a) — ocupantes em camas (UT IV, V e VII)';
       break;
     case 'acamados':
       bruto = 3.2 * n;
       formula = `3,2 × ${n} lugares de acamados`;
-      base = 'Art. 51.º n.º 2 b) — 3,2 vezes o número de lugares de acamados (UT V)';
+      base = 'RT-SCIE, art. 51.º n.º 2 b) — 3,2 vezes o número de lugares de acamados (UT V)';
       break;
     case 'tipologia': {
       const t = e.tipologia ?? 0;
@@ -63,19 +63,19 @@ export function efetivoEspaco(e: Espaco): EfetivoCalc {
       const un = Math.max(1, n || 1);
       bruto = porUn * un;
       formula = `${un} × T${t} → ${un} × 2 × (${t} + 1)`;
-      base = 'Art. 51.º n.º 2 c), quadro XXVI — apartamentos e moradias turísticas';
+      base = 'RT-SCIE, art. 51.º n.º 2 c), quadro XXVI — apartamentos e moradias turísticas';
       break;
     }
     case 'lugares':
       bruto = n;
       formula = `${n} lugares fixos`;
-      base = 'Art. 51.º n.º 2 d) — número de lugares fixos';
+      base = 'RT-SCIE, art. 51.º n.º 2 d) — número de lugares fixos';
       break;
     case 'declarado': {
       const min = 0.03 * A;
       bruto = Math.max(n, min);
       formula = `máx(${n} declarados; 0,03 × ${fmt(A, 2)} m² = ${fmt(min, 2)})`;
-      base = 'Art. 51.º n.º 2 e) — declarado pela entidade exploradora, mínimo 0,03 pessoas/m² (arquivos e espaços não acessíveis a público da UT XII)';
+      base = 'RT-SCIE, art. 51.º n.º 2 e) — declarado pela entidade exploradora, mínimo 0,03 pessoas/m² (arquivos e espaços não acessíveis a público da UT XII)';
       break;
     }
     case 'comprimento': {
@@ -84,8 +84,8 @@ export function efetivoEspaco(e: Espaco): EfetivoCalc {
       bruto = L * k;
       formula = `${fmt(L, 2)} m × ${k} pessoas/m`;
       base = e.comprimentoTipo === 'pe'
-        ? 'Art. 51.º n.º 4, quadro XXVIII — lugares de pé numa única frente: 5 pessoas/m de frente'
-        : 'Art. 51.º n.º 4, quadro XXVIII — lugares sentados não individualizados: 2 pessoas/m de banco ou bancada';
+        ? 'RT-SCIE, art. 51.º n.º 4, quadro XXVIII — lugares de pé numa única frente: 5 pessoas/m de frente'
+        : 'RT-SCIE, art. 51.º n.º 4, quadro XXVIII — lugares sentados não individualizados: 2 pessoas/m de banco ou bancada';
       break;
     }
     case 'desportivo': {
@@ -93,22 +93,22 @@ export function efetivoEspaco(e: Espaco): EfetivoCalc {
       if (e.desportivoTipo === 'patinagem') {
         bruto = esp + 0.7 * A;
         formula = `${esp} espectadores + 0,7 × ${fmt(A, 2)} m² de pista`;
-        base = 'Art. 283.º b) — pistas de patinagem: 0,7 pessoas/m² de pista (acresce ao efetivo da al. a), registado no espaço de apoio)';
+        base = 'RT-SCIE, art. 283.º b) — pistas de patinagem: 0,7 pessoas/m² de pista (acresce ao efetivo da al. a), registado no espaço de apoio)';
       } else if (e.desportivoTipo === 'agua') {
         bruto = esp + 1.0 * A;
         formula = `${esp} espectadores + 1 × ${fmt(A, 2)} m² de plano de água`;
-        base = 'Art. 283.º c) — piscinas e parques aquáticos: 1 pessoa/m² de plano de água, sem tanques de saltos, de mergulho e lava-pés (acresce ao efetivo da al. a))';
+        base = 'RT-SCIE, art. 283.º c) — piscinas e parques aquáticos: 1 pessoa/m² de plano de água, sem tanques de saltos, de mergulho e lava-pés (acresce ao efetivo da al. a))';
       } else {
         bruto = esp + 0.1 * A;
         formula = `${esp} espectadores + 0,1 × ${fmt(A, 2)} m² de área útil de apoio`;
-        base = 'Art. 283.º a) — instalações desportivas cobertas: espectadores + 0,1 pessoas/m² de área de apoio';
+        base = 'RT-SCIE, art. 283.º a) — instalações desportivas cobertas: espectadores + 0,1 pessoas/m² de área de apoio';
       }
       break;
     }
     case 'fundamentado':
       bruto = n;
       formula = `${n} (valor fundamentado)`;
-      base = 'Art. 51.º n.º 8 — efetivo fundamentado pelo autor (locais não abrangidos pelos n.os 2 a 4)';
+      base = 'RT-SCIE, art. 51.º n.º 8 — efetivo fundamentado pelo autor (locais não abrangidos pelos n.os 2 a 4)';
       break;
   }
   const valor = Math.ceil(round(bruto, 6));
@@ -186,14 +186,14 @@ export function raiCompartimento(c: Compartimento): { rai: number; nota: string 
   if (areaMaior / S >= 0.1) {
     return {
       rai: maior.rai,
-      nota: `n.º 7.º, 3, a): a atividade de maior risco de ativação (Rai = ${fmt(maior.rai, 1)}) ocupa ${fmt((100 * areaMaior) / S, 1)} % da área útil (≥ 10 %).`,
+      nota: `Despacho n.º 8954/2020, n.º 7.º, 3, a): a atividade de maior risco de ativação (Rai = ${fmt(maior.rai, 1)}) ocupa ${fmt((100 * areaMaior) / S, 1)} % da área útil (≥ 10 %).`,
     };
   }
   const somaA = zonas.reduce((s, z) => s + z.area, 0);
   const media = zonas.reduce((s, z) => s + z.rai * z.area, 0) / somaA;
   return {
     rai: round(media, 3),
-    nota: `n.º 7.º, 3, b): a atividade de maior risco ocupa menos de 10 % da área útil; Rai = média ponderada pelas áreas = ${fmt(media, 3)}.`,
+    nota: `Despacho n.º 8954/2020, n.º 7.º, 3, b): a atividade de maior risco ocupa menos de 10 % da área útil; Rai = média ponderada pelas áreas = ${fmt(media, 3)}.`,
   };
 }
 
@@ -300,11 +300,11 @@ export const catAtribuida = (c: Classificacao): Cat | null => (c.falta.length ? 
 
 /** O que significa cada critério por preencher e onde se preenche. */
 export const SIGNIFICADO_FATOR: Record<string, string> = {
-  altura: 'diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT (art. 2.º a) do RJ-SCIE); 0 tem de ser confirmado',
-  pisos: 'pisos ocupados pela UT abaixo do plano de referência; 0 tem de ser confirmado',
-  area: 'área bruta ocupada pela UT II, em m² (art. 2.º b) do RJ-SCIE)',
-  efetivo: 'n.º de pessoas da UT, calculado no passo «Efetivo» (art. 51.º do RT-SCIE)',
-  carga: 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020)',
+  altura: 'diferença de cota entre o plano de referência e o pavimento do último piso acima do solo ocupado pela UT (RJ-SCIE, art. 2.º a)); 0 tem de ser confirmado',
+  pisos: 'pisos ocupados pela UT abaixo do plano de referência (RJ-SCIE, anexo III, quadros do art. 12.º); 0 tem de ser confirmado',
+  area: 'área bruta ocupada pela UT II, em m² (RJ-SCIE, art. 2.º b))',
+  efetivo: 'n.º de pessoas da UT, calculado no passo «Efetivo» (RT-SCIE, art. 51.º)',
+  carga: 'densidade de carga de incêndio modificada, calculada no passo «Carga de incêndio» (Despacho n.º 8954/2020, n.º 4.º)',
 };
 
 /** Número do piso a partir do texto («Piso -1», «-2», «Cave», «R/C»…); null se não for possível. */
@@ -452,7 +452,7 @@ export function classificar(ut: UT, ef = efetivoUT(ut), carga = cargaUT(ut)): Cl
       quadro = 'Quadro IV';
       const semDE = ut.tipo === 4 && !ef.temD && !ef.temE;
       const efMax: [number, number, number] = semDE ? [T.q4_efetivo[0], T.q4_efetivo[1] * 1.5, T.q4_efetivo[2] * 1.5] : T.q4_efetivo;
-      if (semDE) notas.push('UT IV sem locais de risco D ou E: limites máximos do efetivo das 2.ª e 3.ª categorias aumentados em 50 % (art. 13.º n.º 3 e nota (*) do quadro IV).');
+      if (semDE) notas.push('UT IV sem locais de risco D ou E: limites máximos do efetivo das 2.ª e 3.ª categorias aumentados em 50 % (RJ-SCIE, art. 13.º n.º 3 e nota (*) do quadro IV).');
       f.push(fator('altura', `Altura da UT ${ut.tipo === 4 ? 'IV' : 'V'}`, h, 'm', T.q4_altura));
       f.push(fator('efetivo', `Efetivo da UT ${ut.tipo === 4 ? 'IV' : 'V'}`, ef.total, 'pessoas', efMax));
       f.push(fator('efetivoDE', 'Efetivo em locais de risco D ou E', ef.emDE, 'pessoas', T.q4_efetivoDE));
@@ -577,6 +577,6 @@ export function normalizarLocal(e: Espaco, antes?: Espaco) {
   if (mudouLimitadas && e.mobilidadeReduzida && (e.local === 'A' || e.local === 'B' || e.local === 'E')) e.local = 'D';
   if (mudouLocal) e.localAuto = false; // escolha do técnico
   const excede = efetivoEspaco(e).valor > 100 || (e.efetivoPublico ?? 0) > 50;
-  if (e.local === 'A' && excede) { e.local = 'B'; e.localAuto = true; } // art. 10.º n.º 1 b)
-  else if (e.local === 'B' && e.localAuto && !excede) { e.local = 'A'; e.localAuto = false; } // voltou aos limites do local A (art. 10.º n.º 1 a))
+  if (e.local === 'A' && excede) { e.local = 'B'; e.localAuto = true; } // RJ-SCIE, art. 10.º n.º 1 b)
+  else if (e.local === 'B' && e.localAuto && !excede) { e.local = 'A'; e.localAuto = false; } // voltou aos limites do local A (RJ-SCIE, art. 10.º n.º 1 a))
 }

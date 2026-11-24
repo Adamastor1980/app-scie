@@ -48,7 +48,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
         </div>
         <Faltas itens={faltaCaracterizacao(e)} titulo="Falta preencher" />
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <Toggle checked={e.independente} onChange={(v) => ue((x) => { x.independente = v; })} label="Edifício independente" legal="RJ-SCIE, art. 2.º j) e art. 13.º n.º 4" hint="Estrutura independente, sem comunicação interior ou apenas por câmara corta-fogo. Em estabelecimentos com vários edifícios independentes a categoria é atribuída a cada edifício." />
+          <Toggle checked={e.independente} onChange={(v) => ue((x) => { x.independente = v; })} label="Edifício independente" legal="RJ-SCIE, art. 2.º j) e RJ-SCIE, art. 13.º n.º 4" hint="Estrutura independente, sem comunicação interior ou apenas por câmara corta-fogo. Em estabelecimentos com vários edifícios independentes a categoria é atribuída a cada edifício." />
           <Toggle checked={e.comunicacoesComuns} onChange={(v) => ue((x) => { x.comunicacoesComuns = v; })} label="Utilização mista com comunicações interiores comuns" legal="RJ-SCIE, art. 13.º n.º 5; RT-SCIE, art. 130.º" hint="Afeta a configuração do alarme e as exigências mais gravosas nos espaços comuns." />
         </div>
         <p className="mt-3 text-[12px] text-ink-3">Altura do edifício = diferença de cota entre o piso mais desfavorável suscetível de ocupação e o plano de referência. Não contam o último piso só com instalações técnicas nem pisos de arrecadações com visitas episódicas.</p>
@@ -79,7 +79,7 @@ export default function EdificioPage({ eid }: { eid: string }) {
           </div>
         )}
         {e.uts.length > 1 && (
-          <div className="mt-4"><Note>Edifício de utilização mista: cada UT tem a sua categoria (art. 12.º). Aplicam-se as exigências mais gravosas nos espaços comuns, na estrutura e compartimentação comuns e no controlo de fumo das vias comuns (art. 13.º n.º 5).</Note></div>
+          <div className="mt-4"><Note>Edifício de utilização mista: cada UT tem a sua categoria (RJ-SCIE, art. 12.º). Aplicam-se as exigências mais gravosas nos espaços comuns, na estrutura e compartimentação comuns e no controlo de fumo das vias comuns (RJ-SCIE, art. 13.º n.º 5).</Note></div>
         )}
       </Section>
     </main>

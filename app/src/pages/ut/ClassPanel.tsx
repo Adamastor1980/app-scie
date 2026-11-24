@@ -54,7 +54,7 @@ export default function ClassPanel({ ut }: { ut: UT }) {
         )}
         {fora.length > 0 && (
           <div className="border-t border-alerta bg-alerta-soft px-4 py-2.5 text-[12px]">
-            <p className="font-semibold text-alerta">⚠ Espaços que não podem ficar nesta UT (art. 8.º n.º 3):</p>
+            <p className="font-semibold text-alerta">⚠ Espaços que não podem ficar nesta UT (RJ-SCIE, art. 8.º n.º 3):</p>
             {fora.map(({ e, ig }) => <p key={e.id}>{e.nome || 'Espaço sem nome'} → UT {ig!.utPropria.map((t) => ROMANO[t]).join(' ou ')} própria</p>)}
           </div>
         )}

@@ -42,7 +42,7 @@ export default function UTCategoria({ ed, ut }: UTProps) {
           <p className="h-display my-6 text-[110px]">{c.cat}.ª</p>
           <div>
             <p className="font-display text-[22px] font-bold">{CAT_NOME[c.cat]}</p>
-            <p className="text-[13px] opacity-90">{CAT_RISCO[c.cat]} (art. 12.º n.º 1)</p>
+            <p className="text-[13px] opacity-90">{CAT_RISCO[c.cat]} (RJ-SCIE, art. 12.º n.º 1)</p>
           </div>
         </div>
         <div className="bg-white p-6">
@@ -69,9 +69,9 @@ export default function UTCategoria({ ed, ut }: UTProps) {
         <div className="grid gap-px border border-ink bg-ink md:grid-cols-2">
           <Item t="Entidade competente" v={c.cat === 1 ? 'Câmara municipal' : 'ANEPC'} b="RJ-SCIE, art. 5.º" />
           <Item t="Peça de SCIE" v={c.cat === 1 ? 'Ficha de segurança (anexo V)' : 'Projeto da especialidade (anexo IV)'} b="RJ-SCIE, art. 17.º" />
-          <Item t="Inspeções regulares" v={inspIsenta ? 'Excetuada (art. 19.º n.º 5)' : `De ${INSPECOES[c.cat]} em ${INSPECOES[c.cat]} anos (prazo máximo)`} b="RJ-SCIE, art. 19.º n.os 4 e 5" />
+          <Item t="Inspeções regulares" v={inspIsenta ? 'Excetuada (RJ-SCIE, art. 19.º n.º 5)' : `De ${INSPECOES[c.cat]} em ${INSPECOES[c.cat]} anos (prazo máximo)`} b="RJ-SCIE, art. 19.º n.os 4 e 5" />
           <Item t="Autor do projeto e das MAP" v={c.cat === 1 ? 'Sem exigência de certificação' : 'Técnico com certificação de especialização (OA/OE/OET), registado na ANEPC'} b="RJ-SCIE, art. 15.º-A" />
-          <Item t="Medidas de autoproteção (quadro XXXIX)" v={map ? map.map((m) => MAP_INFO[m].nome).join(' · ') : 'Não exigíveis (art. 22.º n.º 1)'} b="RT-SCIE, art. 198.º" />
+          <Item t="Medidas de autoproteção (quadro XXXIX)" v={map ? map.map((m) => MAP_INFO[m].nome).join(' · ') : 'Não exigíveis (RJ-SCIE, art. 22.º n.º 1)'} b="RT-SCIE, art. 198.º" />
           <Item t="Simulacros (quadro XLI)" v={map?.includes('simulacros') && sim ? `Período máximo: ${sim}` : 'Não exigidos'} b="RT-SCIE, art. 207.º" />
         </div>
       </Section>
