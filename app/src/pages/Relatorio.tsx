@@ -6,7 +6,7 @@ import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
 import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
-import { CAT_NOME, CAT_RISCO, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio } from '../engine/calc';
+import { CAT_NOME, CAT_RISCO, catAtribuida, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
 import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
@@ -343,7 +343,7 @@ export default function Relatorio() {
         <H1 n={S()}>Densidade de carga de incêndio modificada</H1>
         <P>Determinada segundo o Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020 (n.os 3.º e 4.º): método determinístico Qs = Σ Mi·Hi·Ci·Rai; método probabilístico Qs = Σ qsi·Si·Ci·Rai (atividades) e Qs = Σ qvi·hi·Si·Ci·Rai (armazenamento); qs = Qs/S. Para a UT: q = Σ qsk·Sk / Σ Sk (n.º 4.º).</P>
         {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).length === 0 && <P>Não foram calculadas cargas de incêndio (fator de risco apenas nas UT XI e XII).</P>}
-        {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).map(({ ut, carga }) => (
+        {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).map(({ ut, carga, cls }) => (
           <div key={ut.id} className="mb-6">
             <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             {ut.compartimentos.map((c) => { const r = cargaCompartimento(c); return (
@@ -364,6 +364,12 @@ export default function Relatorio() {
                   <tr className="border-t-2 border-ink"><td className="font-bold">Total da UT (Σ Qsk · Σ Sk · q)</td><td className="num whitespace-nowrap text-right font-bold">{fmt(carga.Q)}</td><td className="num whitespace-nowrap text-right font-bold">{fmt(carga.S, 2)}</td><td className="num text-right font-bold whitespace-nowrap text-fire-ink">{fmt(carga.q, 1)}</td></tr>
                 </tbody></table>
               <p className="mt-2 border-l-[3px] border-fire bg-fire-soft px-3 py-2 text-[12.5px] font-semibold">Densidade de carga de incêndio modificada da UT (Despacho n.º 8954/2020, n.º 4.º, 2): q = Σ (qsk × Sk) / Σ Sk = Σ Qsk / Σ Sk = {fmt(carga.Q)} MJ / {fmt(carga.S, 2)} m² = <span className="text-[14px] text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
+  {(() => { const fc = cls.fatores.find((x) => x.id === 'carga'); if (!fc) return null; const cat = catAtribuida(cls); return (
+    <div className="mt-2">
+      <table className="tbl"><thead><tr><th>Categoria — RJ-SCIE, anexo III, {cls.quadro.replace('Quadro', 'quadro')} ({fc.rotulo.toLowerCase()})</th>{['1.ª', '2.ª', '3.ª', '4.ª'].map((c) => <th key={c} className="text-center">{c}</th>)}</tr></thead>
+        <tbody><tr><td>Valores máximos do quadro</td>{fc.limites.map((l, i) => <td key={i} className={`num whitespace-nowrap text-center ${fc.cat === i + 1 ? 'bg-fire-soft font-bold text-fire-ink' : ''}`}>{l}</td>)}</tr></tbody></table>
+      <p className="mt-2 border-l-[3px] border-ink bg-paper px-3 py-2 text-[12.5px]">Por este critério: q = {fmt(carga.q, 1)} MJ/m² {fc.limites[fc.cat - 1]} → <b className="text-[14px] text-fire-ink">{fc.cat}.ª categoria</b>. A categoria da UT é a mais baixa que satisfaz integralmente todos os critérios do quadro (RJ-SCIE, art. 13.º, n.os 1 e 2): {cat ? <b>{cat}.ª categoria{cls.determinantes.length ? ` (determinada por: ${cls.determinantes.join('; ').toLowerCase()})` : ''}</b> : <b className="text-alerta">por atribuir — falta {cls.falta.join('; ').toLowerCase()}</b>}.</p>
+    </div>); })()}
             </div>
           </div>
         ))}
