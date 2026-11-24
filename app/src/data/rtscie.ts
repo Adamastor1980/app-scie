@@ -188,7 +188,7 @@ export const QUADRO_XXXVI = {
     { comp: 'Proteção total (todas as partes do edifício)', c: [false, false, true] },
     { comp: 'Proteção parcial (um ou mais compartimentos corta-fogo)', c: [true, true, false] },
     { comp: 'Difusão do alarme no interior', c: [true, true, true] },
-    { comp: 'Difusão do alarme no exterior', c: [false, false, true] },
+    { comp: 'Difusão do alarme no exterior', c: [false, true, false] }, // quadro XXXVI tal como publicado (DR n.º 107, 2.6.2020, pág. 129): só na configuração 2
   ],
 };
 

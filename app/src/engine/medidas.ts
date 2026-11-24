@@ -511,13 +511,13 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   /* ---------------- Sinalização e iluminação de emergência ------------- */
   add({
     tema: 'VII.1', titulo: 'Sinalização de segurança',
-    exigencia: 'Placas fotoluminescentes (DL 141/95, Portaria 1456-A/95, EN ISO 7010) com área A ≥ d²/2000 (6 m ≤ d ≤ 50 m), espaçadas de 6 a 30 m, visíveis de qualquer ponto; placas salientes entre 2,1 m e 3 m; a menos de 2 m em projeção horizontal das fontes luminosas.',
+    exigencia: 'Sinalização nos termos do DL 141/95, da Portaria 1456-A/95 e, nos casos não regulamentados, das EN ISO 7010, ISO 3864 e ISO 16069, acessível a todas as pessoas a quem seja essencial, sem placas ou objetos que a ocultem ou confundam (art. 108.º). Placas fotoluminescentes rígidas com área A ≥ d²/2000 (6 m ≤ d ≤ 50 m) (arts. 109.º e 110.º); salientes entre 2,1 m e 3 m (art. 111.º); visíveis de qualquer ponto, perpendiculares ou a 45° ao sentido da fuga, nas mudanças de direção, espaçadas de 6 a 30 m; nas vias verticais, no patamar de acesso (número do andar ou saída) e no intermédio (sentido); a menos de 2 m em projeção horizontal das fontes luminosas, sem coladas sobre os aparelhos, salvo em difusores nas vias de evacuação e em locais da 1.ª categoria das UT III a XI (art. 112.º).',
     base: 'RT-SCIE, arts. 108.º a 112.º', estado: t === 1 && cat === 1 ? 'nao' : 'aplica',
     motivo: t === 1 && cat === 1 ? 'Excetuados os espaços comuns da UT I da 1.ª categoria e os fogos (art. 108.º n.º 4).' : undefined,
   });
   add({
     tema: 'VII.2', titulo: 'Iluminação de emergência',
-    exigencia: `Iluminação de ambiente (≥ 1 lux no pavimento) em locais B, C, D, E (exceto quartos), F e sanitários públicos > 10 m²; balizagem/circulação (5 lux a 1 m do pavimento) a < 2 m de interseções, mudanças de direção, patamares, CCF, botões de alarme, comandos, meios de 1.ª intervenção e saídas; autonomia ≥ 15 min.${[4, 5, 6, 8, 10, 11].includes(t) ? ' Blocos autónomos do tipo permanente (art. 115.º n.º 1).' : ''}`,
+    exigencia: `Iluminação de emergência de segurança (ambiente e balizagem/circulação); a de substituição, se existir, com fonte diferente (art. 113.º). Lâmpadas de descarga: 50 % em ≤ 5 s e 100 % em ≤ 60 s; autonomia adequada à evacuação, mínimo 15 min; ambiente (≥ 1 lux no pavimento) em locais B, C, D, E (exceto quartos), F, vestiários ou sanitários públicos > 10 m² e sanitários para mobilidade condicionada; balizagem (5 lux a 1 m do pavimento) a < 2 m de interseções, mudanças de direção, patamares, câmaras corta-fogo, botões de alarme, comandos, meios de 1.ª intervenção e saídas (art. 114.º).${[4, 5, 6, 8, 10, 11].includes(t) ? ' Blocos autónomos do tipo permanente nesses pontos, exceto nos espaços de dormida em locais D e E (art. 115.º n.º 1).' : ' Blocos permanentes ou de luz mantida quando iluminem ou suportem placas de saída (art. 115.º n.º 2).'}${t === 6 ? ' Em salas com obscurecimento total, redução de intensidade admitida com reposição automática (art. 115.º n.º 3).' : ''}${t === 1 ? ' Habitações excluídas (art. 113.º n.º 1).' : ''}`,
     base: 'RT-SCIE, arts. 113.º a 115.º', estado: t === 1 && cat === 1 ? 'nao' : 'aplica',
     motivo: t === 1 && cat === 1 ? 'Excetuada a UT I da 1.ª categoria (art. 113.º n.º 1).' : undefined,
   });
@@ -564,19 +564,19 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   }
   add({
     tema: 'VII.3', titulo: 'Requisitos de funcionamento do SADI',
-    exigencia: 'EN 54; botões a ~1,2 m junto às saídas dos pisos; alarme geral audível em todo o edifício durante ≥ 5 min; fonte de emergência: 72 h vigília + 30 min alarme (não vigiado) ou 12 h + 5 min (vigiado); deteção em tetos falsos > 0,8 m e pavimentos sobrelevados > 0,2 m com cablagens.',
-    base: 'RT-SCIE, arts. 117.º a 123.º e 132.º', estado: config ? 'aplica' : 'nao', motivo: config ? undefined : 'Sem exigência de alarme.',
+    exigencia: 'Sistemas de deteção automática segundo a EN 54 (art. 117.º). Estado de vigília sinalizado; alarme restrito imediato e, sem meios humanos para o explorar, alarme geral imediato; com meios humanos, temporização entre restrito e geral, anulável; alarme geral audível em todo o edifício durante o tempo da evacuação, mínimo 5 min; alerta automático simultâneo com o alarme geral (art. 118.º). Botões nos caminhos horizontais, junto às saídas dos pisos e a locais de riscos especiais, a ~1,2 m, sinalizados e visíveis (art. 119.º). Detetores adequados ao espaço (art. 120.º). Difusores fora do alcance ou protegidos abaixo de 2,25 m, sinal inconfundível; mensagem gravada admitida com sonorização (exceto UT I, V e VII), sem causar pânico com efetivo > 200 e precedida da iluminação de emergência (art. 121.º). Central em local reservado (posto de segurança, se existir) com as funções do art. 122.º, ou repetidor em local vigiado. Fonte de emergência incorporada e exclusiva: 72 h vigília + 30 min alarme (não vigiado) ou 12 h + 5 min (vigiado) (art. 123.º). Alerta automático por rede telefónica ou rádio (dispensável com posto de segurança guarnecido em permanência, se constar do PEI); alerta manual por telefone junto à central com o número dos bombeiros afixado (art. 124.º). Deteção em tetos falsos > 0,8 m e pavimentos sobrelevados > 0,2 m com cablagens, equipamentos ou condutas, com sinalização ótica dos detetores pontuais (art. 132.º).',
+    base: 'RT-SCIE, arts. 117.º a 124.º e 132.º', estado: config ? 'aplica' : 'nao', motivo: config ? undefined : 'Sem exigência de alarme.',
   });
   if (t === 5 && temD) add({ tema: 'VII.3', titulo: 'Alarme em locais de risco D (UT V)', exigencia: 'Difusão do alarme não reconhecível pelo público, destinada ao pessoal; na 2.ª categoria ou superior, posto não acessível a público com comunicação oral com o posto de segurança.', base: 'RT-SCIE, art. 236.º', estado: 'aplica' });
   {
     const gas = ut.temGas || (ut.liquidosInflamaveisL ?? 0) > 0 ? { estado: 'aplica' as Estado } : porFacto(ut, 'liquidosGases', 'Não existem gases nem líquidos combustíveis.');
-    add({ tema: 'VII.9', titulo: 'Deteção automática de gás combustível', exigencia: 'Em locais de risco C com aparelhos de queima de gás ou armazenamento do quadro XXXV, e em ductos com canalizações de gás (2.ª categoria ou superior).', base: 'RT-SCIE, art. 184.º', ...gas });
+    add({ tema: 'VII.9', titulo: 'Deteção automática de gás combustível', exigencia: `Em locais de risco C com aparelhos de queima de gás ou de armazenamento do quadro XXXV${catEd >= 2 ? ', e nos ductos com canalizações de gás (edifício da 2.ª categoria ou superior)' : ''} (art. 184.º). Unidade de controlo dedicada, detetores e sinalizadores ótico-acústicos com a inscrição «Atmosfera perigosa» e o tipo de gás, no interior e no exterior; a deteção corta automaticamente o gás, com corte manual sinalizado à saída (art. 185.º).`, base: 'RT-SCIE, arts. 184.º e 185.º', ...gas });
   }
 
   /* ---------------------------- Controlo de fumo ----------------------- */
   const cf: string[] = ['vias verticais enclausuradas', 'câmaras corta-fogo', 'vias horizontais protegidas (art. 25.º n.º 1)'];
   const areaAbaixo = pisosUT(ut).filter(pisoAbaixo).reduce((s, p) => Math.max(s, p.area), 0);
-  const efAbaixo = ef.porPiso.filter((p) => pisosUT(ut).some((x) => x.n === nPiso(p.piso) && pisoAbaixo(x))).reduce((s, p) => s + p.efetivo, 0);
+  const efAbaixo = ef.porPiso.filter((p) => pisosUT(ut).some((x) => x.n === nPiso(p.piso) && pisoAbaixo(x))).reduce((s, p) => Math.max(s, p.efetivo), 0); // por piso (art. 135.º n.º 1 d))
   if (abaixo && (efAbaixo > 200 || areaAbaixo > 400)) cf.push('pisos no subsolo (efetivo > 200 ou área > 400 m²)');
   const bGrandes = ut.espacos.filter((e) => e.local === 'B' && efetivoEspaco(e).valor > 500);
   if (bGrandes.length) cf.push(`locais de risco B com efetivo > 500 (${bGrandes.map((e) => e.nome).join(', ')})`);
@@ -585,6 +585,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   if (t === 2 && !ut.arLivre) cf.push('espaços cobertos da UT II');
   if (t === 12) cf.push('espaços da UT XII (art. 306.º)');
   if (ut.espacoCenicoIsolavel) cf.push('espaços cénicos isoláveis');
+  if (ut.factos?.patio) cf.push('átrios e corredores adjacentes a pátios interiores cobertos');
   add({
     tema: 'VII.4', titulo: 'Espaços com controlo de fumo obrigatório',
     exigencia: cf.join('; ') + '.'
@@ -592,7 +593,17 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
       + (pisosAbaixoUT(ut) > 1 ? ' Mais de um piso enterrado: meios ativos, de preferência hierarquia de pressões.' : '')
       + (abaixo ? ' Escadas que servem pisos no subsolo sem saída direta ao exterior: pressurizadas.' : '')
       + ' Desenfumagem passiva interdita em espaços amplos com altura > 12 m.',
-    base: 'RT-SCIE, arts. 133.º a 135.º; secções II a VII do capítulo IV do título VI (arts. 136.º a 161.º)', estado: 'aplica',
+    base: 'RT-SCIE, arts. 133.º a 135.º', estado: 'aplica',
+  });
+  add({
+    tema: 'VII.4', titulo: 'Características das instalações de controlo de fumo',
+    exigencia: 'Tomadas de ar resguardadas do fumo; vãos de fachada a contar só se abrirem > 60° (de fumo no terço superior); bocas interiores normalmente fechadas por obturadores A1 (E/EI); condutas A1, ≥ EI 15 e com a resistência dos elementos atravessados; exutores pela EN 12101-2; comando manual sinalizado junto aos acessos e no posto de segurança, automático por deteção onde houver detetores, com prioridade sobre os sprinklers e rearme manual (arts. 136.º a 140.º). '
+      + 'Passiva: admissão até 1 m do pavimento e evacuação a ≥ 1,8 m; condutas com secção ≥ soma das bocas, relação de lados ≤ 2, ≤ 2 desvios de 20° e ramais ≤ 2 m (arts. 141.º e 142.º). Ativa: insuflação até 1 m; extração a ≥ 1,8 m; fugas < 20 %; ventiladores 400 °C durante 1 h (2 h com H > 28 m ou em pisos enterrados); insuflação < 5 m/s e ~60 % da extração; ventiladores só após abertura dos obturadores; alimentação apoiada por fonte de emergência (arts. 143.º a 147.º). '
+      + 'Locais: cantões ≤ 1600 m² e ≤ 60 m (exceto UT II); passiva com admissão entre metade e a totalidade da evacuação e distância a uma abertura ≤ 7 × pé-direito (máx. 30 m); ativa com uma boca por 320 m² e 1 m³/s por 100 m² (mín. 1,5 m³/s)' + (t === 2 && !ut.arLivre ? '; parques fechados 600 m³/h por veículo no compartimento sinistrado e insuflação de 60 % nos adjacentes; parques abertos, semienterrados com aberturas > 0,06 m² por lugar em fachadas opostas, ou da 1.ª categoria com varrimento, consideram-se desenfumados' : '') + ' (arts. 151.º a 154.º). '
+      + 'Vias horizontais: passiva com aberturas alternadas a ≤ 10 m (reta) ou 7 m, saídas de locais a ≤ 5 m de um escape, ≥ 0,10 m² por UP, ≤ 5 pisos por conduta; ativa a ≤ 15 m / 10 m, 0,5 m³/s por UP (admissão natural) ou 2–5 m/s com extração 1,3 × a admissão, < 80 Pa face às escadas; sobrepressão ~20 Pa só com escape próprio no local; câmaras pressurizadas 20–80 Pa e ≥ 0,5 m/s; galerias entre edifícios pressurizadas (arts. 155.º a 158.º). '
+      + 'Vias verticais: só passiva ou sobrepressão, nunca extração forçada; passiva com abertura no topo ≥ 1 m² (exutor com comando manual no plano de referência) e aberturas inferiores de igual área, ou vãos ≥ 0,25 m² em todos os patamares intermédios; sobrepressão de 20–80 Pa com portas fechadas, ≥ 0,5 m/s com a porta aberta (1 m/s entre câmara e piso), câmara com pressão intermédia e exutor de socorro de 1 m² no topo (arts. 159.º a 161.º).'
+      + (ut.factos?.patio ? ' Pátios cobertos: admissão em baixo, exutores na cobertura a ≥ 4 m de paredes com vãos, áreas ≥ 5 % da maior secção, detetores óticos lineares (também a meia altura se > 12 m), comando manual no piso principal e painéis de cantonamento junto a vias de locais A ou B (altura livre de fumo ≥ 2 m) (arts. 148.º a 150.º).' : ''),
+    base: 'RT-SCIE, arts. 136.º a 161.º', estado: 'aplica',
   });
 
   /* --------------------------- Meios de intervenção -------------------- */
@@ -600,7 +611,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const extPisos = pisosUT(ut).map((p) => p.area > 0 ? `${p.nome}: ${Math.max(Math.ceil(p.area / 200), 2)} extintores (1 por 200 m², mín. 2) e ${Math.ceil(p.area / 500) * 18} L de agente padrão (18 L por 500 m²)` : `${p.nome}: área do piso por indicar (dados complementares)`);
   add({
     tema: 'VII.5', titulo: 'Extintores portáteis',
-    exigencia: `Distância ≤ 15 m de qualquer saída de local de risco até ao extintor mais próximo; manípulo ≤ 1,2 m; em todos os locais C e F.${extPisos.length ? ' Dimensionamento por piso — ' + extPisos.join('; ') + '.' : ' Por piso: 1 extintor por 200 m² ou fração (mínimo 2) e 18 L de agente extintor padrão por 500 m² ou fração.'}${temC ? ' Cozinhas e laboratórios C: manta ignífuga; extintor 25F com óleos ou gorduras.' : ''}`,
+    exigencia: `Distância ≤ 15 m de qualquer saída de local de risco até ao extintor mais próximo; manípulo ≤ 1,2 m; em todos os locais C e F.${extPisos.length ? ' Dimensionamento por piso — ' + extPisos.join('; ') + '.' : ' Por piso: 1 extintor por 200 m² ou fração (mínimo 2) e 18 L de agente extintor padrão por 500 m² ou fração.'}${temC ? ' Cozinhas e laboratórios C: manta ignífuga; extintor 25F com óleos ou gorduras.' : ''} Distribuídos, sinalizados, em suporte ou nicho, de preferência nas comunicações horizontais ou câmaras corta-fogo e no interior dos grandes espaços junto às saídas.${ut.factos?.centralTermica ? ' Centrais térmicas > 70 kW: com combustível sólido ou líquido, 100 l de areia com pá e extintores 34 B (dois por queimador, máximo quatro); a gás, um extintor de pó ABC 5 A/34 B (n.º 6).' : ''}${ut.factos?.tendas ? ' Tendas e insufláveis: também extintores móveis de pó ABC de 50 kg, um por cada 8 portáteis ou fração (n.º 7).' : ''}`,
     base: 'RT-SCIE, art. 163.º', estado: extIsento || (ut.arLivre && !temC) ? 'nao' : 'aplica',
     motivo: extIsento ? 'UT I das 1.ª e 2.ª categorias (art. 163.º n.º 1).' : ut.arLivre && !temC ? 'Ao ar livre só são exigidos em locais de risco C (art. 163.º n.º 8): não existem.' : undefined,
   });
@@ -612,7 +623,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const ruralVII = t === 7 && cat === 2 && ut.turismoRural;
   add({
     tema: 'VII.5', titulo: 'Rede de incêndio armada tipo carretel',
-    exigencia: 'Carretéis EN 671-1 que cubram todos os pontos a ≤ 5 m de uma agulheta; distância entre bocas ≤ 2× o comprimento da mangueira; junto às saídas para vias verticais (< 3 m) e junto às saídas de locais com > 200 pessoas; manípulo ≤ 1,5 m; 1,5 l/s por boca com metade abertas (máx. 4), K ≥ 42.',
+    exigencia: 'Carretéis EN 671-1 que cubram todos os pontos a ≤ 5 m de uma agulheta; distância entre bocas ≤ 2× o comprimento da mangueira; junto às saídas para vias verticais (< 3 m) e junto às saídas de locais com > 200 pessoas; manípulo ≤ 1,5 m; tambor fixo só à face da parede, encastrados de rodar ou pivotar, armários homologados com porta a abrir 170°; espaço livre de 1 m de raio e 2 m de altura (art. 166.º). Caudal de 1,5 l/s por boca com metade abertas (máx. 4) e K ≥ 42 (1 l/s com K = 64 nos casos do n.º 3); canalização independente; ' + (cat <= 2 ? 'rede pública admitida se houver garantia de pressão e caudal; senão ' : '') + 'depósito privativo com grupo sobrepressor apoiado por fonte de emergência; manómetros nos pontos mais desfavoráveis (art. 167.º).',
     base: 'RT-SCIE, arts. 164.º a 167.º', estado: ruralVII ? 'nao' : sim(carretelCond),
     motivo: ruralVII ? 'UT VII da 2.ª categoria de turismo no espaço rural dispensada (art. 257.º).' : carretelCond ? undefined : 'Não preenche as condições do art. 164.º.',
   });
@@ -620,7 +631,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   add({
     tema: 'VII.5', titulo: 'Meios de segunda intervenção (rede seca/húmida)',
     exigencia: seg
-      ? `Rede ${seg}${cat === 4 && [4, 5, 6, 8, 12].includes(t) ? ' com bocas de incêndio armadas tipo teatro (EN 671-2)' : ''}; bocas duplas DN 50 storz a 0,8–1,2 m nos patamares ou CCF de todos os pisos; boca siamesa a ≤ 14 m da coluna${cat >= 3 ? '; rede húmida em carga com depósito privativo e grupo sobrepressor, alimentação alternativa pelos bombeiros; 3 l/s por boca (K = 85)' : ''}.`
+      ? `Rede ${seg}${cat === 4 && [4, 5, 6, 8, 12].includes(t) ? ' com bocas de incêndio armadas tipo teatro (EN 671-2)' : ''}; bocas duplas DN 50 storz a 0,8–1,2 m nos patamares ou CCF de todos os pisos; no piso de referência noutro local sinalizado; à vista, em nichos ou armários sinalizados, a ≥ 0,5 m da base; boca siamesa sinalizada no exterior, junto a acesso dos bombeiros, a ≤ 14 m da coluna (art. 169.º)${cat === 4 && [4, 5, 6, 8, 12].includes(t) ? '; bocas teatro de 45 ou 70 mm na caixa de escada ou câmara corta-fogo (art. 170.º)' : ''}${cat >= 3 ? '; rede húmida permanentemente em carga, com depósito privativo e grupo sobrepressor, alimentação alternativa pelos bombeiros por tubo seco e redes secas admitidas onde haja risco de congelamento (art. 168.º n.os 4 a 6); depósito e grupo dimensionados para a operação simultânea dos meios manuais e automáticos, 3 l/s por boca com metade abertas (máx. 4), K = 85; central de bombagem é local de risco F (art. 171.º)' : ''}.`
       : 'Não exigida.',
     base: 'RT-SCIE, arts. 168.º a 171.º' + (t === 8 ? '; arts. 274.º' : '') + (t === 6 ? '; art. 251.º' : ''),
     estado: seg ? 'aplica' : 'nao', motivo: seg ? undefined : 'Exigida às UT I e II da 2.ª categoria e a todas as UT da 3.ª categoria ou superior.',
@@ -639,7 +650,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const q37 = t === 2 ? QUADRO_XXXVII.II : t === 12 ? QUADRO_XXXVII.XII : QUADRO_XXXVII['III, VI, VII, VIII'];
   add({
     tema: 'VII.6', titulo: 'Sistema de extinção automática por água (sprinklers)',
-    exigencia: `Sistema húmido: densidade ${q37.densidade} L/min/m², área de operação ${q37.area} m², ${q37.n} aspersores em simultâneo, calibre ${q37.calibre} mm, ${q37.tempo} min; depósito privativo e central de bombagem; posto de comando acessível aos bombeiros.`,
+    exigencia: `Sistema húmido${ut.espacoCenicoIsolavel ? ' (dilúvio nas caixas de palco > 50 m², 30 min)' : ''}: densidade ${q37.densidade} L/min/m², área de operação ${q37.area} m², ${q37.n} aspersores em simultâneo, calibre ${q37.calibre} mm, ${q37.tempo} min; aspersores calibrados, usualmente a 68 °C; depósito privativo e central de bombagem; postos de comando acessíveis aos bombeiros e sinalizados; alarme associado ao da deteção automática.`,
     base: 'RT-SCIE, arts. 173.º e 174.º, quadro XXXVII' + (t === 8 ? ' (ver exceções do capítulo VI do título VIII)' : ''),
     estado: sprCond ? 'aplica' : 'nao',
     motivo: sprCond ? undefined : 'Não exigido pelo art. 173.º n.º 1 b) e c) para esta UT/categoria. Exigível ainda em locais adjacentes a pátios interiores com altura > 20 m e em locais de difícil acesso com elevada carga de incêndio (n.º 1 e) e f)); pode ser medida compensatória (n.º 2) ou duplicar áreas de compartimentação (art. 18.º n.º 6).',
@@ -648,14 +659,14 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   if (t === 12 && (ut.pinturaArea ?? 0) > 30) add({ tema: 'VII.6', titulo: 'Extinção automática em zonas de pintura', exigencia: 'Zonas de pintura ou aplicação de vernizes, colas ou solventes com ponto de inflamação < 55 °C com área > 30 m²: instalação fixa de extinção automática por água.', base: 'RT-SCIE, art. 308.º n.º 1', estado: 'aplica' });
   if (t === 12 && (ut.liquidosInflamaveisL ?? 0) > 750) add({ tema: 'VII.6', titulo: 'Extinção automática por agente diferente da água', exigencia: 'Armazenagem > 750 l (ou manuseamento > 50 l) de produtos combustíveis: instalação fixa por agente apropriado diferente da água.', base: 'RT-SCIE, art. 308.º n.º 2', estado: 'aplica' });
   if (ut.patrimonio && (t === 10 || t === 11)) add({ tema: 'VII.6', titulo: 'Proteção de bens patrimoniais', exigencia: 'Sistemas automáticos de extinção com agentes adequados à preservação nos locais de arquivo, conservação e restauro e nas casas-fortes.', base: t === 10 ? 'RT-SCIE, art. 294.º' : 'RT-SCIE, art. 298.º', estado: 'aplica' });
-  add({ tema: 'VII.10', titulo: 'Drenagem de águas residuais da extinção', exigencia: 'Pisos enterrados: caleiras e ralos ligados aos coletores (caudal das redes automáticas + 500 l/min)' + (t === 2 ? ', 1 ralo por 40 veículos' : '') + '; ressaltos nas rampas e escadas; fossas de retenção de líquidos inflamáveis e sua limpeza' + (t === 2 ? ' (ver também art. 227.º)' : t === 12 ? ' (ver também art. 309.º)' : '') + '.', base: 'RT-SCIE, arts. 186.º a 189.º', estado: sim(abaixo), motivo: abaixo ? undefined : 'Exigida apenas em pisos enterrados (art. 186.º n.º 1).' });
+  add({ tema: 'VII.10', titulo: 'Drenagem de águas residuais da extinção', exigencia: 'Pisos enterrados: caleiras e ralos ligados aos coletores, para o caudal das redes automáticas e cortinas de água mais 500 l/min' + (t === 2 ? ', com 1 ralo por 40 veículos em cada piso' : '') + ' (art. 186.º); rampas e escadas sobrelevadas com declive ≥ 2 % nas transições (art. 187.º); fossas de retenção de líquidos inflamáveis ligadas ao coletor, com capacidade para esse caudal durante 1 h' + (t === 2 ? ' e ≥ 0,5 m³ por 1000 m² do maior compartimento' : '') + ' (art. 188.º), limpas com a frequência necessária (art. 189.º)' + (t === 2 ? ' (ver também art. 227.º)' : t === 12 ? ' (ver também art. 309.º)' : '') + '.', base: 'RT-SCIE, arts. 186.º a 189.º', estado: sim(abaixo), motivo: abaixo ? undefined : 'Exigida apenas em pisos enterrados (art. 186.º n.º 1).' });
 
   /* --------------------------- Posto de segurança ---------------------- */
   const psCond = (t === 1 && cat >= 3) || (t >= 2 && cat >= 2) || (cat === 1 && temD) || (t === 9 && ut.designacao.toLowerCase().includes('campismo'));
   add({
     tema: 'VII.11', titulo: 'Posto de segurança',
-    exigencia: 'Centraliza a informação de segurança, a receção e difusão de alarmes e a transmissão do alerta; pode ser na receção/portaria junto a um acesso principal; chaveiro de segurança e exemplares do plano de prevenção e do PEI; ocupado em permanência durante o funcionamento (art. 200.º n.º 5).'
-      + (cat === 4 || (cat === 3 && temDE) ? ' 4.ª categoria ou 3.ª com locais D e E: constitui local de risco F e dispõe de comunicação oral com todos os pisos e locais técnicos por meios distintos da rede pública.' : ''),
+    exigencia: 'Centraliza a informação de segurança, a receção e difusão de alarmes, a transmissão do alerta e a coordenação em emergência; pode ser na receção ou portaria junto a um acesso principal, com ingresso reservado e protegido do fogo; um único posto admitido para várias UT do edifício, individualizando a supervisão de cada uma; chaveiro de segurança com chaves de reserva (exceto do interior dos fogos) e exemplares do plano de prevenção e do PEI; comunicação oral, por meios distintos da rede pública, com as portarias de outros edifícios que sirva.'
+      + (cat === 4 || (cat === 3 && temDE) ? ` 4.ª categoria ou 3.ª com locais D e E: comunicação oral, por meios distintos da rede pública, com todos os pisos, zonas de refúgio, casas de máquinas, fontes centrais, central de bombagem, ascensores e locais D e E${t === 1 || ut.arLivre || ut.factos?.tendas ? '' : '; constitui local de risco F'}.` : ''),
     base: 'RT-SCIE, art. 190.º' + (t === 6 ? '; art. 254.º' : t === 8 ? '; art. 277.º' : t === 9 ? '; art. 287.º' : ''),
     estado: sim(psCond), motivo: psCond ? undefined : 'Exigido à UT I das 3.ª/4.ª categorias, às UT II a XII da 2.ª categoria ou superior e às UT da 1.ª categoria com locais D.',
   });
@@ -807,15 +818,15 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   // VII — sistemas não cobertos acima
   add({
     tema: 'VII.7', titulo: 'Sistemas de cortina de água',
-    exigencia: 'Obrigatórios em fachadas-cortina envidraçadas nas condições do art. 8.º n.º 5 e nas situações específicas das UT II, VI e VIII; complementam (não substituem) elementos resistentes ao fogo; podem ser medida compensatória em edifícios existentes.',
-    base: 'RT-SCIE, arts. 177.º e 178.º', estado: sim([2, 6, 8].includes(t)),
+    exigencia: 'Obrigatórios em fachadas-cortina envidraçadas nas condições do art. 8.º n.º 5 e nas situações específicas das UT II, VI e VIII; complementam e não substituem elementos resistentes ao fogo nem barreiras ao fumo; noutros casos, com fundamentação ou como medida compensatória (art. 177.º e 178.º). Caudal ≥ 10 l/min por m² de vão; comando automático e manual a partir do posto de segurança; alimentação pelo depósito privativo, se existir (art. 179.º).',
+    base: 'RT-SCIE, arts. 177.º a 179.º', estado: sim([2, 6, 8].includes(t)),
     motivo: [2, 6, 8].includes(t) ? 'Nas situações das condições específicas da UT (título VIII).' : 'Exigidos apenas nas situações específicas das UT II, VI e VIII (art. 178.º n.º 1); noutros casos são opção ou medida compensatória.',
   });
   const polu = t === 2 && !ut.arLivre;
   add({
     tema: 'VII.8', titulo: 'Controlo de poluição de ar',
-    exigencia: 'Deteção automática de CO a 1,5 m do pavimento (≤ 400 m² por detetor); alarme ótico e acústico «Atmosfera Saturada-CO» a 200 ppm; CO ≤ 50 ppm (média de 8 h); ventilação comandada pela deteção; fonte local de energia ≥ 60 min.',
-    base: 'RT-SCIE, arts. 179.º a 183.º', ...(polu ? { estado: 'aplica' as Estado } : t === 8 ? porFacto(ut, 'polucaoVIII', 'Sem espaços de pesados de passageiros nem plataformas com locomotivas a gasóleo.') : { estado: 'nao' as Estado, motivo: 'Exigido em espaços cobertos fechados da UT II e em certos espaços da UT VIII (art. 181.º).' }),
+    exigencia: `CO ≤ 50 ppm em média de 8 h e ≤ 200 ppm instantâneos; alarme ótico e acústico «Atmosfera Saturada-CO» a 200 ppm, por cima das portas de acesso; deteção automática de CO a 1,5 m do pavimento (< 400 m² por detetor) com fonte local ≥ 60 min (art. 180.º).${t === 2 ? ' Ventilação passiva admitida em pisos acima do plano de referência ou no imediatamente abaixo, nas condições dos arts. 153.º n.º 8 e 160.º n.º 6 (art. 182.º); ativa com extração ≥ 300 m³/h por veículo (50 ppm) ou 600 m³/h (100 ppm)' : ' Ventilação ativa nas condições específicas da UT VIII'}, comandada pela central de CO e manualmente no posto de segurança${t === 2 ? ' e junto à entrada de veículos' : ''}; câmaras corta-fogo de acesso com 5 renovações por hora (art. 183.º).`,
+    base: 'RT-SCIE, arts. 180.º a 183.º', ...(polu ? { estado: 'aplica' as Estado } : t === 8 ? porFacto(ut, 'polucaoVIII', 'Sem espaços de pesados de passageiros nem plataformas com locomotivas a gasóleo.') : { estado: 'nao' as Estado, motivo: 'Exigido em espaços cobertos fechados da UT II e em certos espaços da UT VIII (art. 181.º).' }),
   });
   add({
     tema: 'VII.12', titulo: 'Instalação de para-raios',

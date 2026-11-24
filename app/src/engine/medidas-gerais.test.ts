@@ -353,3 +353,111 @@ describe('D — Instalações técnicas (arts. 69.º a 107.º)', () => {
     for (const v of ['20 l', '100 l', '500 l', '106 dm³', 'quatro garrafas', '40 kW', '1 %']) expect(e).toContain(v);
   });
 });
+
+describe('E — Sinalização, iluminação e alarme (arts. 108.º a 132.º)', () => {
+  it('arts. 108.º a 112.º: A ≥ d²/2000; 2,1–3 m; 6 a 30 m; UT I da 1.ª categoria excetuada', () => {
+    const e = med(U(3), 2, 'Sinalização de segurança').exigencia;
+    for (const v of ['d²/2000', '2,1 m', '3 m', '6 a 30 m', 'ISO 7010', 'número do andar']) expect(e).toContain(v);
+    expect(med(U(1), 1, 'Sinalização de segurança').estado).toBe('nao');
+  });
+  it('arts. 113.º a 115.º: 1 lux; 5 lux a 1 m; 15 min; 5 s / 60 s; blocos permanentes nas UT IV a VI, VIII, X e XI', () => {
+    const e = med(U(4), 2, 'Iluminação de emergência').exigencia;
+    for (const v of ['1 lux', '5 lux', '15 min', '5 s', '60 s', 'tipo permanente']) expect(e).toContain(v);
+    expect(med(U(3), 2, 'Iluminação de emergência').exigencia).not.toContain('tipo permanente nesses pontos');
+    expect(med(U(1), 1, 'Iluminação de emergência').estado).toBe('nao');
+  });
+  it('quadro XXXVI tal como publicado: difusão no exterior só na configuração 2; alerta automático só na 3', () => {
+    const c3 = med(U(4), 2, 'Configuração do sistema de alarme').exigencia;
+    expect(c3).toContain('alerta automático');
+    expect(c3).not.toContain('difusão do alarme no exterior');
+    expect(med(U(4), 1, 'Configuração do sistema de alarme').exigencia).toContain('difusão do alarme no exterior');
+  });
+  it('arts. 117.º a 124.º e 132.º: EN 54; 1,2 m; 5 min; 72 h + 30 min / 12 h + 5 min; 0,8 m / 0,2 m', () => {
+    const e = med(U(3), 2, 'Requisitos de funcionamento do SADI').exigencia;
+    for (const v of ['EN 54', '1,2 m', '5 min', '72 h vigília + 30 min', '12 h + 5 min', '2,25 m', '0,8 m', '0,2 m']) expect(e).toContain(v);
+  });
+  it('art. 131.º: locais C e F com configuração 2, no mínimo', () => {
+    const u = U(3); u.espacos = [espaco('C')];
+    expect(tem(u, 1, 'Alarme em locais de risco C e F')).toBe(true);
+    expect(tem(u, 2, 'Alarme em locais de risco C e F')).toBe(false);
+  });
+});
+
+describe('E — Controlo de fumo (arts. 133.º a 161.º)', () => {
+  it('art. 135.º: subsolo com efetivo > 200 num piso ou área > 400 m²; B > 500; C agravado; UT II coberta', () => {
+    const u = U(3); u.espacos = [espaco('B', 150, 'Piso -1'), espaco('B', 150, 'Piso -2')]; u.pisosAbaixo = 2; u.indicados = { pisos: true };
+    expect(med(u, 2, 'Espaços com controlo de fumo').exigencia).not.toContain('pisos no subsolo (efetivo');
+    const v = U(3); v.espacos = [espaco('B', 210, 'Piso -1')]; v.pisosAbaixo = 1; v.indicados = { pisos: true };
+    expect(med(v, 2, 'Espaços com controlo de fumo').exigencia).toContain('pisos no subsolo (efetivo');
+    expect(med(U(2), 2, 'Espaços com controlo de fumo').exigencia).toContain('UT II');
+    const b = U(6); b.espacos = [espaco('B', 501)];
+    expect(med(b, 3, 'Espaços com controlo de fumo').exigencia).toContain('efetivo > 500');
+  });
+  it('art. 135.º n.os 2 a 6: H > 28 m sobrepressão; mais de um piso enterrado por meios ativos', () => {
+    expect(med(U(3), 2, 'Espaços com controlo de fumo', { altura: 30 }).exigencia).toContain('sobrepressão');
+    const u = U(3); u.pisosAbaixo = 2; u.indicados = { pisos: true };
+    expect(med(u, 2, 'Espaços com controlo de fumo').exigencia).toContain('meios ativos');
+  });
+  it('arts. 136.º a 161.º: valores de dimensionamento', () => {
+    const e = med(U(3), 2, 'Características das instalações de controlo').exigencia;
+    for (const v of ['EI 15', 'EN 12101-2', '1,8 m', '400 °C', '1600 m²', '60 m', '1 m³/s por 100 m²', '1,5 m³/s', '0,10 m² por UP', '20–80 Pa', '1 m²', '0,25 m²']) expect(e).toContain(v);
+    expect(med(U(2), 2, 'Características das instalações de controlo').exigencia).toContain('600 m³/h');
+  });
+});
+
+describe('E — Meios de intervenção e outros sistemas (arts. 162.º a 192.º)', () => {
+  it('art. 163.º n.os 6 e 7: centrais térmicas e tendas', () => {
+    const u = U(6); u.factos = { centralTermica: true, tendas: true };
+    const e = med(u, 2, 'Extintores portáteis').exigencia;
+    expect(e).toContain('100 l de areia');
+    expect(e).toContain('50 kg');
+  });
+  it('arts. 165.º a 167.º: carretéis — 5 m, 3 m, 1,5 m, 1 m de raio e 2 m, 1,5 l/s, K 42', () => {
+    const e = med(U(3), 2, 'Rede de incêndio armada').exigencia;
+    for (const v of ['5 m', '< 3 m', '1,5 m', '1 m de raio', '1,5 l/s', 'K ≥ 42', 'rede pública admitida']) expect(e).toContain(v);
+    expect(med(U(3), 3, 'Rede de incêndio armada').exigencia).not.toContain('rede pública admitida');
+  });
+  it('arts. 169.º a 171.º: DN 50 storz a 0,8–1,2 m; siamesa a ≤ 14 m; 3 l/s, K 85; central de bombagem local F', () => {
+    const e = med(U(3), 3, 'Meios de segunda intervenção').exigencia;
+    for (const v of ['DN 50', '0,8–1,2 m', '14 m', '3 l/s', 'K = 85', 'local de risco F']) expect(e).toContain(v);
+  });
+  it('arts. 172.º a 176.º e quadro XXXVII: II 5/144/12/15/60; III-VIII 5/216/18/15/60; XII 10/260/29/20/90; 68 °C', () => {
+    expect(med(U(3), 3, 'Sistema de extinção automática').exigencia).toContain('densidade 5 L/min/m², área de operação 216 m², 18 aspersores em simultâneo, calibre 15 mm, 60 min');
+    expect(med(U(12), 3, 'Sistema de extinção automática').exigencia).toContain('densidade 10 L/min/m², área de operação 260 m², 29 aspersores em simultâneo, calibre 20 mm, 90 min');
+    expect(med(U(3), 3, 'Sistema de extinção automática').exigencia).toContain('68 °C');
+  });
+  it('arts. 177.º a 179.º: cortinas de água 10 l/min/m²', () => {
+    expect(med(U(2), 2, 'Sistemas de cortina').exigencia).toContain('10 l/min');
+    expect(med(U(3), 2, 'Sistemas de cortina').estado).toBe('nao');
+  });
+  it('arts. 180.º a 183.º: poluição — 50/200 ppm; 1,5 m; 400 m²; 60 min; 300/600 m³/h por veículo', () => {
+    const e = med(U(2), 2, 'Controlo de poluição').exigencia;
+    for (const v of ['50 ppm', '200 ppm', '1,5 m', '400 m²', '60 min', '300 m³/h', '600 m³/h']) expect(e).toContain(v);
+    expect(med(U(3), 2, 'Controlo de poluição').estado).toBe('nao');
+  });
+  it('arts. 184.º e 185.º: deteção de gás com corte automático e «Atmosfera perigosa»', () => {
+    const u = U(3); u.temGas = true;
+    expect(med(u, 2, 'Deteção automática de gás').exigencia).toContain('Atmosfera perigosa');
+  });
+  it('arts. 186.º a 189.º: drenagem só com pisos enterrados; 500 l/min; 2 %; 1 h; UT II 1 ralo por 40 veículos e 0,5 m³/1000 m²', () => {
+    expect(med(U(3), 2, 'Drenagem').estado).toBe('nao');
+    const p = U(2); p.pisosAbaixo = 1; p.indicados = { pisos: true };
+    const e = med(p, 2, 'Drenagem').exigencia;
+    for (const v of ['500 l/min', '40 veículos', '2 %', '1 h', '0,5 m³']) expect(e).toContain(v);
+  });
+  it('art. 190.º: posto de segurança — UT I 3.ª/4.ª; II a XII 2.ª+; 1.ª com locais D; local F na 4.ª', () => {
+    expect(med(U(1), 2, 'Posto de segurança').estado).toBe('nao');
+    expect(med(U(1), 3, 'Posto de segurança').estado).toBe('aplica');
+    expect(med(U(3), 1, 'Posto de segurança').estado).toBe('nao');
+    expect(med(U(3), 2, 'Posto de segurança').estado).toBe('aplica');
+    const d = U(5); d.espacos = [espaco('D')];
+    expect(med(d, 1, 'Posto de segurança').estado).toBe('aplica');
+    expect(med(U(3), 4, 'Posto de segurança').exigencia).toContain('local de risco F');
+    expect(med(U(1), 4, 'Posto de segurança').exigencia).not.toContain('local de risco F');
+  });
+  it('arts. 191.º e 192.º: para-raios conforme resposta; sinalização para a aviação só com H > 28 m', () => {
+    expect(med(U(3), 2, 'Instalação de para-raios').estado).toBe('verificar');
+    expect(tem(U(3), 2, 'Sinalização ótica')).toBe(false);
+    expect(tem(U(3), 2, 'Sinalização ótica', { altura: 30 })).toBe(true);
+  });
+});
