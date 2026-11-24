@@ -341,7 +341,7 @@ export default function Relatorio() {
         ))}
 
         <H1 n={S()}>Densidade de carga de incêndio modificada</H1>
-        <P>Determinada segundo o Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020: método determinístico Qs = Σ Mi·Hi·Ci·Rai; método probabilístico Qs = Σ qsi·Si·Ci·Rai (atividades) e Qs = Σ qvi·hi·Si·Ci·Rai (armazenamento); qs = Qs/S. Para a UT: q = Σ qsk·Sk / Σ Sk (n.º 4.º).</P>
+        <P>Determinada segundo o Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020 (n.os 3.º e 4.º): método determinístico Qs = Σ Mi·Hi·Ci·Rai; método probabilístico Qs = Σ qsi·Si·Ci·Rai (atividades) e Qs = Σ qvi·hi·Si·Ci·Rai (armazenamento); qs = Qs/S. Para a UT: q = Σ qsk·Sk / Σ Sk (n.º 4.º).</P>
         {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).length === 0 && <P>Não foram calculadas cargas de incêndio (fator de risco apenas nas UT XI e XII).</P>}
         {todas.filter((u) => u.ut.compartimentos.length && (u.ut.tipo === 11 || u.ut.tipo === 12)).map(({ ut, carga }) => (
           <div key={ut.id} className="mb-6">
@@ -357,7 +357,14 @@ export default function Relatorio() {
                   </tbody></table>
               </div>
             ); })}
-            <p className="text-[12px] font-semibold">Densidade de carga de incêndio modificada da UT (Despacho n.º 8954/2020, n.º 4.º, 2): q = Σ (qsk × Sk) / Σ Sk = Σ Qsk / Σ Sk = {fmt(carga.Q)} MJ / {fmt(carga.S, 2)} m² = <span className="text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
+            <div className="avoid-break">
+              <table className="tbl"><thead><tr><th>Resumo da UT — compartimento corta-fogo k</th><th className="text-right">Qsk (MJ)</th><th className="text-right">Sk (m²)</th><th className="text-right">qsk (MJ/m²)</th></tr></thead>
+                <tbody>
+                  {ut.compartimentos.filter((c) => c.area > 0).map((c) => { const r = cargaCompartimento(c); return <tr key={c.id}><td>{c.nome}</td><td className="num text-right">{fmt(r.Qs)}</td><td className="num text-right">{fmt(c.area, 2)}</td><td className="num text-right">{fmt(r.qs, 1)}</td></tr>; })}
+                  <tr className="border-t-2 border-ink"><td className="font-bold">Total da UT (Σ Qsk · Σ Sk · q)</td><td className="num whitespace-nowrap text-right font-bold">{fmt(carga.Q)}</td><td className="num whitespace-nowrap text-right font-bold">{fmt(carga.S, 2)}</td><td className="num text-right font-bold whitespace-nowrap text-fire-ink">{fmt(carga.q, 1)}</td></tr>
+                </tbody></table>
+              <p className="mt-2 border-l-[3px] border-fire bg-fire-soft px-3 py-2 text-[12.5px] font-semibold">Densidade de carga de incêndio modificada da UT (Despacho n.º 8954/2020, n.º 4.º, 2): q = Σ (qsk × Sk) / Σ Sk = Σ Qsk / Σ Sk = {fmt(carga.Q)} MJ / {fmt(carga.S, 2)} m² = <span className="text-[14px] text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
+            </div>
           </div>
         ))}
 
