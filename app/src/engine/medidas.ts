@@ -100,6 +100,7 @@ const sim = (cond: boolean): Estado => (cond ? 'aplica' : 'nao');
  */
 export interface Facto { id: string; pergunta: string; base: string; mostrar?: (c: Contexto) => boolean }
 export const FACTOS: Facto[] = [
+  { id: 'unifamiliar', pergunta: 'O edifício destina-se a habitação unifamiliar?', base: 'RT-SCIE, art. 15.º n.º 6 a)', mostrar: (c) => c.ut.tipo === 1 && c.cls.cat === 1 },
   { id: 'elevadores', pergunta: 'Existem elevadores ou ascensores?', base: 'RT-SCIE, arts. 28.º e 101.º a 103.º' },
   { id: 'camarasCF', pergunta: 'Existem câmaras corta-fogo?', base: 'RT-SCIE, arts. 35.º, 40.º e 63.º', mostrar: (c) => !camarasExigidas(c) },
   { id: 'servEletricos', pergunta: 'Existem transformadores, grupos geradores, baterias > 1000 VAh ou UPS > 40 kVA?', base: 'RT-SCIE, arts. 70.º, 71.º, 74.º e 75.º' },
@@ -234,16 +235,23 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
 
   /* --------------- Resistência ao fogo e compartimentação -------------- */
   const q9 = quadroIX(t, cat);
-  const umPisoPR = pisosUT(ut).length === 1 && pisosUT(ut)[0].n === 0;
-  const isentoEstr = (t === 1 && cat === 1) || (t !== 1 && cat === 1 && umPisoPR);
+  // art. 15.º n.os 2 e 4: edifício só com o piso do plano de referência acima do solo (pode ter pisos abaixo); n.º 6 b): só esse piso
+  const psUT = pisosUT(ut);
+  const soPisoPR = ed.pisosAcimaIndicado ? ed.pisosAcima === 1 : psUT.length > 0 && psUT.every((p) => p.n <= 0);
+  const temAbaixo = (ed.pisosAbaixoIndicado || ed.pisosAbaixo > 0) ? ed.pisosAbaixo > 0 : psUT.some((p) => p.n < 0);
+  const n2 = soPisoPR && t !== 1 && cat >= 2;
+  const unif = t === 1 && cat === 1 ? porFacto(ut, 'unifamiliar', 'Habitação multifamiliar: aplica-se o quadro IX.') : null;
+  const isento6b = t !== 1 && cat === 1 && soPisoPR && !temAbaixo;
   add({
     tema: 'III.1', titulo: 'Resistência ao fogo dos elementos estruturais',
-    exigencia: umPisoPR && t !== 1 && cat >= 2
-      ? 'Edifício com um só piso no plano de referência: R 60 (apenas suporte) e REI 60 (suporte e compartimentação).'
+    exigencia: n2
+      ? `Edifício com um só piso no plano de referência: R 60 (apenas suporte) e REI 60 (suporte e compartimentação); galerias sobrelevadas só com área < 20 % do piso (n.º 3).${temAbaixo ? ` Estrutura dos pisos abaixo do plano de referência: ${q9.suporte} / ${q9.compartimentacao} (quadro IX, n.º 4).` : ''}`
       : `${q9.suporte} (apenas suporte) e ${q9.compartimentacao} (suporte e compartimentação).`,
-    base: umPisoPR && t !== 1 && cat >= 2 ? 'RT-SCIE, art. 15.º n.º 2' : 'RT-SCIE, art. 15.º n.º 1, quadro IX',
-    estado: isentoEstr ? 'nao' : 'aplica',
-    motivo: isentoEstr ? (t === 1 ? 'Sem exigências se for habitação unifamiliar da 1.ª categoria (art. 15.º n.º 6 a)).' : 'UT II a XII da 1.ª categoria só com um piso no plano de referência (art. 15.º n.º 6 b)).') : undefined,
+    base: n2 ? `RT-SCIE, art. 15.º n.os 2, 3${temAbaixo ? ' e 4' : ''}` : 'RT-SCIE, art. 15.º n.º 1, quadro IX',
+    ...(unif && unif.estado !== 'nao'
+      ? { estado: unif.estado === 'aplica' ? 'nao' as const : 'verificar' as const, motivo: unif.estado === 'aplica' ? 'Habitação unifamiliar da 1.ª categoria: sem exigências (art. 15.º n.º 6 a)).' : unif.motivo }
+      : isento6b ? { estado: 'nao' as const, motivo: 'UT II a XII da 1.ª categoria, edifício apenas com um piso ao nível do plano de referência (art. 15.º n.º 6 b)).' }
+      : { estado: 'aplica' as const }),
   });
   add({
     tema: 'III.2', titulo: 'Isolamento entre utilizações-tipo distintas',
@@ -415,13 +423,14 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     if (e.local === 'D') extras.push('saídas para vias protegidas ou exterior (art. 60.º); 2 UP onde se evacuem pessoas em camas, ou 1,1 m se forem menos de três (art. 56.º n.º 4 c))');
     if (ev > 200) extras.push('barras antipânico nas portas (art. 62.º n.º 7 a))');
     if (ev > 50) extras.push('portas a abrir no sentido da evacuação (art. 62.º n.º 1)');
-    const conforme = (e.saidasExistentes === undefined || e.saidasExistentes >= s.n) && (e.upExistentes === undefined || e.upExistentes >= upMin);
+    const semQ29 = t === 1 || t === 2; // art. 54.º n.º 1: o quadro XXIX não se aplica às UT I e II
+    const conforme = (semQ29 || e.saidasExistentes === undefined || e.saidasExistentes >= s.n) && (e.upExistentes === undefined || e.upExistentes >= upMin);
     const verif = e.saidasExistentes !== undefined || e.upExistentes !== undefined;
     add({
       tema: 'V.1a', titulo: `Saídas — ${e.nome || 'espaço'} (${e.piso || '—'})`,
-      exigencia: `Efetivo ${c.valor}${e.mobilidadeReduzida ? ` × 1,3 = ${ev} para dimensionamento` : ''}: mínimo ${s.n} saída(s) [${s.texto}] e ${upMin} UP [${up.texto}]${extras.length ? '; ' + extras.join('; ') : ''}.`
+      exigencia: `Efetivo ${c.valor}${e.mobilidadeReduzida ? ` × 1,3 = ${ev} para dimensionamento` : ''}: ${semQ29 ? `n.º de saídas sem critério do quadro XXIX (UT ${t === 1 ? 'I' : 'II'}, art. 54.º n.º 1)${t === 2 ? ', condicionado pelas distâncias do art. 218.º' : ''}` : `mínimo ${s.n} saída(s) [${s.texto}]`} e ${upMin} UP [${up.texto}]${extras.length ? '; ' + extras.join('; ') : ''}.`
         + (verif ? ` Existente: ${e.saidasExistentes ?? '—'} saída(s), ${e.upExistentes ?? '—'} UP → ${conforme ? 'CONFORME' : 'NÃO CONFORME'}.` : ''),
-      base: `RT-SCIE, arts. 54.º e 56.º, quadros ${ut.arLivre ? 'XXX e XXXII' : 'XXIX e XXXI'}${e.mobilidadeReduzida ? '; art. 51.º n.º 5' + (t === 5 ? ' e art. 232.º' : '') : ''}`,
+      base: `RT-SCIE, arts. 54.º e 56.º, quadros ${ut.arLivre ? 'XXX e XXXII' : semQ29 ? 'XXXI' : 'XXIX e XXXI'}${e.mobilidadeReduzida ? '; art. 51.º n.º 5' + (t === 5 ? ' e art. 232.º' : '') : ''}`,
       estado: 'aplica',
     });
   }
@@ -431,9 +440,11 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   } else {
     add({
       tema: 'V.1a', titulo: 'Distâncias máximas a percorrer nos locais',
-      exigencia: `${t === 2 ? 'Impasse e saídas distintas: condições específicas da UT II (título VIII).' : `≤ 15 m em impasse; ${[8, 10].includes(t) ? 'com acesso a saídas distintas: condições específicas da UT ' + R + ' (título VIII)' : '≤ 30 m com acesso a saídas distintas (+50 % em locais amplos > 800 m² no piso do plano de referência com saídas diretas ao exterior)'}; dobro ao ar livre.`}${t === 1 && cat > 1 ? ' Na UT I das 2.ª a 4.ª categorias apenas nas circulações horizontais comuns.' : ''}`,
-      base: 'RT-SCIE, art. 57.º', estado: t === 1 && cat === 1 ? 'nao' : 'aplica',
-      motivo: t === 1 && cat === 1 ? 'Exceção da UT I da 1.ª categoria (art. 57.º n.º 2 a)).' : undefined,
+      exigencia: t === 2 && !ut.arLivre
+        ? 'Parque coberto: até à saída mais próxima, para o exterior ou para via de evacuação protegida, ≤ 25 m nos pontos em impasse e ≤ 40 m nos pontos com acesso a saídas distintas, medidos segundo os eixos dos caminhos de evacuação.'
+        : t === 2 ? 'Impasse e saídas distintas: condições específicas da UT II (título VIII).'
+        : `${t === 1 && cat === 1 ? 'Sem limite de 15 m em impasse (exceção da UT I da 1.ª categoria)' : '≤ 15 m em impasse'}; ${[8, 10].includes(t) ? 'com acesso a saídas distintas: condições específicas da UT ' + R + ' (título VIII)' : '≤ 30 m com acesso a saídas distintas (+50 % em locais amplos > 800 m² no piso do plano de referência com saídas diretas ao exterior, n.º 3)'}; dobro ao ar livre (n.º 4).${t === 1 && cat > 1 ? ' Na UT I das 2.ª a 4.ª categorias apenas nas circulações horizontais comuns (n.º 2 c)).' : ''}`,
+      base: t === 2 && !ut.arLivre ? 'RT-SCIE, arts. 57.º n.º 2 e 218.º n.º 1' : 'RT-SCIE, art. 57.º', estado: 'aplica',
     });
   }
   add({
@@ -508,6 +519,10 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   if ((t === 6 || t === 9 || ut.arLivre) && ut.arLivre && t !== 2) { config = 0; notaCfg = 'Recintos ao ar livre isentos de alarme (art. 116.º n.º 2).'; }
   if (ed.uts.length > 1 && ed.comunicacoesComuns && cat >= 2 && t !== 1 && t !== 2) {
     config = 3; notaCfg += ' Edifício misto com comunicações interiores comuns: configuração 3 e quadro centralizador no posto de segurança (art. 130.º n.º 2).';
+  }
+  if (t !== 1 && !ut.arLivre && ed.comunicacoesComuns && ed.uts.some((u) => u.tipo === 1)) {
+    if (config < 2) config = 2;
+    notaCfg += ' Edifício com UT I e comunicações interiores comuns: configuração 2, no mínimo, com difusor de alarme na caixa de escada; se a escada for enclausurada, um difusor em cada patamar de acesso aos fogos (art. 130.º n.os 3 e 4).';
   }
   if ((temC || temF) && config < 2) {
     notaCfg += ' Locais de risco C e F inseridos em sistema, pelo menos, da configuração 2 (art. 131.º).';
