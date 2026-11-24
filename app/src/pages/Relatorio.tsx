@@ -348,15 +348,16 @@ export default function Relatorio() {
             <p className="mb-1 text-[12.5px] font-bold">{tituloUT(ut)}</p>
             {ut.compartimentos.map((c) => { const r = cargaCompartimento(c); return (
               <div key={c.id} className="avoid-break mb-3">
-                <table className="tbl"><thead><tr><th colSpan={2}>{c.nome} · S = {fmt(c.area, 2)} m² · método {c.metodo === 'deterministico' ? 'determinístico' : 'probabilístico'}</th><th className="text-right">MJ</th></tr></thead>
+                <table className="tbl"><thead><tr><th colSpan={2}>{c.nome} · S = {fmt(c.area, 2)} m² · método {c.metodo === 'deterministico' ? 'determinístico' : 'probabilístico'}</th><th className="w-28 whitespace-nowrap text-right">MJ</th></tr></thead>
                   <tbody>
                     {r.linhas.map((l, i) => <tr key={i}><td>{l.desc}</td><td className="font-mono text-[11px]">{l.formula}</td><td className="num text-right">{fmt(l.parcela)}</td></tr>)}
                     {r.raiNota && <tr><td colSpan={3} className="text-[11px] text-ink-3">Rai do compartimento: {r.raiNota}</td></tr>}
-                    <tr><td colSpan={2} className="font-semibold">Qs (carga modificada) / qs (densidade modificada)</td><td className="num text-right font-bold">{fmt(r.Qs)} MJ · {fmt(r.qs, 1)} MJ/m²</td></tr>
+                    <tr><td colSpan={2} className="font-semibold">Qs — carga de incêndio modificada do compartimento = Σ das parcelas{r.linhas.length > 1 ? ` = ${r.linhas.map((l) => fmt(l.parcela)).join(' + ')}` : ''}</td><td className="num whitespace-nowrap text-right font-bold">{fmt(r.Qs)} MJ</td></tr>
+                    <tr><td colSpan={2} className="font-semibold">qs — densidade modificada = Qs / S = {fmt(r.Qs)} MJ / {fmt(c.area, 2)} m²</td><td className="num whitespace-nowrap text-right font-bold">{fmt(r.qs, 1)} MJ/m²</td></tr>
                   </tbody></table>
               </div>
             ); })}
-            <p className="text-[12px] font-semibold">Densidade de carga de incêndio modificada da UT: q = {fmt(carga.Q)} / {fmt(carga.S, 2)} = <span className="text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
+            <p className="text-[12px] font-semibold">Densidade de carga de incêndio modificada da UT (Despacho n.º 8954/2020, n.º 4.º, 2): q = Σ (qsk × Sk) / Σ Sk = Σ Qsk / Σ Sk = {fmt(carga.Q)} MJ / {fmt(carga.S, 2)} m² = <span className="text-fire-ink">{fmt(carga.q, 1)} MJ/m²</span></p>
           </div>
         ))}
 
