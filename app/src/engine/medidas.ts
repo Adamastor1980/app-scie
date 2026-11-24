@@ -5,6 +5,7 @@ import {
   quadroIX, quadroL, quadroLI, quadroX, quadroXI, quadroXII, quadroXIX, quadroXLI, quadroXLIX, quadroXXII,
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
+import TITULO_VIII from '../data/tituloVIII.json';
 import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT, pisosUT, pisoAbaixo, nPiso } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
@@ -843,12 +844,13 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   if (t === 12) {
     add({ tema: 'II.3', titulo: 'Distâncias entre edifícios (UT XII)', exigencia: `Paredes exteriores EI/REI 60 e vãos E 30 / E 30 C quando confrontem com edifícios a menos de ${quadroXLIX(cat, H)} m; se a menos de metade: EI/REI 90 e vãos E 45 / E 45 C; +4 m para equipamentos ao ar livre.`, base: 'RT-SCIE, art. 300.º, quadro XLIX', estado: 'aplica' });
   }
-  const esp = ESPECIFICAS[t] ?? [];
-  if (esp.length) add({
-    tema: 'ESP', titulo: `Condições específicas da UT ${R}`,
-    exigencia: `Cumprimento das condições específicas da UT ${R} (título VIII do RT-SCIE), aplicáveis às situações existentes: ${esp.map((a) => `art. ${a.art} — ${a.titulo}`).join('; ')}.`,
-    base: `RT-SCIE, título VIII, arts. ${esp[0].art} a ${esp[esp.length - 1].art}`, estado: 'aplica',
-  });
+  // título VIII: cada artigo das condições específicas da UT, com o texto publicado (republicação de 2020), para verificação ponto a ponto
+  const cap = ESPECIFICAS[t];
+  if (cap) for (let n = cap[0]; n <= cap[1]; n++) {
+    const a = (TITULO_VIII as Record<string, { t: string; x: string[] }>)[String(n)];
+    if (!a) continue; // artigo revogado
+    add({ tema: 'ESP', titulo: `Art. ${n}.º — ${a.t}`, exigencia: a.x.join(' '), base: `RT-SCIE, art. ${n}.º (condições específicas da UT ${R})`, estado: 'aplica' });
+  }
 
   return M;
 }

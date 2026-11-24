@@ -511,3 +511,33 @@ describe('F — Autoproteção (RJ-SCIE arts. 20.º a 22.º; RT-SCIE arts. 193.�
     expect(med(U(3), 3, 'Elementos incorporados').exigencia).toContain('90 min');
   });
 });
+
+describe('G — Condições específicas (título VIII)', () => {
+  const esp = (t: UTNum) => medidas(U(t), 2).filter((m) => m.tema === 'ESP');
+  it('um item por artigo em vigor de cada capítulo; revogados excluídos; UT III e IV sem capítulo', () => {
+    expect(esp(1).map((m) => m.titulo.slice(0, 9))).toEqual(['Art. 208.', 'Art. 209.', 'Art. 210.', 'Art. 211.', 'Art. 212.', 'Art. 213.']);
+    expect(esp(2).some((m) => m.titulo.startsWith('Art. 223.'))).toBe(false); // revogado
+    expect(esp(2).some((m) => m.titulo.startsWith('Art. 228.'))).toBe(false); // revogado
+    expect(esp(8).some((m) => m.titulo.startsWith('Art. 259.'))).toBe(false); // revogado
+    expect(esp(3)).toHaveLength(0);
+    expect(esp(4)).toHaveLength(0);
+    expect(esp(12)[0].titulo).toMatch(/^Art\. 300\.º/);
+    expect(esp(12).at(-1)!.titulo).toMatch(/^Art\. 309\.º/);
+  });
+  it('texto literal publicado e referência para o texto integral', () => {
+    const a = esp(1)[0];
+    expect(a.titulo).toBe('Art. 208.º — Localização dos fogos');
+    expect(a.exigencia.length).toBeGreaterThan(50);
+    expect(a.base).toContain('art. 208.º');
+    expect(esp(8).find((m) => m.titulo.startsWith('Art. 265.'))!.exigencia).toContain('EI 90');
+  });
+  it('UT XII: quadros XLIX (4/8/8/12/16 m), L e LI', () => {
+    expect(med(U(12), 1, 'Distâncias entre edifícios').exigencia).toContain('4 m');
+    expect(med(U(12), 2, 'Distâncias entre edifícios', { altura: 12 }).exigencia).toContain('12 m');
+    expect(med(U(12), 3, 'Distâncias entre edifícios').exigencia).toContain('16 m');
+    const u = U(12); u.casoXII = 3;
+    expect(med(u, 2, 'Compartimentação corta-fogo da UT XII').exigencia).toMatch(/acima do plano de referência 4\s?800 m²/);
+    expect(med(U(12), 3, 'Distâncias máximas nos locais').exigencia).toContain('Impasse ≤ 15 m');
+    expect(med(U(12), 1, 'Distâncias máximas nos locais').exigencia).toContain('≤ 80 m');
+  });
+});
