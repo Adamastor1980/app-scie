@@ -461,3 +461,53 @@ describe('E — Meios de intervenção e outros sistemas (arts. 162.º a 192.º)
     expect(tem(U(3), 2, 'Sinalização ótica', { altura: 30 })).toBe(true);
   });
 });
+
+describe('F — Autoproteção (RJ-SCIE arts. 20.º a 22.º; RT-SCIE arts. 193.º a 207.º)', () => {
+  it('RJ-SCIE art. 22.º n.º 1: UT I das 1.ª e 2.ª categorias excluídas; 3.ª e 4.ª só espaços comuns', () => {
+    expect(med(U(1), 2, 'Medidas de autoproteção exigíveis').estado).toBe('nao');
+    expect(med(U(1), 3, 'Medidas de autoproteção exigíveis').exigencia).toMatch(/^Apenas espaços comuns/);
+  });
+  it('quadro XXXIX tal como publicado', () => {
+    const lista = (t: UTNum, c: Cat, d = false) => { const u = U(t); if (d) u.espacos = [espaco('D')]; return med(u, c, 'Medidas de autoproteção exigíveis').exigencia; };
+    expect(lista(1, 3)).toContain('Procedimentos de prevenção');
+    expect(lista(1, 3)).not.toContain('Plano de emergência');
+    expect(lista(1, 4)).toContain('Plano de emergência interno');
+    expect(lista(2, 2)).toContain('Procedimentos de prevenção');
+    expect(lista(2, 2)).toContain('Procedimentos em caso de emergência');
+    expect(lista(3, 1)).not.toContain('Ações de sensibilização');
+    expect(lista(3, 2)).toContain('Plano de prevenção');
+    expect(lista(3, 3)).toContain('Simulacros');
+    expect(lista(5, 1)).not.toContain('Plano de prevenção');
+    expect(lista(5, 1, true)).toContain('Plano de prevenção');
+    expect(lista(5, 2, true)).toContain('Plano de emergência interno');
+    expect(lista(5, 2)).not.toContain('Plano de emergência interno');
+  });
+  it('quadro XXXVIII: RS por utilização-tipo', () => {
+    expect(med(U(1), 3, 'Responsável e delegado').exigencia).toContain('administração do condomínio');
+    expect(med(U(3), 2, 'Responsável e delegado').exigencia).toContain('entidade exploradora');
+  });
+  it('quadro XLI: períodos entre simulacros; aviso quando o quadro indica período sem PEI exigido', () => {
+    expect(med(U(3), 4, 'Periodicidade dos simulacros').exigencia).toContain('Um ano');
+    expect(med(U(3), 3, 'Periodicidade dos simulacros').exigencia).toContain('Dois anos');
+    const d = U(5); d.espacos = [espaco('D')];
+    expect(med(d, 2, 'Periodicidade dos simulacros').exigencia).toContain('Um ano');
+    const m = med(U(3), 2, 'Periodicidade dos simulacros');
+    expect(m.estado).toBe('nao');
+    expect(m.motivo).toContain('art. 207.º n.º 1');
+    expect(med(U(4), 3, 'Periodicidade dos simulacros').exigencia).toContain('início do ano escolar');
+  });
+  it('arts. 199.º, 200.º, 201.º, 205.º e 206.º', () => {
+    const u = U(3); u.espacos = [espaco('C')];
+    expect(med(u, 2, 'Instruções de segurança').exigencia).toContain('face interior das portas');
+    expect(med(U(3), 3, 'Serviço de segurança').exigencia).toContain('ANEPC');
+    expect(med(U(3), 2, 'Registos de segurança').exigencia).toContain('10 anos');
+    expect(med(U(3), 3, 'Plantas de emergência').exigencia).toContain('NP 4386');
+    expect(med(U(3), 2, 'Formação em SCIE').exigencia).toContain('60 dias');
+    expect(med(U(4), 2, 'Formação em SCIE').exigencia).toContain('ano escolar');
+    expect(med(U(3), 1, 'Formação em SCIE').estado).toBe('nao');
+  });
+  it('art. 16.º e quadro XXXIV: elementos incorporados em instalações', () => {
+    expect(med(U(3), 2, 'Elementos incorporados').exigencia).toContain('15 min');
+    expect(med(U(3), 3, 'Elementos incorporados').exigencia).toContain('90 min');
+  });
+});

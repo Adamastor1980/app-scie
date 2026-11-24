@@ -665,9 +665,9 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const psCond = (t === 1 && cat >= 3) || (t >= 2 && cat >= 2) || (cat === 1 && temD) || (t === 9 && ut.designacao.toLowerCase().includes('campismo'));
   add({
     tema: 'VII.11', titulo: 'Posto de segurança',
-    exigencia: 'Centraliza a informação de segurança, a receção e difusão de alarmes, a transmissão do alerta e a coordenação em emergência; pode ser na receção ou portaria junto a um acesso principal, com ingresso reservado e protegido do fogo; um único posto admitido para várias UT do edifício, individualizando a supervisão de cada uma; chaveiro de segurança com chaves de reserva (exceto do interior dos fogos) e exemplares do plano de prevenção e do PEI; comunicação oral, por meios distintos da rede pública, com as portarias de outros edifícios que sirva.'
+    exigencia: 'Centraliza a informação de segurança, a receção e difusão de alarmes, a transmissão do alerta e a coordenação em emergência; pode ser na receção ou portaria junto a um acesso principal, com ingresso reservado e protegido do fogo; um único posto admitido para várias UT do edifício, individualizando a supervisão de cada uma; chaveiro de segurança com chaves de reserva (exceto do interior dos fogos) e exemplares do plano de prevenção e do PEI; ocupado em permanência durante o funcionamento por, pelo menos, um elemento da equipa de segurança (art. 200.º n.º 5); comunicação oral, por meios distintos da rede pública, com as portarias de outros edifícios que sirva.'
       + (cat === 4 || (cat === 3 && temDE) ? ` 4.ª categoria ou 3.ª com locais D e E: comunicação oral, por meios distintos da rede pública, com todos os pisos, zonas de refúgio, casas de máquinas, fontes centrais, central de bombagem, ascensores e locais D e E${t === 1 || ut.arLivre || ut.factos?.tendas ? '' : '; constitui local de risco F'}.` : ''),
-    base: 'RT-SCIE, art. 190.º' + (t === 6 ? '; art. 254.º' : t === 8 ? '; art. 277.º' : t === 9 ? '; art. 287.º' : ''),
+    base: 'RT-SCIE, arts. 190.º e 200.º n.º 5' + (t === 6 ? '; art. 254.º' : t === 8 ? '; art. 277.º' : t === 9 ? '; art. 287.º' : ''),
     estado: sim(psCond), motivo: psCond ? undefined : 'Exigido à UT I das 3.ª/4.ª categorias, às UT II a XII da 2.ª categoria ou superior e às UT da 1.ª categoria com locais D.',
   });
 
@@ -675,35 +675,35 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const map = quadroXXXIX(t, cat, temDE);
   add({
     tema: 'MAP', titulo: 'Medidas de autoproteção exigíveis',
-    exigencia: map ? map.map((m) => `${MAP_INFO[m].nome} (art. ${MAP_INFO[m].art})`).join('; ') + '.' : 'Não exigíveis.',
+    exigencia: map ? `${t === 1 ? 'Apenas espaços comuns: ' : ''}${map.map((m) => `${MAP_INFO[m].nome} (art. ${MAP_INFO[m].art})`).join('; ')}. Adaptadas às condições reais de exploração; auditáveis a qualquer momento, com acesso a todos os espaços (exceto fogos)${ut.patrimonio ? '; incluem procedimentos de prevenção e de atuação para proteger os bens de interesse histórico ou cultural' : ''}; em edifícios existentes com insuficiências elevadas, elencá-las e propor medidas compensatórias (art. 193.º n.º 3). Em zonas florestadas, faixa de 50 m livre de mato em volta do edificado (art. 202.º n.º 6).` : 'Não exigíveis.',
     base: 'RT-SCIE, art. 198.º, quadro XXXIX; RJ-SCIE, arts. 21.º e 22.º', estado: map ? 'aplica' : 'nao',
     motivo: map ? undefined : 'UT I das 1.ª e 2.ª categorias excluídas (RJ-SCIE, art. 22.º n.º 1).',
   });
   if (map) {
-    add({ tema: 'MAP', titulo: 'Responsável e delegado de segurança', exigencia: `RS: ${t === 1 ? 'administração do condomínio (espaços comuns)' : 'proprietário ou entidade exploradora'}; o RS designa um delegado de segurança para executar as medidas de autoproteção.`, base: 'RT-SCIE, art. 194.º, quadro XXXVIII; RJ-SCIE, arts. 6.º e 20.º', estado: 'aplica' });
-    add({ tema: 'MAP', titulo: 'Entrega das medidas de autoproteção', exigencia: `Submeter a parecer da ${cat === 1 ? 'câmara municipal' : 'ANEPC'} até 30 dias antes da entrada em funcionamento (construção nova, alteração, ampliação ou mudança de uso); atualizar sempre que mude a categoria de risco ou a UT.`, base: 'RJ-SCIE, art. 21.º n.os 2 e 3 e art. 22.º n.º 2', estado: 'aplica' });
-    add({ tema: 'MAP', titulo: 'Registos de segurança', exigencia: 'Relatórios de vistoria e inspeção, anomalias, manutenções, modificações e trabalhos perigosos, ocorrências, relatórios dos bombeiros, formação e simulacros; arquivo ≥ 10 anos.', base: 'RT-SCIE, art. 201.º', estado: 'aplica' });
+    add({ tema: 'MAP', titulo: 'Responsável e delegado de segurança', exigencia: `RS (quadro XXXVIII): ${t === 1 ? 'proprietário (interior das habitações) e administração do condomínio (espaços comuns)' : 'proprietário ou entidade exploradora da UT; entidade gestora dos espaços comuns a várias UT'}; o RS designa um delegado de segurança para executar as medidas e colabora com o comandante das operações de socorro. Alterações de uso ou lotação que mudem a equipa obrigam a atualizar o plano de prevenção e o PEI; cedência temporária só aos locais necessários; decoração temporária desmontada em ≤ 48 h (art. 195.º). Obras que prejudiquem a evacuação fora do funcionamento ou com meios alternativos; trabalhos com risco de incêndio só com autorização expressa do RS registada (art. 197.º).`, base: 'RT-SCIE, arts. 194.º, 195.º e 197.º, quadro XXXVIII; RJ-SCIE, arts. 6.º e 20.º', estado: 'aplica' });
+    add({ tema: 'MAP', titulo: 'Entrega das medidas de autoproteção', exigencia: `Submeter a parecer da ${catEd === 1 ? 'câmara municipal' : 'ANEPC'} até 30 dias antes da entrada em funcionamento (construção nova, alteração, ampliação ou mudança de uso); o parecer depende da implementação efetiva (art. 196.º RT-SCIE). Nova apreciação sempre que mude a categoria de risco ou a UT; outras modificações aprovadas pelo RS e registadas; comunicar a mudança da entidade responsável.`, base: 'RJ-SCIE, art. 21.º n.os 2 e 3 e art. 22.º n.os 2 a 4', estado: 'aplica' });
+    add({ tema: 'MAP', titulo: 'Registos de segurança', exigencia: 'Relatórios de vistoria, inspeção e fiscalização; anomalias (descrição, impacte, data e duração da reparação); manutenções (elemento, tipo, motivo, data e responsável); modificações e trabalhos perigosos (início e fim); ocorrências (alarmes falsos, princípios de incêndio, atuação das equipas); relatórios dos bombeiros; formação e simulacros; arquivo ≥ 10 anos, em papel ou digital.', base: 'RT-SCIE, art. 201.º', estado: 'aplica' });
   }
   if (map?.includes('pei')) {
-    add({ tema: 'MAP', titulo: 'Serviço de segurança contra incêndio (SSI)', exigencia: 'Delegado de segurança como chefe de equipa e elementos em número adequado à dimensão da UT e à categoria de risco; dimensionamento fundamentado e aceite pela ANEPC.', base: 'RT-SCIE, art. 200.º n.os 3, 4 e 6', estado: 'aplica' });
-    add({ tema: 'MAP', titulo: 'Plantas de emergência', exigencia: 'Para cada piso, segundo a NP 4386, afixadas junto aos acessos principais, nos locais D e E e nas zonas de refúgio.', base: 'RT-SCIE, art. 205.º n.º 6', estado: 'aplica' });
+    add({ tema: 'MAP', titulo: 'Serviço de segurança contra incêndio (SSI)', exigencia: 'Delegado de segurança como chefe de equipa e elementos em número adequado à dimensão da UT e à categoria de risco, de reconhecida competência em SCIE; dimensionamento fundamentado e aceite pela ANEPC; com público presente, o delegado em funções e a equipa contactável pelo posto de segurança e rapidamente mobilizável.', base: 'RT-SCIE, art. 200.º n.os 3, 4 e 6 a 8', estado: 'aplica' });
+    add({ tema: 'MAP', titulo: 'Plantas de emergência', exigencia: 'Para cada piso, segundo a NP 4386, afixadas junto aos acessos principais, nos locais D e E e nas zonas de refúgio, com instruções gerais de segurança; cópias aos bombeiros quando pedidas.', base: 'RT-SCIE, arts. 199.º n.º 4 e 205.º n.os 6 e 7', estado: 'aplica' });
   }
   const sim41 = quadroXLI(t, cat, temDE);
   add({
     tema: 'MAP', titulo: 'Periodicidade dos simulacros',
-    exigencia: sim41 ? `Período máximo entre simulacros: ${sim41}.${t === 4 ? ' Na UT IV, no início do ano escolar.' : ''}` : 'Não exigidos.',
+    exigencia: sim41 ? `Período máximo entre simulacros: ${sim41}.${t === 4 ? ' Na UT IV, no início do ano escolar.' : ''} Planeados, executados e avaliados (eventualmente com os bombeiros e a proteção civil municipal), com observadores e informação prévia aos ocupantes; exercícios de quadros quando os ocupantes não possam ser evacuados.` : 'Não exigidos.',
     base: 'RT-SCIE, art. 207.º, quadro XLI', estado: map?.includes('simulacros') && sim41 ? 'aplica' : 'nao',
-    motivo: map?.includes('simulacros') && sim41 ? undefined : 'Sem plano de emergência interno exigível nesta categoria (quadro XXXIX).',
+    motivo: map?.includes('simulacros') && sim41 ? undefined : sim41 ? `O quadro XLI indica «${sim41}» para esta categoria, mas o art. 207.º n.º 1 só exige simulacros com plano de emergência interno, que o quadro XXXIX não exige aqui; se houver PEI, aplica-se esse período.` : 'Sem plano de emergência interno exigível nesta categoria (quadro XXXIX).',
   });
   add({
     tema: 'MAP', titulo: 'Instruções de segurança',
-    exigencia: `Instruções afixadas para os ocupantes dos locais de risco C, D, E e F (com planta simplificada nos locais D e E)${map && !map.includes('pei') && !map.includes('procEmergencia') ? '; instruções simplificadas de alarme, alerta e uso de meios de 1.ª intervenção' : ''}.`,
+    exigencia: `Instruções com os procedimentos de prevenção e de emergência do espaço, afixadas na face interior das portas dos locais de risco C, D, E e F (com planta simplificada das vias, alarme e meios de 1.ª intervenção nos locais D e E)${map && !map.includes('pei') && !map.includes('procEmergencia') ? '; instruções simplificadas de alarme, alerta e uso de meios de 1.ª intervenção' : ''}.`,
     base: 'RT-SCIE, art. 199.º', estado: sim(temC || temDE || temF || (!!map && !map.includes('pei') && !map.includes('procEmergencia'))),
     motivo: temC || temDE || temF ? undefined : 'Sem locais C, D, E ou F.',
   });
   add({
     tema: 'MAP', titulo: 'Formação em SCIE',
-    exigencia: 'Sensibilização de todos os funcionários e colaboradores no prazo de 60 dias após a entrada ao serviço; formação específica para quem trabalha em locais C, D ou F e para os elementos com atribuições em emergência.' + (t === 1 ? ' Ocupantes dos fogos da UT I das 3.ª/4.ª categorias.' : t === 4 ? ' Alunos que permaneçam mais de 30 dias, no primeiro período do ano escolar.' : t === 9 ? ' Frequentadores que permaneçam mais de 30 dias.' : ''),
+    exigencia: 'Destinatários: funcionários e colaboradores, quem trabalhe mais de 30 dias por ano nos espaços e os elementos com atribuições de autoproteção. Sensibilização (espaços e riscos, prevenção, alarme, evacuação, uso de extintores) no prazo de 60 dias após a entrada ao serviço; formação específica para quem trabalha em locais C, D ou F e para os elementos com atribuições em emergência (alerta, evacuação, comandos, receção dos bombeiros, direção das operações).' + (t === 1 ? ' Ocupantes dos fogos da UT I das 3.ª/4.ª categorias.' : t === 4 ? ' Alunos que permaneçam mais de 30 dias, no primeiro período do ano escolar.' : t === 9 ? ' Frequentadores que permaneçam mais de 30 dias.' : ''),
     base: 'RT-SCIE, art. 206.º', estado: sim(!!map?.includes('formacao')),
     motivo: map?.includes('formacao') ? undefined : 'Não exigida pelo quadro XXXIX para esta UT e categoria (art. 198.º).',
   });
@@ -712,7 +712,7 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   const esc = (a: number, b: number) => (cat <= 2 ? a : b);
   add({
     tema: 'III.1', titulo: 'Elementos incorporados em instalações',
-    exigencia: `Cablagens elétricas, de fibra ótica e de energia ou sinal que sirvam os sistemas de segurança ou sejam indispensáveis aos locais de risco F: embebidas, em ducto próprio ou com classe P/PH. Escalões mínimos (quadro XXXIV): alarme, deteção e retenção de portas ${esc(15, 30)} min; iluminação de emergência e comandos de extinção ${esc(30, 60)} min; controlo de fumo, pressurização de água, ascensores de bombeiros e comunicações ${esc(60, 90)} min${temF ? '; locais de risco F 90 min' : ''}.`,
+    exigencia: `Cablagens elétricas, de fibra ótica e de energia ou sinal que sirvam os sistemas de segurança ou sejam indispensáveis aos locais de risco F: embebidas, em ducto próprio ou com classe P/PH (exceto os percursos no interior de câmaras corta-fogo e de vias de evacuação protegidas). Escalões mínimos (quadro XXXIV): alarme, deteção e retenção de portas ${esc(15, 30)} min; iluminação de emergência e comandos de extinção ${esc(30, 60)} min; controlo de fumo, pressurização de água, ascensores de bombeiros e comunicações ${esc(60, 90)} min${temF ? '; locais de risco F 90 min' : ''}.`,
     base: 'RT-SCIE, art. 16.º; art. 77.º n.º 3, quadro XXXIV', estado: 'aplica',
   });
   {
