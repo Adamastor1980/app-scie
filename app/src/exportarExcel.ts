@@ -1,4 +1,5 @@
 import type { Projeto } from './data/types';
+import { baseLegalDoc, notaVersao } from './versao';
 import { ROMANO } from './data/rjscie';
 import { contexto, gerarMedidas, secRotulo } from './engine/medidas';
 import { desconformidades, verDe } from './engine/verificacao';
@@ -47,6 +48,10 @@ export async function exportarExcel(p: Projeto) {
     {
       data: todas as never, sheet: 'Verificação', stickyRowsCount: 1,
       columns: [{ width: 22 }, { width: 30 }, { width: 13 }, { width: 28 }, { width: 34 }, { width: 70 }, { width: 28 }, { width: 14 }, { width: 13 }, { width: 40 }],
+    },
+    {
+      data: [[cab('Base legal e versão')], [baseLegalDoc(p.data ? new Date(p.data + 'T00:00').toLocaleDateString('pt-PT') : '')], [notaVersao()]] as never,
+      sheet: 'Base legal', columns: [{ width: 120 }],
     },
   ]).toBlob();
 

@@ -1,3 +1,4 @@
+import { LEI_VERIFICADA_EM, VERSAO_APP, baseLegalDoc, notaVersao } from '../versao';
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -172,6 +173,8 @@ export default function Relatorio() {
               ['Associação profissional', p.autor.ordem ? `${p.autor.ordem}, n.º ${p.autor.numero || '—'}` : '—'], ['Registo ANEPC do autor', p.autor.registoAnepc || '—'],
               ['Empresa', [p.empresa.nome, p.empresa.nif && `NIF ${p.empresa.nif}`].filter(Boolean).join(' · ') || '—'],
               ['Data / versão', `${dataPt} · v${p.versao}`],
+              ['Base legal', `Legislação em vigor${dataPt ? ` em ${dataPt}` : ''}: RJ-SCIE (DL 220/2008, na redação da Lei 123/2019); RT-SCIE (Portaria 1532/2008, na redação da Portaria 135/2020); Despacho 2074/2009, na redação do Despacho 8954/2020`],
+              ['Ferramenta de cálculo', `Cautela SCIE, versão de ${VERSAO_APP} (regras conferidas com o Diário da República em ${LEI_VERIFICADA_EM})`],
             ].map(([a, b]) => <tr key={a}><td className="w-[42%] font-semibold">{a}</td><td>{b}</td></tr>)}
           </tbody>
         </table>
@@ -253,6 +256,7 @@ export default function Relatorio() {
         <H2 n={`${sec}.3`}>Legislação aplicada</H2>
         <table className="tbl mb-2"><thead><tr><th>Sigla</th><th>Diploma</th><th>Objeto</th></tr></thead>
           <tbody>{DIPLOMAS.map((d) => <tr key={d.sigla}><td className="font-semibold">{d.sigla}</td><td>{d.titulo}</td><td>{d.objeto}</td></tr>)}</tbody></table>
+        <P>{baseLegalDoc(dataPt)} {notaVersao()}</P>
         <P>A estrutura deste relatório segue o conteúdo da memória descritiva e justificativa definido no anexo IV do RJ-SCIE. Todas as exigências indicadas citam o artigo e o quadro de onde resultam.</P>
 
         <H1 n={S()}>Caracterização dos edifícios e das utilizações-tipo</H1>

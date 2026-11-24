@@ -1,7 +1,7 @@
 import { DIPLOMAS } from '../data/rjscie';
 import { Lema, NomeApp, Simbolo } from './Marca';
+import { LEI_VERIFICADA_EM, VERSAO_APP as versao } from '../versao';
 
-const versao = new Date(parseInt(__VERSAO__, 36)).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 /** Rodapé institucional: finalidade, autoria, base legal, limitações e dados. */
 export default function Rodape() {
@@ -40,7 +40,7 @@ export default function Rodape() {
 
       <div className="mt-8 flex flex-wrap justify-between gap-2 border-t border-paper-3 py-4 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-4">
         <span>© {new Date().getFullYear()} Fernando Adamastor · Cautela SCIE</span>
-        <span>Versão de {versao}</span>
+        <span>Versão de {versao} · legislação conferida com o Diário da República em {LEI_VERIFICADA_EM}</span>
       </div>
     </footer>
   );

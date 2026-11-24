@@ -1,3 +1,4 @@
+import { baseLegalDoc, notaVersao } from '../versao';
 import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Eye, Loader2, PenLine, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
@@ -127,6 +128,7 @@ export default function MapDocumento() {
       <Sheet className="page-break">
         <H1 n={S()}>Enquadramento</H1>
         <P>As medidas de autoproteção são medidas de organização e gestão da segurança, adaptadas às condições reais de exploração de cada utilização-tipo e proporcionadas à sua categoria de risco (RT-SCIE, art. 193.º n.os 1 e 2), e são auditáveis a qualquer momento, devendo o RS fornecer a documentação e facultar o acesso a todos os espaços à entidade competente (art. 198.º n.º 3).</P>
+        <P>{baseLegalDoc(dataPt)} {notaVersao()}</P>
         <H2 n={`${n}.1`}>Medidas exigíveis (quadro XXXIX)</H2>
         <table className="tbl mb-3">
           <thead><tr><th>Utilização-tipo</th><th>Cat.</th><th>Medidas de autoproteção exigíveis</th></tr></thead>
