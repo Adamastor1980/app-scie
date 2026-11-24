@@ -117,7 +117,7 @@ export default function NovaNC({ ed, ut, plantas, upU, medidaKey, onClose }: {
               <p className="label mb-1.5">Que exigência não é cumprida?</p>
               <div className="relative mb-2">
                 <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-4" />
-                <input className="input pl-8" placeholder="Pesquisar (ex.: extintor, porta, sinalização)…" value={q} onChange={(e) => setQ(e.target.value)} />
+                <input className="input sem-marca pl-8" placeholder="Pesquisar (ex.: extintor, porta, sinalização)…" value={q} onChange={(e) => setQ(e.target.value)} />
               </div>
               <div className="max-h-[46vh] overflow-y-auto border border-ink bg-white">
                 {lista.map((x) => (

@@ -114,7 +114,7 @@ export default function UTEfetivo({ ut, upU }: UTProps) {
               const aviso = e.local === 'A' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50);
               return (
                 <div key={e.id} data-bloco={e.id} className={`border bg-white ${e.naoSimultaneo ? 'border-dashed border-ink-4 opacity-80' : 'border-ink'}`}>
-                  <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto]">
+                  <div className="grid gap-3 p-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_1.8fr_auto] md:[&>.field>span:first-child]:min-h-[44px] md:[&>.field>span:first-child]:items-end">
                     <Field label={`Espaço · ${cod.get(e.id) ?? ""}`} className={e.nome.trim() ? '' : 'falta'}><Text value={e.nome} onChange={(v) => setE(i, (x) => { x.nome = v; })} placeholder="ex.: Open space piso 1" /></Field>
                     <Field label="Piso" className={nPiso(e.piso) === null ? 'falta' : ''}><Select value={nPiso(e.piso) === null ? '' : String(nPiso(e.piso))} onChange={(v) => setE(i, (x) => { x.piso = v === '' ? '' : rotuloPiso(Number(v)); })} options={OPCOES_PISO} /></Field>
                     <Field label="Local de risco" legal="RJ-SCIE, art. 10.º" hint={e.local === 'B' && (c.valor > 100 || (e.efetivoPublico ?? 0) > 50) ? `B automático: ${c.valor > 100 ? `efetivo ${c.valor} > 100` : `público ${e.efetivoPublico} > 50`}` : undefined}><Select value={e.local} onChange={(v) => setE(i, (x) => { x.local = v; })} options={LOCAL_OPTS} /></Field>

@@ -26,13 +26,13 @@ export default function Combo({ items, value, onPick, placeholder }: { items: Co
   }, [q, items]);
   return (
     <div ref={ref} className="relative">
-      <button type="button" className="input flex items-center justify-between text-left" onClick={() => setOpen((o) => !o)}>
+      <button type="button" className={`input flex items-center justify-between text-left ${value ? 'preenchido' : ''}`} onClick={() => setOpen((o) => !o)}>
         <span className={`truncate ${value ? '' : 'text-ink-4'}`}>{value || placeholder || 'Escolher…'}</span>
         <Search size={13} className="shrink-0 text-ink-4" />
       </button>
       {open && (
         <div className="absolute left-0 right-0 top-[calc(100%+2px)] z-30 min-w-[min(360px,calc(100vw-2rem))] border border-ink bg-white shadow-[6px_6px_0_rgba(15,15,14,0.15)]">
-          <input autoFocus className="input border-0 border-b border-ink" placeholder="Pesquisar…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input autoFocus className="input sem-marca border-0 border-b border-ink" placeholder="Pesquisar…" value={q} onChange={(e) => setQ(e.target.value)} />
           <ul className="max-h-[300px] overflow-y-auto">
             {list.map((i) => (
               <li key={i.key}>

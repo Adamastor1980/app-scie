@@ -53,11 +53,11 @@ export function Num({ value, onChange, suffix, min, step, className = '', placeh
 }
 
 export function Text({ value, onChange, placeholder, className = '' }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
-  return <input className={`input ${className}`} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
+  return <input className={`input ${className}`} value={value} placeholder={placeholder ?? ' '} onChange={(e) => onChange(e.target.value)} />;
 }
 
 export function Area({ value, onChange, placeholder, rows = 4 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
-  return <textarea className="input" rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
+  return <textarea className="input" rows={rows} value={value} placeholder={placeholder ?? ' '} onChange={(e) => onChange(e.target.value)} />;
 }
 
 export function Select<T extends string | number>({ value, onChange, options, className = '' }: {

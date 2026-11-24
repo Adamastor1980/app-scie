@@ -26,6 +26,8 @@ body { @apply bg-paper text-ink font-sans antialiased; font-feature-settings: 't
   .btn-primary { @apply btn bg-ink text-white hover:bg-ink-2 hover:border-ink-2; }
   .btn-fire { @apply btn bg-fire border-fire text-ink hover:bg-fire-dark hover:border-fire-dark; }
   .btn-ghost { @apply inline-flex items-center gap-1.5 h-8 px-2 text-[12.5px] font-medium text-ink-3 hover:text-ink hover:bg-paper-2 transition-colors; }
+  /* dado introduzido pelo técnico: fundo creme quente e traço dourado à esquerda (vazio obrigatório: vermelho; calculado: caixa cinzenta) */
+  input.input:not(:placeholder-shown):not(.sem-marca):not([type='checkbox']):not([type='file']):not([type='date']), textarea.input:not(:placeholder-shown), input.input-num:not(:placeholder-shown), .input.preenchido { background-color: #FFFBF0; box-shadow: inset 3px 0 0 #DA9A1E; }
   .falta .input, .falta .input-num, .input.falta { @apply border-alerta bg-alerta-soft; }
   .btn-icon { @apply inline-flex items-center justify-center w-8 h-8 text-ink-3 hover:text-ink hover:bg-paper-2 transition-colors; }
   .field { @apply flex flex-col gap-1.5; }

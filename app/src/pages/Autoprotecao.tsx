@@ -289,7 +289,7 @@ function EditorRegisto({ r: r0, uts, onGuardar, onFechar }: { r: Registo; uts: {
           )}
           {rot.motivo && <Field label={rot.motivo} className={rot.tipoAcao ? '' : 'sm:col-span-2'}><Text value={r.motivo} onChange={(t) => set((x) => { x.motivo = t; })} /></Field>}
           {(r.tipo === 'formacao' || r.tipo === 'simulacro') && (
-            <Field label="N.º de participantes"><input className="input" inputMode="numeric" value={r.participantes ?? ''} onChange={(e) => set((x) => { const n = parseInt(e.target.value, 10); x.participantes = Number.isFinite(n) ? n : undefined; })} /></Field>
+            <Field label="N.º de participantes"><input className="input" placeholder=" " inputMode="numeric" value={r.participantes ?? ''} onChange={(e) => set((x) => { const n = parseInt(e.target.value, 10); x.participantes = Number.isFinite(n) ? n : undefined; })} /></Field>
           )}
           {r.tipo === 'modificacao' && <Field label="Responsável"><Text value={r.responsavel} onChange={(t) => set((x) => { x.responsavel = t; })} /></Field>}
           <Field label={r.tipo === 'simulacro' ? 'Planeamento, execução e avaliação' : 'Descrição / observações'} legal={r.tipo === 'simulacro' ? 'art. 207.º n.º 2 c)' : undefined} className="sm:col-span-2">

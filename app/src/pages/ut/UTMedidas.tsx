@@ -114,7 +114,7 @@ function Medidas({ ed, ut, upU }: UTProps) {
         );
       })()}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <input className="input max-w-sm" placeholder="Pesquisar nas medidas…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input sem-marca max-w-sm" placeholder="Pesquisar nas medidas…" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="flex-1"><Note>Exigências do RJ-SCIE e do RT-SCIE concretizadas para esta UT, com a categoria, a altura do edifício e os locais de risco registados. As marcadas «verificar» dependem de elementos do projeto que a app não recolhe.</Note></div>
       </div>
       <div className="flex flex-col gap-8">
