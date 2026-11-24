@@ -352,7 +352,11 @@ function CompBloco({ c, set, remove }: { c: Compartimento; set: (fn: (c: Compart
         <div className="bg-paper p-4"><p className="label">Qs — carga modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.Qs)} <span className="font-mono text-[12px] text-ink-3">MJ</span></p></div>
         <div className="bg-ink p-4 text-white"><p className="label !text-white/60">qs — densidade modificada</p><p className="mt-1 font-display text-[26px] font-extrabold num">{fmt(r.qs, 1)} <span className="font-mono text-[12px] text-white/60">MJ/m²</span></p></div>
         <div className="bg-paper p-4 text-[12px] leading-snug">
-          <p className="ref mb-1">qs = {fmt(r.Qs)} MJ / {fmt(c.area, 2)} m²</p>
+          <div className="mb-2 border-l-[3px] border-fire bg-white px-3 py-2">
+            <p className="label mb-1">Cálculo do compartimento</p>
+            {r.linhas.length > 1 && <p className="font-mono text-[12.5px]">Qs = {r.linhas.map((l) => fmt(l.parcela)).join(' + ')} = <b>{fmt(r.Qs)} MJ</b></p>}
+            <p className="font-mono text-[14px]">qs = Qs / S = {fmt(r.Qs)} / {fmt(c.area, 2)} = <b className="text-[16px]">{fmt(r.qs, 1)} MJ/m²</b></p>
+          </div>
           {outro.Qs > 0 && r.Qs > 0 && (
             <p className="mb-1 text-[12px]">
               Comparação — {c.metodo === 'deterministico' ? 'probabilístico' : 'determinístico'}: <b className="num">{fmt(outro.qs, 1)} MJ/m²</b>
