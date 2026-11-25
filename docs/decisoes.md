@@ -161,6 +161,14 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Facto:** o quadro XLI indica «dois anos» para a 2.ª categoria das UT III, VI, VIII a XII, mas o art. 207.º n.º 1 só exige simulacros com plano de emergência interno, que o quadro XXXIX não exige nessa categoria.
 - **Decisão:** a app não exige simulacros nesses casos e explica a contradição; se houver PEI voluntário, aplica-se o período do quadro XLI.
 
+### D-33 — Percurso das MAP: medidas exigíveis antes da verificação no local ✅
+- **Decisão:** guia de 10 passos no painel de cada projeto e nas Tabelas legais, com a ordem: recolha → UT → locais de risco → efetivo e categoria → **MAP exigíveis** → **verificação no local** → documentos → relatório → entrega → submissão.
+- **Base:** RT-SCIE, art. 198.º, quadro XXXIX (as MAP dependem só da UT, da categoria e dos locais D/E); art. 193.º n.os 3 e 4 (a verificação alimenta as medidas compensatórias); RJ-SCIE, arts. 21.º, 22.º e 34.º n.º 2 (submissão obrigatória salvo UT I das 1.ª e 2.ª categorias; edifícios existentes sem MAP estão fora de prazo).
+
+### D-34 — Estado «Por verificar» e evidências opcionais ✅
+- **Decisão:** além de Cumpre / Não cumpre / N.A., uma exigência pode ficar «Por verificar», com o que falta para concluir; não conta como verificada e aparece em lista própria no relatório. Fotografias de evidência opcionais em «Cumpre» e «Por verificar»; no relatório só com o interruptor «Incluir evidências de conformidade».
+- **Porquê:** registar honestamente o que não foi possível confirmar no local (falta de acesso, de certificado), sem o dar como cumprido.
+
 ---
 
 ## 8. Documentos

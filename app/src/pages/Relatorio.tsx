@@ -9,7 +9,7 @@ import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
 import { CAT_NOME, CAT_RISCO, catAtribuida, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosUT } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
-import { desconformidades, estadoSeccao, opcoesPrazo, progresso } from '../engine/verificacao';
+import { desconformidades, estadoSeccao, evidenciasConformidade, opcoesPrazo, porVerificar, progresso } from '../engine/verificacao';
 import QuadroAnexo from './ut/QuadroAnexo';
 import { CAT_COR, Toggle } from '../ui/primitives';
 import type { Cat } from '../data/types';
@@ -41,6 +41,7 @@ const nomeCat = (c: { falta: string[]; cat: Cat }) => (c.falta.length ? 'Categor
 export default function Relatorio() {
   const { p } = useP();
   const [incluirNao, setIncluirNao] = useState(false);
+  const [incluirEvid, setIncluirEvid] = useState(false);
   const [incluirVerif, setIncluirVerif] = useState(false);
   // no telemóvel/tablet a folha A4 (210 mm ≈ 794 px) é reduzida para caber no ecrã; na impressão volta a 100 %
   const escala = () => Math.min(1, (window.innerWidth - 16) / 800);
@@ -119,6 +120,7 @@ export default function Relatorio() {
           </div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas por decidir" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
+          <div className="w-full sm:w-[230px]"><Toggle checked={incluirEvid} onChange={setIncluirEvid} label="Incluir evidências de conformidade" /></div>
           <button className="btn h-11 w-full justify-center px-4 sm:w-auto" disabled={!!aGerar} onClick={async () => {
             const raiz = document.getElementById('relatorio-folhas');
             if (!raiz) return;
@@ -425,7 +427,7 @@ export default function Relatorio() {
             </div>
           ) : null;
         })()}
-        {todas.every(({ ut, medidas }) => progresso(ut, medidas).marcadas === 0) ? (
+        {todas.every(({ ut, medidas }) => { const g = progresso(ut, medidas); return g.marcadas === 0 && g.porVerificar === 0; }) ? (
           <P>Não foi registada verificação no local das exigências identificadas no capítulo anterior. A análise de conformidade (cumpre / não cumpre / não aplicável) é feita no passo «Medidas» de cada utilização-tipo.</P>
         ) : (
           <>
@@ -437,7 +439,7 @@ export default function Relatorio() {
               return (
                 <div key={ut.id} className="mb-8">
                   <p className="keep-next avoid-break mb-2 border-b-2 border-ink pb-1 text-[13.5px] font-bold">{sec}.{ui + 1} {ed.nome} · {tituloUT(ut)}</p>
-                  <p className="mb-2 text-[11.5px] text-ink-3">{pg.marcadas} de {pg.total} exigências verificadas · cumpre {pg.cumpre} · não cumpre {pg.naoCumpre} · não aplicável {pg.na}</p>
+                  <p className="mb-2 text-[11.5px] text-ink-3">{pg.marcadas} de {pg.total} exigências verificadas · cumpre {pg.cumpre} · não cumpre {pg.naoCumpre} · não aplicável {pg.na}{pg.porVerificar ? ` · por verificar ${pg.porVerificar}` : ''}</p>
                   <table className="tbl mb-4">
                     <thead><tr><th>Exigência regulamentar (anexo IV) — há desconformidades?</th><th className="w-14 text-center">Sim</th><th className="w-14 text-center">Não</th><th className="w-14 text-center">N.A.</th><th className="w-24">Notas</th></tr></thead>
                     <tbody>
@@ -486,6 +488,30 @@ export default function Relatorio() {
                       ))}</tbody></table>
                     </>
                   )}
+                  {(() => {
+                    const pv = porVerificar(ut, medidas);
+                    return pv.length > 0 && (
+                      <>
+                        <p className="keep-next mb-1 mt-3 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-warn">Exigências por verificar</p>
+                        <table className="tbl mb-4"><tbody>{pv.map(({ medida, ver }) => (
+                          <tr key={medida.key}><td className="text-[11.5px]"><b>{medida.titulo}</b><span className="block text-ink-3">Falta: {ver.falta || 'elementos para concluir a verificação'}</span></td><td className="w-[22%] text-[10px] text-ink-3">{medida.base}</td></tr>
+                        ))}</tbody></table>
+                      </>
+                    );
+                  })()}
+                  {incluirEvid && (() => {
+                    const ev = evidenciasConformidade(ut, medidas);
+                    return ev.length > 0 && (
+                      <>
+                        <p className="keep-next mb-1 mt-3 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-ok">Evidências de conformidade</p>
+                        <table className="tbl mb-4"><tbody>{ev.map(({ medida, ver }) => (
+                          <tr key={medida.key} className="avoid-break"><td className="text-[11.5px]"><b>{medida.titulo}</b>
+                            <span className="mt-1.5 flex flex-wrap gap-1.5">{ver.fotos!.map((id) => ut.levantamento?.find((a) => a.id === id)).filter((a) => a?.imagem).map((a) => <img key={a!.id} src={a!.imagem} alt="" className="h-[30mm] w-auto max-w-[45mm] border border-paper-3 object-contain" />)}</span>
+                          </td><td className="w-[22%] text-[10px] text-ink-3">{medida.base}</td></tr>
+                        ))}</tbody></table>
+                      </>
+                    );
+                  })()}
                 </div>
               );
             })}

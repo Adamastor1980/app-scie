@@ -57,12 +57,26 @@ export function desconformidades(ut: UT, medidas: Medida[]): Desconformidade[] {
 
 export function progresso(ut: UT, medidas: Medida[]) {
   const verificaveis = medidas.filter((m) => m.estado !== 'nao');
-  const marcadas = verificaveis.filter((m) => verDe(ut, m).estado);
+  // «por verificar» não conta como verificada: fica pendente até haver elementos para concluir
+  const marcadas = verificaveis.filter((m) => { const e = verDe(ut, m).estado; return !!e && e !== 'por_verificar'; });
   return {
     total: verificaveis.length,
     marcadas: marcadas.length,
     cumpre: marcadas.filter((m) => verDe(ut, m).estado === 'cumpre').length,
     naoCumpre: marcadas.filter((m) => verDe(ut, m).estado === 'nao_cumpre').length,
     na: marcadas.filter((m) => verDe(ut, m).estado === 'na').length,
+    porVerificar: verificaveis.filter((m) => verDe(ut, m).estado === 'por_verificar').length,
   };
+}
+
+/** Exigências marcadas «por verificar», pela ordem do anexo IV */
+export function porVerificar(ut: UT, medidas: Medida[]) {
+  const out: { medida: Medida; ver: Verificacao }[] = [];
+  for (const s of SECOES) for (const m of medidas.filter((x) => x.tema === s.c)) { const v = verDe(ut, m); if (v.estado === 'por_verificar') out.push({ medida: m, ver: v }); }
+  return out;
+}
+
+/** Exigências que cumprem e têm evidências fotográficas */
+export function evidenciasConformidade(ut: UT, medidas: Medida[]) {
+  return medidas.map((m) => ({ medida: m, ver: verDe(ut, m) })).filter(({ ver }) => ver.estado === 'cumpre' && (ver.fotos?.length ?? 0) > 0);
 }

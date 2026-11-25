@@ -1,6 +1,7 @@
 import { nomeUT } from '../nome';
 import { ArrowRight, CheckCircle2, Circle, FileText } from 'lucide-react';
 import { useP } from './ProjetoShell';
+import { PercursoProjeto } from './Percurso';
 import { classificar, efetivoUT, CAT_NOME, fmt, faltaCaracterizacao } from '../engine/calc';
 import { ROMANO } from '../data/rjscie';
 import { CatBadge, Stat, Empty } from '../ui/primitives';
@@ -8,7 +9,7 @@ import { go } from '../router';
 import type { Cat } from '../data/types';
 
 export default function Overview() {
-  const { p, pedirUT } = useP();
+  const { p, up, pedirUT } = useP();
   const base = `/p/${p.id}`;
   const linhas = p.edificios.flatMap((e) => e.uts.map((u) => {
     const ef = efetivoUT(u);
@@ -46,6 +47,8 @@ export default function Overview() {
         <Stat label="Efetivo total" value={fmt(efTotal)} unit="pessoas" />
         <Stat label="Categoria mais gravosa" value={max ? `${max}.ª` : '—'} sub={max ? CAT_NOME[max] : linhas.length ? 'Por atribuir (faltam critérios)' : 'Sem UT'} accent />
       </div>
+
+      <PercursoProjeto p={p} atualizar={up} />
 
       <section className="mb-10">
         <h2 className="section-title mb-3">Utilizações-tipo</h2>

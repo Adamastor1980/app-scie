@@ -7,7 +7,7 @@ import { CAT_NOME, faltaEdificio, faltaParaMedidas } from './engine/calc';
 import { nomeUT } from './nome';
 import { entregarFicheiro } from './pdfDireto';
 
-const ESTADO: Record<string, string> = { cumpre: 'Cumpre', nao_cumpre: 'Não cumpre', na: 'N.A.' };
+const ESTADO: Record<string, string> = { cumpre: 'Cumpre', nao_cumpre: 'Não cumpre', na: 'N.A.', por_verificar: 'Por verificar' };
 
 /** Exporta para Excel: (1) plano de ação com as não conformidades; (2) verificação completa de todas as medidas */
 export async function exportarExcel(p: Projeto) {
@@ -35,7 +35,7 @@ export async function exportarExcel(p: Projeto) {
         const v = verDe(ut, m);
         todas.push([ed.nome, nomeU, (ctx.cls.falta.length ? 'Por atribuir' : CAT_NOME[ctx.cls.cat]), secRotulo(m.tema), m.titulo, m.exigencia, m.base,
           m.estado === 'aplica' ? 'Aplicável' : m.estado === 'verificar' ? 'A verificar' : 'Não aplicável',
-          v.estado ? ESTADO[v.estado] : '', v.obs ?? '']);
+          v.estado ? ESTADO[v.estado] : '', v.estado === 'por_verificar' ? (v.falta ? `Falta: ${v.falta}` : '') : (v.obs ?? '')]);
       }
     }
   }

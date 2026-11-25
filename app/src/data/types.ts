@@ -146,7 +146,8 @@ export interface Compartimento {
   raiDet?: number;
 }
 
-export type Conformidade = 'cumpre' | 'nao_cumpre' | 'na';
+/** por_verificar: visto no local mas sem elementos para concluir (ex.: falta certificado ou acesso) */
+export type Conformidade = 'cumpre' | 'nao_cumpre' | 'na' | 'por_verificar';
 
 /** Verificação de uma exigência no local (avaliação de edifício existente) */
 export interface Verificacao {
@@ -158,6 +159,8 @@ export interface Verificacao {
   fotos?: string[];
   /** localização na planta (coordenadas relativas 0–1) */
   ponto?: { plantaId: string; x: number; y: number };
+  /** por verificar: o que falta para concluir a verificação */
+  falta?: string;
 }
 
 export interface Revisao {
@@ -262,6 +265,8 @@ export interface Projeto {
   distribuicao?: Distribuicao[];
   /** medidas de autoproteção: organização da segurança e registos (RT-SCIE, título VII) */
   autoprotecao?: Autoprotecao;
+  /** percurso das MAP: passos marcados pelo técnico (datas ISO) */
+  percurso?: { entregue?: string; submetido?: string; refSubmissao?: string };
   criadoEm: number;
   atualizadoEm: number;
 }

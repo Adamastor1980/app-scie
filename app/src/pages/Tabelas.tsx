@@ -1,3 +1,4 @@
+import { PercursoEstatico } from './Percurso';
 import { useMemo, useState } from 'react';
 import { QUADRO_I_HI, QUADRO_II } from '../data/despacho';
 import { DIPLOMAS, NOTA_PISOS_TECNICOS, ROMANO, UTS } from '../data/rjscie';
@@ -69,10 +70,10 @@ export function QuadroIIView({ onPick }: { onPick?: (id: number, tipo: 'qs' | 'q
   );
 }
 
-const TABS = ['Anexo III — categorias', 'Efetivo', 'Carga de incêndio', 'Resistência e compartimentação', 'Equipamentos e autoproteção', 'Diplomas'] as const;
+const TABS = ['Percurso das MAP', 'Anexo III — categorias', 'Efetivo', 'Carga de incêndio', 'Resistência e compartimentação', 'Equipamentos e autoproteção', 'Diplomas'] as const;
 
 export default function Tabelas() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[1]);
   return (
     <main className="mx-auto max-w-[1240px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <p className="label !text-fire-ink">Biblioteca</p>
@@ -83,7 +84,9 @@ export default function Tabelas() {
         ))}
       </div>
 
-      {tab === TABS[0] && (
+      {tab === 'Percurso das MAP' && <PercursoEstatico />}
+
+      {tab === 'Anexo III — categorias' && (
         <div className="flex flex-col gap-6">
           {UTS.flatMap((u) => {
             const variants: { ar: boolean; label: string }[] = [{ ar: false, label: [2, 6, 9, 12].includes(u.n) ? 'integrada em edifício' : '' }];
@@ -101,7 +104,7 @@ export default function Tabelas() {
         </div>
       )}
 
-      {tab === TABS[1] && (
+      {tab === TABS[2] && (
         <div className="flex flex-col gap-6">
           <div className="border border-ink bg-white">
             <div className="border-b border-ink bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white">RT-SCIE · Quadro XXVII — ocupantes por unidade de área (art. 51.º n.º 3)</div>
@@ -119,7 +122,7 @@ export default function Tabelas() {
         </div>
       )}
 
-      {tab === TABS[2] && (
+      {tab === TABS[3] && (
         <div className="flex flex-col gap-6">
           <QuadroIIView />
           <QuadroIView />
@@ -127,7 +130,7 @@ export default function Tabelas() {
         </div>
       )}
 
-      {tab === TABS[3] && (
+      {tab === TABS[4] && (
         <div className="grid gap-6 lg:grid-cols-2">
           <TabelaSimples titulo="Quadro IX — elementos estruturais (art. 15.º)" cab={['UT', '1.ª', '2.ª', '3.ª', '4.ª']} linhas={[
             ['I, III a X — suporte', ...[1, 2, 3, 4].map((k) => quadroIX(3, k as 1).suporte)],
@@ -150,7 +153,7 @@ export default function Tabelas() {
         </div>
       )}
 
-      {tab === TABS[4] && (
+      {tab === TABS[5] && (
         <div className="grid gap-6 lg:grid-cols-2">
           <TabelaSimples titulo="Quadro XXXVI — configurações de alarme (art. 125.º)" cab={['Componente', '1', '2', '3']} linhas={QUADRO_XXXVI.linhas.map((l) => [l.comp, ...l.c.map((x) => (x ? '■' : ''))])} />
           <TabelaSimples titulo="Quadro XXXVII — sprinklers (art. 174.º)" cab={['UT', 'L/min/m²', 'Área m²', 'N.º', 'mm', 'min']} linhas={Object.entries(QUADRO_XXXVII).map(([k, v]) => [k === 'XII' ? 'XII *' : k, String(v.densidade), String(v.area), String(v.n), String(v.calibre), String(v.tempo)])} nota="* Incluindo sistemas tipo dilúvio previstos para a UT VI, com um tempo de descarga de 30 min." />
@@ -172,7 +175,7 @@ export default function Tabelas() {
         </div>
       )}
 
-      {tab === TABS[5] && (
+      {tab === TABS[6] && (
         <div className="grid gap-px border border-ink bg-ink md:grid-cols-3">
           {DIPLOMAS.map((d) => (
             <div key={d.sigla} className="bg-white p-5">

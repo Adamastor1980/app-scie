@@ -2,11 +2,12 @@ import { classificar, faltaEdificio, faltaParaMedidas } from '../../engine/calc'
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
 import NovaNC from './NovaNC';
 import { useP } from '../ProjetoShell';
-import { Camera, MapPin, BookOpen } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Camera, MapPin, BookOpen, ImagePlus, X } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import type { UTProps } from '../UTPage';
 import { contexto, gerarMedidas, resumoMedidas, GRUPOS, SECOES, secRotulo, type Estado, type Medida, factosVisiveis } from '../../engine/medidas';
-import { Note } from '../../ui/primitives';
+import { Note, caberNaNuvem, compressImage, readFile } from '../../ui/primitives';
+import { uid } from '../../store';
 import type { Conformidade, UT, Verificacao } from '../../data/types';
 import { opcoesPrazo, progresso, verDe } from '../../engine/verificacao';
 import UTComplementares from './UTComplementares';
@@ -109,6 +110,7 @@ function Medidas({ ed, ut, upU }: UTProps) {
             <span className="text-ok">Cumpre <b className="num">{pg.cumpre}</b></span>
             <span className="text-alerta">Não cumpre <b className="num">{pg.naoCumpre}</b></span>
             <span className="text-ink-3">N.A. <b className="num">{pg.na}</b></span>
+            {pg.porVerificar > 0 && <span className="font-semibold text-warn">Por verificar <b className="num">{pg.porVerificar}</b></span>}
             <span className="ml-auto text-[11.5px] text-ink-3">As desconformidades e as medidas corretivas entram na «Análise regulamentar» do relatório.</span>
           </div>
         );
@@ -128,7 +130,9 @@ function Medidas({ ed, ut, upU }: UTProps) {
               <div key={x.c} className="mb-3">
                 {x.c !== '0' && x.c !== 'MAP' && x.c !== 'ESP' && <p className="mb-1 mt-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-fire-ink">{secRotulo(x.c)}</p>}
                 <div className="border-x border-t border-ink bg-white">
-                  {m.map((y) => <Linha key={y.id} m={y} ut={ut} onEvid={() => setNcKey(y.key)} setV={(fn) => upU((u) => { u.verificacao = u.verificacao ?? {}; const v = { ...(u.verificacao[y.key] ?? {}) }; fn(v); u.verificacao[y.key] = v; })} />)}
+                  {m.map((y) => <Linha key={y.id} m={y} ut={ut} onEvid={() => setNcKey(y.key)}
+                    setV={(fn) => upU((u) => { u.verificacao = u.verificacao ?? {}; const v = { ...(u.verificacao[y.key] ?? {}) }; fn(v); u.verificacao[y.key] = v; })}
+                    juntarFotos={(imgs) => upU((u) => { const lev = (u.levantamento ??= []); const ids = imgs.map((imagem) => { const id = uid(); lev.push({ id, tipo: 'foto', imagem, legenda: `Evidência — ${y.titulo}`, data: Date.now() }); return id; }); u.verificacao ??= {}; const v = { ...(u.verificacao[y.key] ?? {}) }; v.fotos = [...(v.fotos ?? []), ...ids]; u.verificacao[y.key] = v; })} />)}
                 </div>
               </div>
             ))}
@@ -143,10 +147,11 @@ const CONF: { v: Conformidade; l: string; on: string }[] = [
   { v: 'cumpre', l: 'Cumpre', on: 'bg-ok text-white border-ok' },
   { v: 'nao_cumpre', l: 'Não cumpre', on: 'bg-alerta text-white border-alerta' },
   { v: 'na', l: 'N.A.', on: 'bg-ink-3 text-white border-ink-3' },
+  { v: 'por_verificar', l: 'Por verificar', on: 'bg-warn text-white border-warn' },
 ];
 const PRAZOS = opcoesPrazo();
 
-function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao) => void) => void; onEvid: () => void }) {
+function Linha({ m, ut, setV, onEvid, juntarFotos }: { m: Medida; ut: UT; setV: (fn: (v: Verificacao) => void) => void; onEvid: () => void; juntarFotos: (imgs: string[]) => void }) {
   const e = ESTADO[m.estado];
   const v = verDe(ut, m);
   const [lei, setLei] = useState(false);
@@ -190,9 +195,46 @@ function Linha({ m, ut, setV, onEvid }: { m: Medida; ut: UT; setV: (fn: (v: Veri
           </div>
         </div>
       )}
+      {v.estado === 'por_verificar' && (
+        <div className="mt-3 flex flex-col gap-2">
+          <input className="input" placeholder="O que falta para concluir (ex.: pedir relatório de manutenção do SADI; sem acesso à cobertura)" value={v.falta ?? ''} onChange={(ev) => setV((x) => { x.falta = ev.target.value || undefined; })} />
+          <Evidencias ut={ut} v={v} setV={setV} juntarFotos={juntarFotos} />
+        </div>
+      )}
+      {v.estado === 'cumpre' && <div className="mt-2"><Evidencias ut={ut} v={v} setV={setV} juntarFotos={juntarFotos} /></div>}
       {v.estado === 'na' && (
         <input className="input mt-3" placeholder="Motivo da não aplicabilidade no local (ex.: não existem elevadores)" value={v.obs ?? ''} onChange={(ev) => setV((x) => { x.obs = ev.target.value; })} />
       )}
+    </div>
+  );
+}
+
+/** Evidências fotográficas opcionais (cumpre / por verificar): ficam no levantamento da UT; no relatório só aparecem se o técnico o escolher. */
+function Evidencias({ ut, v, setV, juntarFotos }: { ut: UT; v: Verificacao; setV: (fn: (v: Verificacao) => void) => void; juntarFotos: (imgs: string[]) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const fotos = (v.fotos ?? []).map((id) => ut.levantamento?.find((a) => a.id === id)).filter(Boolean) as { id: string; imagem: string }[];
+  const juntar = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setBusy(true);
+    try {
+      const imgs: string[] = [];
+      for (const f of Array.from(files)) imgs.push(await caberNaNuvem(await compressImage(await readFile(f), 1800, 0.82, true), 800_000));
+      juntarFotos(imgs);
+    } finally { setBusy(false); if (ref.current) ref.current.value = ''; }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {fotos.map((a) => (
+        <span key={a.id} className="relative">
+          <img src={a.imagem} alt="" className="h-12 w-12 border border-ink object-cover" />
+          <button className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white" title="Retirar evidência" onClick={() => setV((x) => { x.fotos = (x.fotos ?? []).filter((id) => id !== a.id); })}><X size={11} /></button>
+        </span>
+      ))}
+      <input ref={ref} type="file" accept="image/*" multiple className="hidden" onChange={(e) => juntar(e.target.files)} />
+      <button className="flex items-center gap-1.5 text-[11.5px] font-semibold text-ink-3 hover:text-ink" disabled={busy} onClick={() => ref.current?.click()}>
+        <ImagePlus size={14} /> {busy ? 'A guardar…' : fotos.length ? 'Mais evidências' : 'Evidência (opcional)'}
+      </button>
     </div>
   );
 }
