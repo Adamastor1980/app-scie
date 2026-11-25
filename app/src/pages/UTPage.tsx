@@ -1,3 +1,5 @@
+import UTExtintores from './ut/UTExtintores';
+import { dimensionarExtintores } from '../engine/extintores';
 import { nomeUT } from '../nome';
 import { novaUT } from '../store';
 import { Plus, Trash2 } from 'lucide-react';
@@ -54,6 +56,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       : []),
     ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
     { k: 'categoria', t: 'Categoria', s: cls.falta.length ? 'por atribuir' : CAT_NOME[cls.cat] },
+    { k: 'extintores', t: 'Extintores', s: (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.pisos.reduce((a, x) => a + x.qtd, 0); return r.geral ? (n ? `${n} portáteis` : 'por calcular') : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
   const steps = todos.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
@@ -132,6 +135,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
         {step === 'efetivo' && <UTEfetivo {...props} />}
         {step === 'carga' && <UTCarga {...props} />}
         {step === 'categoria' && <UTCategoria {...props} />}
+        {step === 'extintores' && <UTExtintores {...props} />}
         {step === 'medidas' && <UTMedidas {...props} />}
 
         <div className="no-print mt-10 flex justify-between border-t border-ink pt-4">

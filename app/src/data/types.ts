@@ -175,6 +175,30 @@ export interface Distribuicao {
   suporte: string;
 }
 
+/** Dimensionamento de extintores (RT-SCIE, art. 163.º e condições específicas) */
+export type AgenteExtintor = 'agua' | 'po';
+export interface ExtintoresUT {
+  /** por piso (chave = número do piso): agente, capacidade (L de água ou kg de pó) e quantidade escolhida pelo técnico */
+  pisos?: Record<string, { agente?: AgenteExtintor; cap?: number; qtd?: number }>;
+  /** locais C ou F indicados à mão (modo «só extintores»); no projeto completo vêm dos espaços */
+  locais?: { id: string; nome: string; tipo: 'C' | 'F' }[];
+  /** central térmica > 70 kW (art. 163.º n.º 6) */
+  queimadores?: number;
+  combustivelCT?: 'nao' | 'solido_liquido' | 'gas';
+  /** UT XII: mais de 50 % dos líquidos em recipientes metálicos estanques (art. 307.º n.º 2) */
+  metalicos?: boolean;
+  /** UT IX: parque de campismo — n.º de setores (art. 286.º) */
+  setores?: number;
+  /** UT VIII: gare com plataformas de embarque; «eletrica» = tração elétrica (art. 273.º) */
+  gare?: 'nao' | 'sim' | 'eletrica';
+  /** UT I: espaços com extintores próprios (arts. 209.º n.º 14, 210.º n.º 6, 211.º n.º 4) */
+  arrecadacoes?: boolean;
+  salaCondominio?: boolean;
+  estacionamento?: boolean;
+  /** extintores de CO2 como complemento (não contam para o art. 163.º n.º 2 a)) */
+  co2?: { id: string; local: string; kg: number; qtd: number }[];
+}
+
 export interface UT {
   id: string;
   tipo: UTNum;
@@ -211,6 +235,7 @@ export interface UT {
   /** levantamento no local: fotografias e desenhos de apoio (uso interno, não entram nos cálculos) */
   levantamento?: Anexo[];
   /** factos do local que decidem a aplicabilidade das medidas (Sim/Não); ausente = por responder */
+  extintores?: ExtintoresUT;
   factos?: Record<string, boolean>;
 }
 
@@ -265,6 +290,8 @@ export interface Projeto {
   distribuicao?: Distribuicao[];
   /** medidas de autoproteção: organização da segurança e registos (RT-SCIE, título VII) */
   autoprotecao?: Autoprotecao;
+  /** «extintores» = projeto só de dimensionamento de extintores; omisso = projeto SCIE completo */
+  modo?: 'completo' | 'extintores';
   /** percurso das MAP: passos marcados pelo técnico (datas ISO) */
   percurso?: { entregue?: string; submetido?: string; refSubmissao?: string };
   criadoEm: number;
