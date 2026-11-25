@@ -99,7 +99,7 @@ interface State {
   projetos: Projeto[];
   empresaPadrao: Projeto['empresa'] | null;
   autorPadrao: Projeto['autor'] | null;
-  criar: () => string;
+  criar: (modo?: 'extintores') => string;
   importar: (p: Projeto) => string;
   /** abre o exemplo (substitui o anterior); não fica nos projetos nem na nuvem */
   abrirExemplo: (p: Projeto) => string;
@@ -119,8 +119,9 @@ export const useStore = create<State>()(
       projetos: [],
       empresaPadrao: null,
       autorPadrao: null,
-      criar: () => {
+      criar: (modo) => {
         const p = novoProjeto();
+        if (modo) { p.modo = modo; p.nome = 'Dimensionamento de extintores'; p.tipoIntervencao = 'Dimensionamento de extintores'; }
         const { empresaPadrao, autorPadrao } = getS();
         if (empresaPadrao) p.empresa = clone(empresaPadrao);
         if (autorPadrao) p.autor = clone(autorPadrao);

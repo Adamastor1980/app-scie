@@ -4,6 +4,7 @@ import { ENVOLVENTE_LOCAIS, QUADRO_XXV, quadroIX, quadroX, quadroXIX, quadroXXII
 import { contexto, gerarMedidas, type Medida } from './medidas';
 import { alturaEdificio, cargaUT, efetivoEspaco, efetivoUT, faltaEdificio, faltaParaMedidas, fmt, pisosUT } from './calc';
 import { desconformidades, porVerificar, verDe } from './verificacao';
+import { dimensionarExtintores } from './extintores';
 
 /**
  * Dados para a ficha de segurança da 1.ª categoria (RJ-SCIE, art. 17.º n.º 2 e anexo V),
@@ -126,9 +127,8 @@ export function fichaSeguranca(p: Projeto, ed: Edificio, ut: UT): FichaDados {
   const cfg = med(ms, 'Configuração do sistema de alarme');
   const config = cfg?.estado === 'nao' ? 'Isento' : cfg?.exigencia.match(/Configuração (\d)/)?.[0] ?? '—';
   const fumo = med(ms, 'Espaços com controlo de fumo');
-  const ps = pisosUT(ut);
-  const extQtd = ps.reduce((s, x) => s + (x.area > 0 ? Math.max(Math.ceil(x.area / 200), 2) : 0), 0);
-  const extFaltaArea = ps.some((x) => !(x.area > 0));
+  const dim = dimensionarExtintores(ut, cat);
+  const extFaltaArea = dim.pisos.some((x) => !(x.area > 0));
   const ext = med(ms, 'Extintores portáteis');
   const carr = med(ms, 'Rede de incêndio armada');
 
@@ -186,7 +186,7 @@ export function fichaSeguranca(p: Projeto, ed: Edificio, ut: UT): FichaDados {
       alarme: de(ms, ut, ['VII.3']), configuracao: config,
       fumo: de(ms, ut, ['VII.4']), espacosFumo: fumo ? fumo.exigencia.split('.')[0] : '—',
       intervencao: de(ms, ut, ['VII.5']),
-      extintores: ext?.estado === 'nao' ? 'não exigidos' : extQtd ? `${extQtd} (1 por 200 m² ou fração, mínimo 2 por piso)${extFaltaArea ? '; há pisos sem área indicada' : ''}` : 'indique a área de cada piso (dados complementares)',
+      extintores: !dim.exigido ? 'não exigidos' : dim.totais.length ? `${dim.totais.map((z) => `${z.qtd} × ${z.descricao}`).join('; ')}${dim.extras.length ? `; mais: ${dim.extras.map((e) => e.texto).join('; ')}` : ''}${extFaltaArea ? ' (há pisos sem área indicada)' : ''}` : dim.extras.length ? dim.extras.map((e) => e.texto).join('; ') : 'indique a área de cada piso (passo «Extintores»)',
       distanciaExtintor: ext?.estado === 'nao' ? '—' : '15 m (de qualquer saída de local de risco)',
       carretel: carr ? (carr.estado === 'aplica' ? 'Sim, exigida' : 'Não exigida') : '—',
       gas: de(ms, ut, ['VII.9']), poluicao: de(ms, ut, ['VII.8']),

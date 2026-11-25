@@ -1,3 +1,4 @@
+import { QuadroExtintores } from './ExtintoresQuadro';
 import { LEI_VERIFICADA_EM, VERSAO_APP, baseLegalDoc, notaVersao } from '../versao';
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
@@ -183,7 +184,7 @@ export default function Relatorio() {
         <H1 n="—">Índice</H1>
         <p className="mb-1.5 flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1 text-[12.5px] font-semibold"><span className="w-6 font-mono text-fire-ink">—</span>Síntese para o cliente</p>
         <ol className="space-y-1.5 text-[12.5px]">
-          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
+          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Dimensionamento de extintores', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
             <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire-ink">{i + 1}</span>{t}</li>
           ))}
         </ol>
@@ -377,6 +378,15 @@ export default function Relatorio() {
       <p className="mt-2 border-l-[3px] border-ink bg-paper px-3 py-2 text-[12.5px]">Por este critério: q = {fmt(carga.q, 1)} MJ/m² {fc.limites[fc.cat - 1]} → <b className="text-[14px] text-fire-ink">{fc.cat}.ª categoria</b>. A categoria da UT é a mais baixa que satisfaz integralmente todos os critérios do quadro (RJ-SCIE, art. 13.º, n.os 1 e 2): {cat ? <b>{cat}.ª categoria{cls.determinantes.length ? ` (determinada por: ${cls.determinantes.join('; ').toLowerCase()})` : ''}</b> : <b className="text-alerta">por atribuir — falta {cls.falta.join('; ').toLowerCase()}</b>}.</p>
     </div>); })()}
             </div>
+          </div>
+        ))}
+
+        <H1 n={S()}>Dimensionamento de extintores</H1>
+        <P>Por piso, aplicam-se os dois critérios do RT-SCIE, art. 163.º n.º 2, e prevalece o mais exigente: a) 18 L de agente extintor padrão — água (anexo I, art. 8.º n.º 2) — por 500 m² ou fração; b) um extintor por 200 m² ou fração, com o mínimo de dois. Acrescem os extintores dos locais e situações específicas (n.os 4 a 7 e condições específicas da UT). Distância máxima a percorrer de qualquer saída de local de risco até ao extintor: 15 m; manípulo a ≤ 1,2 m (n.os 1 e 3).</P>
+        {todas.map(({ ut, ed, cls }, i) => (
+          <div key={ut.id} className="avoid-break">
+            <H2 n={`${sec}.${i + 1}`}>{ed.nome} · {tituloUT(ut)}</H2>
+            <QuadroExtintores ut={ut} cat={cls.cat} />
           </div>
         ))}
 

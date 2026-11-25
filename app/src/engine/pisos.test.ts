@@ -41,7 +41,7 @@ describe('Medidas que dependem dos pisos', () => {
     ut.espacos = [espaco('Piso 0', 10)];
     ut.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 650 }];
     const ex = medidas(ut).find((m) => m.titulo === 'Extintores portáteis');
-    expect(ex?.exigencia).toContain('Piso 0: 4 extintores');
-    expect(ex?.exigencia).toContain('36 L de agente padrão');
+    expect(ex?.exigencia).toContain('exigido mín. 4 e 36 L de água');
+    expect(ex?.exigencia).toContain('Piso 0: 6 × água 6 L');
   });
 });

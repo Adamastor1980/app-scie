@@ -38,7 +38,8 @@ export default function Home() {
           Classificar. Calcular. <span className="text-fire">Cumprir.</span>
         </h1>
         <div className="flex flex-wrap gap-2">
-          <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><FilePlus2 size={16} /> Novo projeto</button>
+          <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><FilePlus2 size={16} /> Novo projeto SCIE</button>
+          <button className="btn h-10 px-4" title="Projeto só de dimensionamento de extintores (RT-SCIE, art. 163.º)" onClick={() => go(`/p/${criar('extintores')}`)}><FilePlus2 size={16} /> Só extintores</button>
           <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
           {projetos.length > 0 && (
             <button className="btn h-10 px-3" onClick={() => {

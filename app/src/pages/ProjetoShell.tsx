@@ -1,3 +1,4 @@
+import EstudoExtintores from './EstudoExtintores';
 import FichaSeguranca from './FichaSeguranca';
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -76,6 +77,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   else if (rel === '/autoprotecao') page = <Autoprotecao />;
   else if (rel === '/map') page = <MapDocumento />;
   else if (rel === '/ficha') page = <FichaSeguranca />;
+  else if (rel === '/extintores') page = <EstudoExtintores />;
   else if (mU) page = <UTPage eid={mU.eid} uid={mU.uid} step={mU.step ?? 'fatores'} />;
   else if (mE) page = <EdificioPage eid={mE.eid} />;
   else page = <Overview />;
@@ -144,14 +146,19 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
             ))}
           </div>
           <nav className="mt-auto flex flex-col border-t border-ink-4/40 py-2">
+            {p.modo === 'extintores' ? (
+              <NavItem to="/extintores" icon={<FileText size={15} />} active={rel === '/extintores'}>Estudo de extintores</NavItem>
+            ) : (<>
             <NavItem to="/plantas" icon={<Image size={15} />} active={rel === '/plantas'}>Peças desenhadas</NavItem>
             <NavItem to="/autoprotecao" icon={<ShieldCheck size={15} />} active={rel === '/autoprotecao'}>Autoproteção</NavItem>
             <NavItem to="/map" icon={<FileText size={15} />} active={rel === '/map'}>Documento MAP</NavItem>
             <NavItem to="/ficha" icon={<FileText size={15} />} active={rel === '/ficha'}>Ficha de segurança (1.ª cat.)</NavItem>
+            <NavItem to="/extintores" icon={<FileText size={15} />} active={rel === '/extintores'}>Estudo de extintores</NavItem>
             <NavItem to="/relatorio" icon={<FileText size={15} />} active={isReport}>Relatório</NavItem>
             <button onClick={() => import('../exportarExcel').then((m) => m.exportarExcel(p)).catch((e) => alert('Não foi possível exportar: ' + (e as Error).message))} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
               <Sheet size={15} /> Exportar Excel (plano de ação)
             </button>
+            </>)}
             <button onClick={() => exportarJSON(p)} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
               <Download size={15} /> Exportar projeto (JSON)
             </button>

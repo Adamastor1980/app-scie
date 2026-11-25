@@ -182,6 +182,14 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Preenchido pela app:** caracterização (2), valores mínimos dos quadros do RT-SCIE (4 e 5), efetivo (6), configuração do alarme, espaços com controlo de fumo e extintores (8), «Cumpre» S/N/NA/? a partir da verificação no local, não conformidades (9.1) e MAP exigíveis (9.2). À mão: registo predial, licenças, medidas reais da via, n.º de frações/escadas/ascensores, tipos de extintores e assinatura.
 - ⚠️ **Discrepâncias do modelo obtido em 25/11/2026 (ficha-de-seguranca_v2.doc) face à lei em vigor:** exclui as UT IV e V (a lei atual admite ficha nessas UT, com peças desenhadas — RJ-SCIE, art. 17.º n.º 2 e anexo V, art. 2.º n.º 2); cita os diplomas sem as redações de 2019/2020 e a sigla ANPC; notas 8.6 e 8.7 trocadas; a nota 8.3 proíbe centrais via rádio, que o RT-SCIE admite (art. 122.º n.º 1 a) e b)). A app segue a lei; as discrepâncias justificam-se no quadro 9.1 quando relevante. A confirmar com o orientador ou a ANEPC.
 
+### D-36 — Dimensionamento de extintores ✅/⚠️
+- **Decisão:** por piso, os dois critérios do art. 163.º n.º 2 em simultâneo — a) 18 L de agente padrão por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2 — prevalecendo o mais exigente; a app propõe a quantidade e o técnico pode alterá-la. Agente padrão = água (RT-SCIE, anexo I, art. 8.º n.º 2).
+- **Conversões (critério técnico, não consta do RT-SCIE):** pó químico kg = L de água ÷ 2; CO₂ kg = L × 0,62. Adotadas ao abrigo do «outro critério devidamente justificado» do art. 163.º n.º 2; fonte: formação académica (ISLA Gaia, 2026). ⚠️ Confirmar a origem com o professor.
+- **CO₂ só como complemento:** não conta para a alínea a), por não ter eficácia em fogos da classe A (EN 3). ⚠️ A confirmar com o professor.
+- **Situações específicas incluídas:** art. 163.º n.os 4 a 8; arts. 209.º n.º 14, 210.º n.º 6, 211.º n.º 4 (UT I, mesmo nas 1.ª e 2.ª categorias); 226.º (UT II); 273.º (UT VIII — sem água com tração elétrica); 286.º (UT IX, campismo); 307.º (UT XII).
+- ⚠️ **Art. 307.º e):** «por cada 1000 l de líquido, adicionais ou fração» lido como **além da alínea d)**, 1 móvel por cada 1000 l acima de 750 l (800 l → 2 móveis; 2000 l → 3). A leitura anterior (1 por cada 1000 l do total) dava menos extintores. O n.º 2 (recipientes metálicos) baixa só a eficácia, não os móveis. A confirmar.
+- **Projeto «só extintores»:** pede só o que o art. 163.º usa (UT, pisos e áreas, situações próprias; categoria só na UT I) e gera o «Estudo de dimensionamento de extintores»; pode passar a projeto completo sem perder dados.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

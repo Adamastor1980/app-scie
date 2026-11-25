@@ -2,6 +2,7 @@ import { nomeUT } from '../nome';
 import { ArrowRight, CheckCircle2, Circle, FileText } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { PercursoProjeto } from './Percurso';
+import { dimensionarExtintores } from '../engine/extintores';
 import { classificar, efetivoUT, CAT_NOME, fmt, faltaCaracterizacao } from '../engine/calc';
 import { ROMANO } from '../data/rjscie';
 import { CatBadge, Stat, Empty } from '../ui/primitives';
@@ -29,6 +30,36 @@ export default function Overview() {
     { ok: p.edificios.length > 0 && p.edificios.every((e) => !faltaCaracterizacao(e).length), t: 'Caracterização de todos os edifícios (altura e pisos acima)', to: p.edificios.find((e) => faltaCaracterizacao(e).length) ? `/e/${p.edificios.find((e) => faltaCaracterizacao(e).length)!.id}` : '' },
     { ok: p.plantas.length > 0, t: 'Peças desenhadas (plantas)', to: '/plantas' },
   ];
+
+  if (p.modo === 'extintores') {
+    const res = linhas.map((l) => ({ ...l, r: dimensionarExtintores(l.u, l.c.cat) }));
+    return (
+      <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
+        <div className="mb-6 border-b-2 border-ink pb-5">
+          <p className="label !text-fire-ink">Projeto só de dimensionamento de extintores · RT-SCIE, art. 163.º</p>
+          <h1 className="h-display mt-2 text-[40px]">{p.nome}</h1>
+          <p className="mt-2 text-[13px] text-ink-3">{[p.cliente, p.morada, p.concelho].filter(Boolean).join(' · ') || 'Preencha os dados do projeto.'}</p>
+        </div>
+        <ol className="mb-8 border border-ink bg-white text-[13.5px]">
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">1.</b>Dados do projeto (cliente, morada) — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/dados`)}>abrir</button></li>
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">2.</b>Utilização-tipo de cada espaço {linhas.length === 0 ? <button className="ml-2 font-semibold text-fire-ink hover:underline" onClick={() => pedirUT(p.edificios[0].id)}>escolher UT</button> : <span className="text-ink-3">({linhas.length})</span>}</li>
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">3.</b>Em cada UT, o passo «Extintores»: área de cada piso e situações próprias</li>
+          <li className="px-4 py-3"><b className="mr-2 font-mono text-fire-ink">4.</b>Estudo de dimensionamento — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/extintores`)}>abrir e descarregar PDF</button></li>
+        </ol>
+        {res.length > 0 && (
+          <div className="mb-8 border border-ink bg-white">
+            {res.map(({ e, u, r }) => (
+              <button key={u.id} onClick={() => go(`${base}/e/${e.id}/u/${u.id}/extintores`)} className="flex w-full items-center justify-between gap-3 border-b border-paper-3 px-4 py-3 text-left last:border-0 hover:bg-paper">
+                <span><b className="font-mono">UT {ROMANO[u.tipo]}</b> {nomeUT(u).nome} <span className="ref block">{e.nome}</span></span>
+                <span className={`text-[12.5px] ${r.falta.length ? 'text-alerta' : 'text-ink-2'}`}>{r.falta.length ? 'Falta preencher' : r.totais.map((t) => `${t.qtd} × ${t.descricao}`).join(' · ') || (r.extras.length ? 'situações próprias' : 'não exigidos')}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <button className="text-[12px] text-ink-3 hover:text-ink hover:underline" onClick={() => { if (confirm('Passar a projeto SCIE completo? Os dados já introduzidos mantêm-se e passam a aparecer todos os passos (fatores, efetivo, medidas, relatório, MAP).')) up((q) => { delete q.modo; }); }}>Passar a projeto SCIE completo</button>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">

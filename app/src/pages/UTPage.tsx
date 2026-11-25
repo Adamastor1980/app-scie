@@ -59,18 +59,23 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
     { k: 'extintores', t: 'Extintores', s: (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.pisos.reduce((a, x) => a + x.qtd, 0); return r.geral ? (n ? `${n} portáteis` : 'por calcular') : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
-  const steps = todos.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
-  if (!steps.some((x) => x.k === step)) step = 'fatores';
+  // modo «só extintores»: levantamento, fatores só na UT I (a categoria decide a isenção do art. 163.º n.º 1) e extintores
+  const so = p.modo === 'extintores';
+  const usados = so ? todos.filter((x) => x.k === 'levantamento' || x.k === 'extintores' || (x.k === 'fatores' && ut.tipo === 1)) : todos;
+  const steps = usados.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
+  if (!steps.some((x) => x.k === step)) step = so ? 'extintores' : 'fatores';
   const props: UTProps = { ed, ut, upU };
 
   return (
     <main className="pb-24">
       <div className="border-b border-ink bg-white">
         <div className="mx-auto flex max-w-[1240px] items-stretch gap-3 sm:gap-6 px-4 pt-6 sm:px-8">
+          {(!so || ut.tipo === 1) && (
           <div className={`flex w-[64px] shrink-0 flex-col items-center sm:w-[92px] justify-center self-stretch ${cls.falta.length ? 'border border-dashed border-alerta bg-alerta-soft text-ink-2' : `${CAT_COR[cls.cat]} text-white`}`}>
             <span className="font-display text-[30px] font-extrabold leading-none sm:text-[44px]">{cls.falta.length ? '—' : `${cls.cat}.ª`}</span>
             <span className="mt-1 px-1 text-center font-mono text-[9.5px] uppercase leading-tight tracking-wider">{cls.falta.length ? 'por atribuir' : 'categoria'}</span>
           </div>
+          )}
           <div className="min-w-0 flex-1 pb-5">
             <p className="label">{ed.nome} · UT {ROMANO[ut.tipo]} · art. 8.º n.º 1 {info.alinea} RJ-SCIE</p>
             <input
@@ -83,7 +88,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             <p className="mt-1 hidden max-w-3xl text-[12.5px] leading-snug text-ink-3 sm:block">{info.definicao}</p>
           </div>
           <div className="flex flex-col items-end gap-2 pb-5">
-            <button className="btn-fire h-10 whitespace-nowrap px-3" onClick={() => setNc(true)} title="Registar uma não conformidade (foto, medida, planta)"><Plus size={16} /> <span className="hidden sm:inline">Não conformidade</span><span className="sm:hidden">NC</span></button>
+{!so && <button className="btn-fire h-10 whitespace-nowrap px-3" onClick={() => setNc(true)} title="Registar uma não conformidade (foto, medida, planta)"><Plus size={16} /> <span className="hidden sm:inline">Não conformidade</span><span className="sm:hidden">NC</span></button>}
             <button className="btn-icon" title="Apagar UT" onClick={() => {
               if (!confirm('Apagar esta utilização-tipo?')) return;
               up((pp) => { const e = pp.edificios.find((x) => x.id === eid); if (e) e.uts = e.uts.filter((x) => x.id !== uid); });
@@ -144,7 +149,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             return (
               <>
                 {i > 0 ? <a className="btn" href={`#${base}/${steps[i - 1].k}`}>← {steps[i - 1].t}</a> : <span />}
-                {i < steps.length - 1 ? <a className="btn-primary" href={`#${base}/${steps[i + 1].k}`}>{steps[i + 1].t} →</a> : <a className="btn-fire" href={`#/p/${p.id}/relatorio`}>Relatório →</a>}
+                {i < steps.length - 1 ? <a className="btn-primary" href={`#${base}/${steps[i + 1].k}`}>{steps[i + 1].t} →</a> : <a className="btn-fire" href={`#/p/${p.id}/${so ? 'extintores' : 'relatorio'}`}>{so ? 'Estudo de extintores →' : 'Relatório →'}</a>}
               </>
             );
           })()}

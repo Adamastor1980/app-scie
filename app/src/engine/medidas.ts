@@ -6,6 +6,7 @@ import {
   quadroXXIII, quadroXXIV, quadroXXXIX, saidasMinimas, upMinimas,
 } from '../data/rtscie';
 import TITULO_VIII from '../data/tituloVIII.json';
+import { NOME_AGENTE, UNIDADE, art307, dimensionarExtintores } from './extintores';
 import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT, pisosUT, pisoAbaixo, nPiso } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
@@ -609,7 +610,9 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
 
   /* --------------------------- Meios de intervenção -------------------- */
   const extIsento = t === 1 && cat <= 2;
-  const extPisos = pisosUT(ut).map((p) => p.area > 0 ? `${p.nome}: ${Math.max(Math.ceil(p.area / 200), 2)} extintores (1 por 200 m², mín. 2) e ${Math.ceil(p.area / 500) * 18} L de agente padrão (18 L por 500 m²)` : `${p.nome}: área do piso por indicar (dados complementares)`);
+  // dimensionamento do passo «Extintores» (engine/extintores.ts)
+  const dimExt = dimensionarExtintores(ut, cat);
+  const extPisos = dimExt.pisos.map((p) => p.area > 0 ? `${p.nome}: ${p.qtd} × ${NOME_AGENTE[p.agente]} ${p.cap} ${UNIDADE[p.agente]} (exigido mín. ${p.minN} e ${p.litros} L de água)` : `${p.nome}: área por indicar (passo «Extintores»)`);
   add({
     tema: 'VII.5', titulo: 'Extintores portáteis',
     exigencia: `Distância ≤ 15 m de qualquer saída de local de risco até ao extintor mais próximo; manípulo ≤ 1,2 m; em todos os locais C e F.${extPisos.length ? ' Dimensionamento por piso — ' + extPisos.join('; ') + '.' : ' Por piso: 1 extintor por 200 m² ou fração (mínimo 2) e 18 L de agente extintor padrão por 500 m² ou fração.'}${temC ? ' Cozinhas e laboratórios C: manta ignífuga; extintor 25F com óleos ou gorduras.' : ''} Distribuídos, sinalizados, em suporte ou nicho, de preferência nas comunicações horizontais ou câmaras corta-fogo e no interior dos grandes espaços junto às saídas.${ut.factos?.centralTermica ? ' Centrais térmicas > 70 kW: com combustível sólido ou líquido, 100 l de areia com pá e extintores 34 B (dois por queimador, máximo quatro); a gás, um extintor de pó ABC 5 A/34 B (n.º 6).' : ''}${ut.factos?.tendas ? ' Tendas e insufláveis: também extintores móveis de pó ABC de 50 kg, um por cada 8 portáteis ou fração (n.º 7).' : ''}`,
@@ -639,8 +642,8 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
   });
   if (t === 12 && (ut.liquidosInflamaveisL ?? 0) > 0) {
     const L = ut.liquidosInflamaveisL!;
-    const ef307 = L < 50 ? '113 B/C' : L <= 100 ? '144 B/C' : L <= 200 ? '233 B/C' : L <= 750 ? '233 B/C + extintor móvel de 50 kg de pó BC/ABC' : `233 B/C + ${Math.ceil(L / 1000)} extintor(es) móvel(eis) de 50 kg (1 por 1 000 l ou fração)`;
-    add({ tema: 'VII.5', titulo: 'Extintores para líquidos combustíveis (UT XII)', exigencia: `${fmt(L)} l de líquidos combustíveis: eficácia mínima ${ef307} (escalão inferior se > 50 % em recipientes metálicos estanques).`, base: 'RT-SCIE, art. 307.º', estado: 'aplica' });
+    const a307 = art307(L, ut.extintores?.metalicos);
+    add({ tema: 'VII.5', titulo: 'Extintores para líquidos combustíveis (UT XII)', exigencia: `${fmt(L)} l de líquidos combustíveis (escalão ${a307.escalao}): eficácia mínima ${a307.eficacia}${a307.moveis ? ` + ${a307.moveis} extintor(es) móvel(eis) de 50 kg de pó BC/ABC ou agente de eficácia equivalente` : ''}.`, base: 'RT-SCIE, art. 307.º', estado: 'aplica' });
   }
   if (t === 2 && (ut.arLivre || ut.parqueAutomatico)) {
     add({ tema: 'VII.5', titulo: 'Meios de 1.ª intervenção específicos (UT II)', exigencia: ut.arLivre ? 'Um extintor portátil 21 A/113 B/C e um móvel de CO₂ ou pó ABC no posto de controlo.' : 'Extintores móveis de CO₂ ou pó ABC em cada piso junto ao acesso a cada escada; sprinklers em todos os pisos.', base: 'RT-SCIE, art. 226.º', estado: 'aplica' });
