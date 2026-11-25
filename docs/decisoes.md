@@ -177,6 +177,11 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Decisão:** a ficha técnica, a introdução, o documento das medidas de autoproteção e o Excel indicam a legislação em vigor à data do documento, a versão da Cautela SCIE e a data da última verificação das regras.
 - **Porquê:** um relatório tem de ser avaliado pela lei em vigor quando foi feito; a versão permite saber se foi gerado antes ou depois de uma correção.
 
+### D-35 — Ficha de segurança: dados para o modelo oficial, não um modelo próprio ✅/⚠️
+- **Decisão:** a app gera os dados da ficha de segurança da 1.ª categoria pela numeração do modelo da ANEPC (quadros 1 a 10), para transcrever para o modelo oficial; não reproduz nem altera o modelo (RJ-SCIE, art. 17.º n.º 2; anexo V, art. 1.º — modelos definidos e atualizados exclusivamente pela ANEPC).
+- **Preenchido pela app:** caracterização (2), valores mínimos dos quadros do RT-SCIE (4 e 5), efetivo (6), configuração do alarme, espaços com controlo de fumo e extintores (8), «Cumpre» S/N/NA/? a partir da verificação no local, não conformidades (9.1) e MAP exigíveis (9.2). À mão: registo predial, licenças, medidas reais da via, n.º de frações/escadas/ascensores, tipos de extintores e assinatura.
+- ⚠️ **Discrepâncias do modelo obtido em 25/11/2026 (ficha-de-seguranca_v2.doc) face à lei em vigor:** exclui as UT IV e V (a lei atual admite ficha nessas UT, com peças desenhadas — RJ-SCIE, art. 17.º n.º 2 e anexo V, art. 2.º n.º 2); cita os diplomas sem as redações de 2019/2020 e a sigla ANPC; notas 8.6 e 8.7 trocadas; a nota 8.3 proíbe centrais via rádio, que o RT-SCIE admite (art. 122.º n.º 1 a) e b)). A app segue a lei; as discrepâncias justificam-se no quadro 9.1 quando relevante. A confirmar com o orientador ou a ANEPC.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)
@@ -188,3 +193,4 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 5. Dúvidas sobre o texto publicado: D-27 e D-31.
 6. A aplicação tem de ser revista sempre que a legislação for alterada (D-32).
 7. Validação com casos reais aprovados: por fazer.
+8. Projetos de especialidade de SCIE (2.ª a 4.ª categorias) e peças desenhadas de projeto estão fora do âmbito; a ficha de segurança é gerada como dados a transcrever para o modelo da ANEPC (D-35).

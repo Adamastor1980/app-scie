@@ -93,7 +93,8 @@ export function estadoPercurso(p: Projeto): Record<number, EstadoP> {
   out[7] = { estado: org ? 'feito' : 'falta', nota: org ? 'RS e delegado indicados' : 'Faltam o responsável e o delegado de segurança', ir: org ? '/map' : '/autoprotecao' };
 
   const base = [1, 2, 3, 4, 6].every((n) => out[n].estado === 'feito');
-  out[8] = { estado: base ? 'feito' : 'falta', nota: base ? 'Dados completos para o relatório' : 'Conclua os passos anteriores', ir: '/relatorio' };
+  const cat1 = linhas.some((l) => !l.ctx.cls.falta.length && l.ctx.cls.cat === 1);
+  out[8] = { estado: base ? 'feito' : 'falta', nota: (base ? 'Dados completos para o relatório' : 'Conclua os passos anteriores') + (cat1 ? ' · UT da 1.ª categoria: há dados para a ficha de segurança' : ''), ir: '/relatorio' };
 
   out[9] = { estado: p.percurso?.entregue ? 'feito' : 'falta', nota: p.percurso?.entregue ? `Entregue em ${dataPt(p.percurso.entregue)}` : 'Marcar quando entregue' };
 

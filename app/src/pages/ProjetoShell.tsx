@@ -1,3 +1,4 @@
+import FichaSeguranca from './FichaSeguranca';
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, Sheet, ShieldCheck, X } from 'lucide-react';
@@ -74,6 +75,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   else if (rel === '/relatorio') page = <Relatorio />;
   else if (rel === '/autoprotecao') page = <Autoprotecao />;
   else if (rel === '/map') page = <MapDocumento />;
+  else if (rel === '/ficha') page = <FichaSeguranca />;
   else if (mU) page = <UTPage eid={mU.eid} uid={mU.uid} step={mU.step ?? 'fatores'} />;
   else if (mE) page = <EdificioPage eid={mE.eid} />;
   else page = <Overview />;
@@ -145,6 +147,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
             <NavItem to="/plantas" icon={<Image size={15} />} active={rel === '/plantas'}>Peças desenhadas</NavItem>
             <NavItem to="/autoprotecao" icon={<ShieldCheck size={15} />} active={rel === '/autoprotecao'}>Autoproteção</NavItem>
             <NavItem to="/map" icon={<FileText size={15} />} active={rel === '/map'}>Documento MAP</NavItem>
+            <NavItem to="/ficha" icon={<FileText size={15} />} active={rel === '/ficha'}>Ficha de segurança (1.ª cat.)</NavItem>
             <NavItem to="/relatorio" icon={<FileText size={15} />} active={isReport}>Relatório</NavItem>
             <button onClick={() => import('../exportarExcel').then((m) => m.exportarExcel(p)).catch((e) => alert('Não foi possível exportar: ' + (e as Error).message))} className="flex h-9 items-center gap-2.5 px-3.5 text-[13px] font-semibold text-ink-2 hover:bg-white/60">
               <Sheet size={15} /> Exportar Excel (plano de ação)
