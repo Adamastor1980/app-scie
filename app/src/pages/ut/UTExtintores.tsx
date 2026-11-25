@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
 import type { AgenteExtintor, ExtintoresUT, Piso } from '../../data/types';
@@ -39,6 +39,9 @@ export default function UTExtintores({ ut, upU }: UTProps) {
   const ApagarPiso = ({ n, className = '' }: { n: number; className?: string }) => comEspacos.has(n)
     ? <button className={`btn-icon items-center text-ink-4 ${className}`} title="Piso com espaços registados" onClick={() => alert(`O ${rotuloPiso(n)} tem espaços registados no passo «Efetivo». Para o retirar, mude o piso desses espaços ou apague-os.`)}><Trash2 size={15} /></button>
     : <button className={`btn-icon items-center ${className}`} title={`Apagar ${rotuloPiso(n)}`} onClick={() => apagar(n)}><Trash2 size={15} /></button>;
+  // UT sem pisos (ex.: projeto «só extintores», sem espaços): começa com o Piso 0 pronto a receber a área
+  const semPisos = r.geral && r.pisos.length === 0;
+  useEffect(() => { if (semPisos) setArea(0, 0); }, [semPisos]); // eslint-disable-line react-hooks/exhaustive-deps
   const livres = OPCOES.filter((o) => !r.pisos.some((p) => p.n === o));
   const soPo = t === 8 && x.gare === 'eletrica';
   const Lei = ({ b }: { b: string }) => <button className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei(b)}><BookOpen size={12} /> Ver lei</button>;
@@ -80,13 +83,15 @@ export default function UTExtintores({ ut, upU }: UTProps) {
               </div>
             ))}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[12.5px]">
-            <span className="text-ink-3">Acrescentar piso:</span>
-            <select className="input h-9 w-auto py-0" value="" onChange={(e) => { if (e.target.value !== '') setArea(Number(e.target.value), 0); }}>
-              <option value="">Escolher…</option>
-              {livres.map((o) => <option key={o} value={o}>{rotuloPiso(o)}</option>)}
-            </select>
-          </div>
+          {r.pisos.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-[12.5px]">
+              {(() => { const prox = Math.max(...r.pisos.map((p) => p.n)) + 1; return livres.includes(prox) && <button className="btn h-10 px-4" onClick={() => setArea(prox, 0)}><Plus size={15} /> Acrescentar {rotuloPiso(prox)}</button>; })()}
+              <select className="input h-10 w-auto py-0 text-[12.5px]" value="" onChange={(e) => { if (e.target.value !== '') setArea(Number(e.target.value), 0); }}>
+                <option value="">Outro piso (ex.: cave)…</option>
+                {livres.map((o) => <option key={o} value={o}>{rotuloPiso(o)}</option>)}
+              </select>
+            </div>
+          )}
           <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.po.texto} — {CONVERSAO.fonte}.</p>
         </Section>
       )}
