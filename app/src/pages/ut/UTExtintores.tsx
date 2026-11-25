@@ -3,7 +3,7 @@ import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
 import type { AgenteExtintor, ExtintoresUT, Piso } from '../../data/types';
 import { CAPACIDADES, CONVERSAO, UNIDADE, dimensionarExtintores, litrosEquivalentes } from '../../engine/extintores';
-import { classificar, fmt, numPiso, rotuloPiso } from '../../engine/calc';
+import { classificar, fmt, numPiso, pisosUT, rotuloPiso } from '../../engine/calc';
 import { Faltas, Num, Section, Toggle } from '../../ui/primitives';
 import { novoPiso, uid } from '../../store';
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
@@ -27,6 +27,18 @@ export default function UTExtintores({ ut, upU }: UTProps) {
     if (!l) { l = { ...novoPiso(n), n, nome: rotuloPiso(n), cota: 0 } as Piso; u.pisos.push(l); }
     l.area = v;
   });
+  const comEspacos = new Set(pisosUT(ut).filter((q) => q.comEspacos).map((q) => q.n));
+  const apagar = (n: number) => {
+    if (!confirm(`Apagar o ${rotuloPiso(n)}? A área e a escolha de extintores deste piso são apagadas.`)) return;
+    upU((u) => {
+      u.pisos = u.pisos.filter((q) => numPiso(q) !== n);
+      if (u.extintores?.pisos) delete u.extintores.pisos[String(n)];
+      u.pisosTecnicos = (u.pisosTecnicos ?? []).filter((q) => q !== n);
+    });
+  };
+  const ApagarPiso = ({ n, className = '' }: { n: number; className?: string }) => comEspacos.has(n)
+    ? <button className={`btn-icon items-center text-ink-4 ${className}`} title="Piso com espaços registados" onClick={() => alert(`O ${rotuloPiso(n)} tem espaços registados no passo «Efetivo». Para o retirar, mude o piso desses espaços ou apague-os.`)}><Trash2 size={15} /></button>
+    : <button className={`btn-icon items-center ${className}`} title={`Apagar ${rotuloPiso(n)}`} onClick={() => apagar(n)}><Trash2 size={15} /></button>;
   const livres = OPCOES.filter((o) => !r.pisos.some((p) => p.n === o));
   const soPo = t === 8 && x.gare === 'eletrica';
   const Lei = ({ b }: { b: string }) => <button className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei(b)}><BookOpen size={12} /> Ver lei</button>;
@@ -45,11 +57,13 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <Section n="A" title="Extintores por piso" sub="A app propõe a quantidade que cumpre os dois critérios do art. 163.º n.º 2: a) 18 L de água por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2. Só altere se quiser outra solução.">
           <div className="border border-ink bg-white">
             <div className="hidden grid-cols-[90px_110px_1fr_210px_100px_120px] gap-3 border-b border-ink bg-paper px-4 py-2 font-mono text-[10.5px] uppercase tracking-wide text-ink-3 md:grid">
-              <span>Piso</span><span>Área (m²)</span><span>Exigido</span><span>Extintor</span><span>Quantidade</span><span>Resultado</span>
+              <span>Piso</span><span>Área (m²)</span><span>Exigido</span><span>Extintor</span><span>Quantidade</span><span>Resultado</span><span />
             </div>
             {r.pisos.map((p) => (
-              <div key={p.n} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 md:grid-cols-[90px_110px_1fr_210px_100px_120px]">
-                <span className="font-semibold">{p.nome}</span>
+              <div key={p.n} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 md:grid-cols-[90px_110px_1fr_210px_100px_120px_32px]">
+                <span className="flex items-center justify-between font-semibold md:block">{p.nome}
+                  <ApagarPiso className="md:hidden" n={p.n} />
+                </span>
                 <label className={`flex items-center gap-2 ${p.area > 0 ? '' : 'falta'}`}><span className="text-[11px] text-ink-3 md:hidden">Área</span><Num value={p.area} onChange={(v) => setArea(p.n, v)} suffix="m²" /></label>
                 <span className="col-span-2 text-[12.5px] md:col-span-1">{p.area > 0 ? <>Exigido: mín. <b>{p.minN}</b> extintores e <b>{p.litros} L</b> de água</> : <span className="text-alerta">Falta preencher: área do piso (para calcular)</span>}</span>
                 <select className="input col-span-2 h-10 py-0 text-[13px] md:col-span-1" value={`${p.agente}:${p.cap}`} onChange={(e) => { const [a, c] = e.target.value.split(':'); setPiso(p.n, (o) => { o.agente = a as AgenteExtintor; o.cap = Number(c); delete o.qtd; }); }}>
@@ -62,6 +76,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
                 <span className={`text-[12.5px] font-semibold ${p.area > 0 ? (p.cumpre ? 'text-ok' : 'text-alerta') : 'text-ink-3'}`}>
                   {p.area > 0 ? <>{p.cumpre ? '✔ Cumpre' : '✗ Insuficiente'}<span className="block text-[11px] font-normal text-ink-3">{fmt(p.totalL)} L equivalentes</span></> : '—'}
                 </span>
+                <ApagarPiso className="hidden md:flex" n={p.n} />
               </div>
             ))}
           </div>
