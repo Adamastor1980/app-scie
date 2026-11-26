@@ -124,12 +124,16 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <div className="grid gap-3 md:grid-cols-2">
           <Toggle checked={!!(ut.temCozinhaC || ut.factos?.cozinha)} onChange={(v) => upU((u) => { u.factos ??= {}; u.factos.cozinha = v; if (!v) u.temCozinhaC = false; })} label="Cozinha ou laboratório que seja local C" hint="Só se for local C: cozinha > 20 kW ou com combustíveis sólidos, ou laboratório com > 10 l de líquidos inflamáveis (RJ-SCIE, art. 10.º n.º 3 b), c), d))" legal="RT-SCIE, art. 163.º n.º 5" />
           <div className="border border-paper-3 bg-white p-3">
-            <p className="mb-1.5 text-[13px] font-semibold">Central térmica com mais de 70 kW</p>
-            <select className="input h-9 py-0" value={x.combustivelCT ?? ''} onChange={(e) => upX((z) => { z.combustivelCT = (e.target.value || undefined) as ExtintoresUT['combustivelCT']; })}>
-              <option value="">{ut.factos?.centralTermica ? 'Indique…' : 'Não'}</option><option value="nao">Não</option><option value="solido_liquido">Sim — combustível sólido ou líquido</option><option value="gas">Sim — gás</option>
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <p className="text-[13px] font-semibold">Central térmica com mais de 70 kW</p>
+              <Lei b="RT-SCIE, arts. 80.º e 163.º" />
+            </div>
+            <p className="mb-2 text-[11.5px] leading-snug text-ink-3">Local onde ficam os aparelhos de aquecimento de ambiente, de água ou de outros termofluidos que usam combustível (ex.: caldeiras), obrigatório quando a potência útil total passa de 40 kW, salvo numa única habitação (art. 80.º n.º 1). Acima de 70 kW leva meios de extinção próprios (art. 163.º n.º 6).</p>
+            <select className={`input h-9 py-0 ${ut.factos?.centralTermica && !x.combustivelCT ? 'falta' : ''}`} value={x.combustivelCT ?? (ut.factos?.centralTermica ? '' : 'nao')} onChange={(e) => upX((z) => { z.combustivelCT = (e.target.value || undefined) as ExtintoresUT['combustivelCT']; })}>
+              {ut.factos?.centralTermica && !x.combustivelCT && <option value="">Indique a potência e o combustível…</option>}
+              <option value="nao">Não existe (ou tem 70 kW ou menos)</option><option value="solido_liquido">Sim — combustível sólido ou líquido</option><option value="gas">Sim — combustível gasoso</option>
             </select>
             {x.combustivelCT === 'solido_liquido' && <label className="mt-2 flex items-center gap-2 text-[12.5px]">N.º de queimadores <Num value={x.queimadores ?? 1} onChange={(v) => upX((z) => { z.queimadores = Math.max(1, Math.round(v)); })} className="w-20" /></label>}
-            <p className="ref mt-1">RT-SCIE, art. 163.º n.º 6</p>
           </div>
           {(t === 6 || t === 9) && <Toggle checked={!!ut.factos?.tendas} onChange={(v) => upU((u) => { u.factos ??= {}; u.factos.tendas = v; })} label="Recinto em tenda ou estrutura insuflável" legal="RT-SCIE, art. 163.º n.º 7" />}
           {t === 1 && <>
