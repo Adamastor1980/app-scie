@@ -7,6 +7,7 @@ import { classificar, fmt, numPiso, pisosUT, rotuloPiso } from '../../engine/cal
 import { Faltas, Num, Section, Toggle } from '../../ui/primitives';
 import { novoPiso, uid } from '../../store';
 import TextoLei, { refsDeBase } from '../../ui/TextoLei';
+import { DEF_C, DEF_F, LOCAIS_C, LOCAIS_F } from '../../data/locaisCF';
 
 const OPCOES = Array.from({ length: 51 }, (_, k) => 40 - k);
 const opcoesExt = (soPo: boolean) => (['agua', 'po'] as AgenteExtintor[]).filter((a) => !soPo || a === 'po').flatMap((a) => CAPACIDADES[a].map((c) => ({
@@ -59,27 +60,27 @@ export default function UTExtintores({ ut, upU }: UTProps) {
       {r.geral && (
         <Section n="A" title="Extintores por piso" sub="A app propõe a quantidade que cumpre os dois critérios do art. 163.º n.º 2: a) 18 L de água por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2. Só altere se quiser outra solução.">
           <div className="border border-ink bg-white">
-            <div className="hidden grid-cols-[90px_110px_1fr_210px_100px_120px] gap-3 border-b border-ink bg-paper px-4 py-2 font-mono text-[10.5px] uppercase tracking-wide text-ink-3 md:grid">
+            <div className="hidden grid-cols-[90px_110px_1fr_210px_100px_120px] gap-3 border-b border-ink bg-paper px-4 py-2 font-mono text-[10.5px] uppercase tracking-wide text-ink-3 xl:grid">
               <span>Piso</span><span>Área (m²)</span><span>Exigido</span><span>Extintor</span><span>Quantidade</span><span>Resultado</span><span />
             </div>
             {r.pisos.map((p) => (
-              <div key={p.n} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 md:grid-cols-[90px_110px_1fr_210px_100px_120px_32px]">
-                <span className="flex items-center justify-between font-semibold md:block">{p.nome}
-                  <ApagarPiso className="md:hidden" n={p.n} />
+              <div key={p.n} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 xl:grid-cols-[90px_110px_1fr_210px_100px_120px_32px]">
+                <span className="flex items-center justify-between font-semibold xl:block">{p.nome}
+                  <ApagarPiso className="xl:hidden" n={p.n} />
                 </span>
-                <label className={`flex items-center gap-2 ${p.area > 0 ? '' : 'falta'}`}><span className="text-[11px] text-ink-3 md:hidden">Área</span><Num value={p.area} onChange={(v) => setArea(p.n, v)} suffix="m²" /></label>
-                <span className="col-span-2 text-[12.5px] md:col-span-1">{p.area > 0 ? <>Exigido: mín. <b>{p.minN}</b> extintores e <b>{p.litros} L</b> de água</> : <span className="text-alerta">Falta preencher: área do piso (para calcular)</span>}</span>
-                <select className="input col-span-2 h-10 py-0 text-[13px] md:col-span-1" value={`${p.agente}:${p.cap}`} onChange={(e) => { const [a, c] = e.target.value.split(':'); setPiso(p.n, (o) => { o.agente = a as AgenteExtintor; o.cap = Number(c); delete o.qtd; }); }}>
+                <label className={`flex items-center gap-2 ${p.area > 0 ? '' : 'falta'}`}><span className="text-[11px] text-ink-3 xl:hidden">Área</span><Num value={p.area} onChange={(v) => setArea(p.n, v)} suffix="m²" /></label>
+                <span className="col-span-2 text-[12.5px] xl:col-span-1">{p.area > 0 ? <>Exigido: mín. <b>{p.minN}</b> extintores e <b>{p.litros} L</b> de água</> : <span className="text-alerta">Falta preencher: área do piso (para calcular)</span>}</span>
+                <select className="input col-span-2 h-10 py-0 text-[13px] xl:col-span-1" value={`${p.agente}:${p.cap}`} onChange={(e) => { const [a, c] = e.target.value.split(':'); setPiso(p.n, (o) => { o.agente = a as AgenteExtintor; o.cap = Number(c); delete o.qtd; }); }}>
                   {opcoesExt(soPo).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
                 <div>
-                  <label className="flex items-center gap-2"><span className="text-[11px] text-ink-3 md:hidden">Quantidade</span><Num value={p.qtd} onChange={(v) => setPiso(p.n, (o) => { if (!v || v === p.proposta) delete o.qtd; else o.qtd = Math.round(v); })} /></label>
+                  <label className="flex items-center gap-2"><span className="text-[11px] text-ink-3 xl:hidden">Quantidade</span><Num value={p.qtd} onChange={(v) => setPiso(p.n, (o) => { if (!v || v === p.proposta) delete o.qtd; else o.qtd = Math.round(v); })} /></label>
                   {x.pisos?.[String(p.n)]?.qtd !== undefined && <button className="mt-0.5 block text-[11px] text-fire-ink hover:underline" onClick={() => setPiso(p.n, (o) => { delete o.qtd; })}>repor proposta ({p.proposta})</button>}
                 </div>
                 <span className={`text-[12.5px] font-semibold ${p.area > 0 ? (p.cumpre ? 'text-ok' : 'text-alerta') : 'text-ink-3'}`}>
                   {p.area > 0 ? <>{p.cumpre ? '✔ Cumpre' : '✗ Insuficiente'}<span className="block text-[11px] font-normal text-ink-3">{fmt(p.totalL)} L equivalentes</span></> : '—'}
                 </span>
-                <ApagarPiso className="hidden md:flex" n={p.n} />
+                <ApagarPiso className="hidden xl:flex" n={p.n} />
               </div>
             ))}
           </div>
@@ -98,19 +99,29 @@ export default function UTExtintores({ ut, upU }: UTProps) {
 
       <Section n={r.geral ? 'B' : 'A'} title="Situações com extintores próprios" sub="Responda só ao que existe nesta UT. Cada resposta acrescenta o que a lei exige.">
         <div className="mb-4 border border-paper-3 bg-white p-3">
-          <p className="mb-2 text-[12.5px] font-semibold">Locais de risco C ou F (art. 163.º n.º 4{ut.arLivre ? '; ao ar livre só C, n.º 8' : ''})</p>
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-[12.5px] font-semibold">Locais de risco C ou F — cada um tem o seu extintor (art. 163.º n.º 4{ut.arLivre ? '; ao ar livre só C, n.º 8' : ''})</p>
+            <Lei b="RJ-SCIE, art. 10.º; RT-SCIE, art. 163.º" />
+          </div>
+          <p className="text-[12px] leading-snug text-ink-2"><b>Local C</b> — {DEF_C}</p>
+          <p className="mb-2 text-[12px] leading-snug text-ink-2"><b>Local F</b> — {DEF_F}</p>
           {ut.espacos.filter((e) => ['C', 'Cag', 'F'].includes(e.local)).map((e) => <p key={e.id} className="text-[12.5px] text-ink-2">• {e.nome || 'espaço'} — local {e.local === 'Cag' ? 'C agravado' : e.local} <span className="ref">(dos espaços)</span></p>)}
           {(x.locais ?? []).map((l, i) => (
-            <div key={l.id} className="mt-1 flex flex-wrap items-center gap-2">
-              <input className="input h-9 max-w-[260px] py-0" placeholder="Nome do local (ex.: cozinha, quadro elétrico)" value={l.nome} onChange={(e) => upX((z) => { z.locais![i].nome = e.target.value; })} />
-              <select className="input h-9 w-auto py-0" value={l.tipo} onChange={(e) => upX((z) => { z.locais![i].tipo = e.target.value as 'C' | 'F'; })}><option value="C">Local C</option><option value="F">Local F</option></select>
-              <button className="btn-icon" onClick={() => upX((z) => { z.locais = z.locais!.filter((_, k) => k !== i); })}><Trash2 size={14} /></button>
+            <div key={l.id} className="mt-2 flex flex-wrap items-center gap-2 border-t border-paper-3 pt-2">
+              <select className={`input h-10 min-w-0 flex-1 basis-[320px] py-0 text-[12.5px] ${l.alinea ? '' : 'falta'}`} value={l.alinea ? `${l.tipo}:${l.alinea}` : ''} onChange={(e) => upX((z) => { const [tp, al] = e.target.value.split(':'); z.locais![i].tipo = tp as 'C' | 'F'; z.locais![i].alinea = al || undefined; })}>
+                <option value="">Escolher o tipo de local…</option>
+                <optgroup label="Local de risco C (RJ-SCIE, art. 10.º n.º 3)">{LOCAIS_C.map((o) => <option key={o.a} value={`C:${o.a}`}>{o.a}) {o.t}</option>)}</optgroup>
+                <optgroup label="Local de risco F (RJ-SCIE, art. 10.º n.º 6)">{LOCAIS_F.map((o) => <option key={o.a} value={`F:${o.a}`}>{o.a}) {o.t}</option>)}</optgroup>
+              </select>
+              <input className="input h-10 min-w-0 flex-1 basis-[200px] py-0" placeholder="Onde fica (ex.: piso −1, junto à garagem)" value={l.nome} onChange={(e) => upX((z) => { z.locais![i].nome = e.target.value; })} />
+              <button className="btn-icon" title="Retirar local" onClick={() => upX((z) => { z.locais = z.locais!.filter((_, k) => k !== i); })}><Trash2 size={14} /></button>
+              {!l.alinea && <p className="w-full text-[11.5px] text-alerta">Falta preencher: tipo de local — confirme na lista se é mesmo local C ou F; se não constar, não precisa de extintor próprio.</p>}
             </div>
           ))}
-          <button className="mt-2 flex items-center gap-1 text-[12px] font-semibold text-fire-ink hover:underline" onClick={() => upX((z) => { (z.locais ??= []).push({ id: uid(), nome: '', tipo: 'C' }); })}><Plus size={13} /> Acrescentar local C ou F</button>
+          <button className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-fire-ink hover:underline" onClick={() => upX((z) => { (z.locais ??= []).push({ id: uid(), nome: '', tipo: 'C' }); })}><Plus size={13} /> Acrescentar local C ou F</button>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <Toggle checked={!!(ut.temCozinhaC || ut.factos?.cozinha)} onChange={(v) => upU((u) => { u.factos ??= {}; u.factos.cozinha = v; if (!v) u.temCozinhaC = false; })} label="Cozinha ou laboratório (local C)" legal="RT-SCIE, art. 163.º n.º 5" />
+          <Toggle checked={!!(ut.temCozinhaC || ut.factos?.cozinha)} onChange={(v) => upU((u) => { u.factos ??= {}; u.factos.cozinha = v; if (!v) u.temCozinhaC = false; })} label="Cozinha ou laboratório que seja local C" hint="Só se for local C: cozinha > 20 kW ou com combustíveis sólidos, ou laboratório com > 10 l de líquidos inflamáveis (RJ-SCIE, art. 10.º n.º 3 b), c), d))" legal="RT-SCIE, art. 163.º n.º 5" />
           <div className="border border-paper-3 bg-white p-3">
             <p className="mb-1.5 text-[13px] font-semibold">Central térmica com mais de 70 kW</p>
             <select className="input h-9 py-0" value={x.combustivelCT ?? ''} onChange={(e) => upX((z) => { z.combustivelCT = (e.target.value || undefined) as ExtintoresUT['combustivelCT']; })}>

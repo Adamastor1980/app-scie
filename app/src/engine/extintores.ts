@@ -1,5 +1,8 @@
 import type { AgenteExtintor, Cat, UT } from '../data/types';
 import { classificar, efetivoUT, fmt, pisosUT } from './calc';
+import { LOCAIS_C, LOCAIS_F } from '../data/locaisCF';
+
+const descLocal = (tipo: 'C' | 'F', a: string) => ((tipo === 'C' ? LOCAIS_C : LOCAIS_F).find((o) => o.a === a)?.t ?? '').split(/ com |: | \(/)[0].trim();
 
 /**
  * Dimensionamento de extintores — RT-SCIE (Portaria n.º 135/2020).
@@ -75,9 +78,10 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   // locais C e F: dos espaços (projeto completo) e os indicados à mão (modo só extintores)
   const locaisCF = [
     ...ut.espacos.filter((e) => e.local === 'C' || e.local === 'Cag' || e.local === 'F').map((e) => ({ nome: e.nome || 'espaço', tipo: e.local === 'F' ? 'F' : 'C' })),
-    ...(x.locais ?? []).map((l) => ({ nome: l.nome || 'local', tipo: l.tipo })),
+    ...(x.locais ?? []).filter((l) => l.alinea).map((l) => ({ nome: [descLocal(l.tipo, l.alinea!), l.nome].filter(Boolean).join(' — '), tipo: l.tipo, alinea: l.alinea })),
   ];
 
+  for (const l of x.locais ?? []) if (!l.alinea) falta.push(`tipo do local${l.nome ? ` «${l.nome}»` : ''} — escolha na lista do RJ-SCIE, art. 10.º, se é mesmo local C ou F (cada um exige extintor próprio)`);
   // n.º 1 e n.º 8 — aplicabilidade
   const isentoUTI = t === 1 && c <= 2;
   const arLivre = !!ut.arLivre;
@@ -106,7 +110,8 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   // n.º 4 — locais C e F; n.º 8 ao ar livre só C
   for (const l of locaisCF) {
     if (arLivre && l.tipo !== 'C') continue;
-    extras.push({ texto: `Local de risco ${l.tipo} «${l.nome}»: dotado de extintor próprio`, base: arLivre ? 'RT-SCIE, art. 163.º n.º 8' : 'RT-SCIE, art. 163.º n.º 4', qtd: 1 });
+    const al = (l as { alinea?: string }).alinea;
+    extras.push({ texto: `Local de risco ${l.tipo} «${l.nome}»: dotado de extintor próprio`, base: `${arLivre ? 'RT-SCIE, art. 163.º n.º 8' : 'RT-SCIE, art. 163.º n.º 4'}${al ? `; RJ-SCIE, art. 10.º n.º ${l.tipo === 'C' ? 3 : 6} ${al})` : ''}`, qtd: 1 });
   }
   // n.º 5 — cozinhas e laboratórios C
   if (ut.temCozinhaC || ut.factos?.cozinha) extras.push({ texto: 'Cozinha ou laboratório (local C): manta ignífuga, em complemento; extintor com eficácia mínima 25F se forem usados óleos ou gorduras', base: 'RT-SCIE, art. 163.º n.º 5' });

@@ -181,7 +181,7 @@ export interface ExtintoresUT {
   /** por piso (chave = número do piso): agente, capacidade (L de água ou kg de pó) e quantidade escolhida pelo técnico */
   pisos?: Record<string, { agente?: AgenteExtintor; cap?: number; qtd?: number }>;
   /** locais C ou F indicados à mão (modo «só extintores»); no projeto completo vêm dos espaços */
-  locais?: { id: string; nome: string; tipo: 'C' | 'F' }[];
+  locais?: { id: string; nome: string; tipo: 'C' | 'F'; /** alínea do RJ-SCIE, art. 10.º n.º 3 (C) ou n.º 6 (F) */ alinea?: string }[];
   /** central térmica > 70 kW (art. 163.º n.º 6) */
   queimadores?: number;
   combustivelCT?: 'nao' | 'solido_liquido' | 'gas';

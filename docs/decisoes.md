@@ -189,6 +189,7 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **CO₂ só como complemento:** não conta para a alínea a), por não ter eficácia em fogos da classe A (EN 3). ⚠️ A confirmar com o professor.
 - **Situações específicas incluídas:** art. 163.º n.os 4 a 8; arts. 209.º n.º 14, 210.º n.º 6, 211.º n.º 4 (UT I, mesmo nas 1.ª e 2.ª categorias); 226.º (UT II); 273.º (UT VIII — sem água com tração elétrica); 286.º (UT IX, campismo); 307.º (UT XII).
 - ⚠️ **Art. 307.º e):** «por cada 1000 l de líquido, adicionais ou fração» lido como **além da alínea d)**, 1 móvel por cada 1000 l acima de 750 l (800 l → 2 móveis; 2000 l → 3). A leitura anterior (1 por cada 1000 l do total) dava menos extintores. O n.º 2 (recipientes metálicos) baixa só a eficácia, não os móveis. A confirmar.
+- **Locais C e F:** escolhidos da lista do RJ-SCIE, art. 10.º n.os 3 (C, alíneas a) a n)) e 6 (F, alíneas a) a g)), com a definição do n.º 1 c) e f) à vista; um local sem tipo escolhido não conta e fica em «Falta preencher» (evita classificar como C, por exemplo, uma cozinha ≤ 20 kW).
 - **Projeto «só extintores»:** pede só o que o art. 163.º usa (UT, pisos e áreas, situações próprias; categoria só na UT I) e gera o «Estudo de dimensionamento de extintores»; pode passar a projeto completo sem perder dados.
 
 ---

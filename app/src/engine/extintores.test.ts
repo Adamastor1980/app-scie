@@ -91,3 +91,16 @@ describe('Art. 307.º — combustíveis líquidos (UT XII)', () => {
     expect(art307(2000, true).moveis).toBe(3);
   });
 });
+
+describe('Locais C e F indicados à mão (RJ-SCIE, art. 10.º n.os 3 e 6)', () => {
+  it('sem tipo escolhido: não conta e fica em «Falta preencher»; com tipo: extintor próprio com a alínea', () => {
+    const u = ut(3, [200]); u.extintores = { locais: [{ id: 'l', nome: 'piso −1', tipo: 'C' }] };
+    let r = dimensionarExtintores(u, 2);
+    expect(r.extras).toHaveLength(0);
+    expect(r.falta.join(' ')).toContain('tipo do local');
+    u.extintores.locais![0].alinea = 'g';
+    r = dimensionarExtintores(u, 2);
+    expect(r.extras[0].texto).toContain('Arquivo, depósito, armazém ou arrecadação — piso −1');
+    expect(r.extras[0].base).toContain('art. 10.º n.º 3 g)');
+  });
+});
