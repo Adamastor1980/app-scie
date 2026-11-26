@@ -64,17 +64,6 @@ export default function Home() {
           </div>
           <button className="btn h-10 px-4" title="Estudo de sinalética de segurança (RT-SCIE, arts. 108.º a 112.º)" onClick={() => go(`/p/${criar('sinaletica')}`)}><Signpost size={16} /> Sinalética</button>
           {todosExt.length > 0 && <button className="btn h-10 px-3" onClick={() => setQr(true)}><ScanLine size={16} /> Ler QR</button>}
-          <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
-          {projetos.length > 0 && (
-            <button className="btn h-10 px-3" onClick={() => {
-                const blob = new Blob([JSON.stringify(projetos, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `scie-calc-copia-${new Date().toISOString().slice(0, 10)}.json`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-              }}><Download size={15} /> Exportar todos (JSON)</button>
-          )}
           <button className="btn h-10 px-3" onClick={() => go(`/p/${abrirExemplo(exemploProjeto())}`)}>Abrir exemplo</button>
           {qr && (
             <LerQR onLido={(t) => { setQr(false); const u = lerUrlExt(t); if (u) go(`/x/${u.pid}/${u.eid}`); else alert('Este QR não é de um extintor da Cautela.'); }} onFechar={() => setQr(false)}>
@@ -82,7 +71,6 @@ export default function Home() {
                 sub={(e) => { const x = todosExt.find((z) => z.e.id === e.id)!; return `${x.p.nome} · ${x.p.edificios.find((z) => z.id === e.edificio)?.nome ?? ''} · ${e.local || '—'}`; }} />
             </LerQR>
           )}
-          <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
         </div>
       </div>
 
@@ -165,6 +153,29 @@ export default function Home() {
           })}
         </div>
       )}
+
+      {/* Cópia de segurança: importar e exportar ficheiros JSON, fora da zona de trabalho principal */}
+      <section className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-paper-3 pt-6">
+        <div className="min-w-0 flex-1 basis-[260px]">
+          <h3 className="label">Cópia de segurança</h3>
+          <p className="mt-1 text-[12.5px] text-ink-3">Guardar todos os projetos num ficheiro JSON ou recuperar projetos a partir de um ficheiro exportado.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
+          {projetos.length > 0 && (
+            <button className="btn h-10 px-3" onClick={() => {
+                const blob = new Blob([JSON.stringify(projetos, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `scie-calc-copia-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+              }}><Download size={15} /> Exportar todos (JSON)</button>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
+      </section>
+
       <Rodape />
     </main>
   );
