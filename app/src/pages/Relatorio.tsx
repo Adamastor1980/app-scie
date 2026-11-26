@@ -1,13 +1,14 @@
+import { ABREVIATURAS, Abreviaturas, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor } from './docComum';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
 import { dimensionarExtintores } from '../engine/extintores';
-import { LEI_VERIFICADA_EM, VERSAO_APP, baseLegalDoc, notaVersao } from '../versao';
+import { baseLegalDoc, notaVersao } from '../versao';
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FileDown, Loader2, Printer } from 'lucide-react';
 import { gerarPdfDireto, usarPdfDireto } from '../pdfDireto';
 import { useP } from './ProjetoShell';
-import { DIPLOMAS, ROMANO, utInfo } from '../data/rjscie';
+import { ROMANO, utInfo } from '../data/rjscie';
 import { classeAltura } from '../data/rtscie';
 import { CAT_NOME, CAT_RISCO, catAtribuida, cargaCompartimento, cargaUT, efetivoEspaco, fmt, justificacaoCategoria, faltaCaracterizacao, faltaEdificio, faltaParaMedidas, alturaEdificio, pisosUT } from '../engine/calc';
 import { contexto, gerarMedidas, GRUPOS, SECOES, secRotulo, type Medida } from '../engine/medidas';
@@ -143,52 +144,14 @@ export default function Relatorio() {
       </div>
 
       {/* ------------------------------ CAPA ------------------------------ */}
-      <Sheet className="flex flex-col">
-        <div className="flex items-start justify-between">
-<div className="flex items-center gap-5">{p.empresa.logo ? <img src={p.empresa.logo} className="h-[80px] w-[80px] object-contain" /> : <span className="font-display text-[20px] font-extrabold">{p.empresa.nome || 'Empresa'}</span>}{p.clienteLogo && <><span className="h-12 w-px bg-ink-4" /><img src={p.clienteLogo} className="h-[80px] w-[80px] object-contain" /></>}</div>
-          <span className="text-right font-mono text-[10px] uppercase leading-relaxed tracking-wider text-ink-3">{p.referencia || 'S/ ref.'}<br />Versão {p.versao}<br />{dataPt}</span>
-        </div>
-        <div className="mt-[52mm]">
-          <div className="mb-6 h-[6px] w-24 bg-fire" />
-          <p className="label mb-3">{p.tipoIntervencao}</p>
-          <h1 className="h-display text-[44px]">Segurança contra incêndio em edifícios</h1>
-          <p className="mt-4 font-display text-[22px] font-bold leading-tight text-ink-2">{p.nome}</p>
-          <p className="mt-2 text-[13px] text-ink-3">{[p.morada, p.concelho, p.distrito].filter(Boolean).join(', ')}</p>
-        </div>
-        <div className="mt-auto border-t-[3px] border-ink pt-5">
-          <div className="grid grid-cols-3 gap-x-8 gap-y-3 text-[11.5px]">
-            <div><p className="label">Cliente</p><p className="font-semibold">{p.cliente || '—'}</p></div>
-            <div><p className="label">Elaborado por</p><p className="font-semibold">{p.autor.nome || '—'}</p><p className="text-ink-3">{[p.autor.qualificacao, p.autor.ordem && `${p.autor.ordem} n.º ${p.autor.numero}`].filter(Boolean).join(' · ')}</p></div>
-            <div><p className="label">Data</p><p className="font-semibold">{dataPt || '—'}</p><p className="text-ink-3">Versão {p.versao}</p></div>
-          </div>
-        </div>
-      </Sheet>
+      <Capa p={p} rotulo={p.tipoIntervencao} titulo="Segurança contra incêndio em edifícios" />
 
       {/* -------------------- FICHA TÉCNICA E ÍNDICE ---------------------- */}
       <Sheet className="page-break">
         <H1 n="—">Ficha técnica</H1>
-        <table className="tbl mb-10">
-          <tbody>
-            {[
-              ['Documento', `Relatório de segurança contra incêndio em edifícios — ${p.tipoIntervencao}`],
-              ['Projeto', p.nome], ['Referência', p.referencia || '—'], ['Cliente / entidade responsável', p.cliente || '—'],
-              ['Localização', [p.morada, p.concelho, p.distrito].filter(Boolean).join(', ') || '—'], ['Coordenadas', p.coordenadas || '—'],
-              ['Autor', [p.autor.nome, p.autor.qualificacao].filter(Boolean).join(', ') || '—'],
-              ['Associação profissional', p.autor.ordem ? `${p.autor.ordem}, n.º ${p.autor.numero || '—'}` : '—'], ['Registo ANEPC do autor', p.autor.registoAnepc || '—'],
-              ['Empresa', [p.empresa.nome, p.empresa.nif && `NIF ${p.empresa.nif}`].filter(Boolean).join(' · ') || '—'],
-              ['Data / versão', `${dataPt} · v${p.versao}`],
-              ['Base legal', `Legislação em vigor${dataPt ? ` em ${dataPt}` : ''}: RJ-SCIE (DL 220/2008, na redação da Lei 123/2019); RT-SCIE (Portaria 1532/2008, na redação da Portaria 135/2020); Despacho 2074/2009, na redação do Despacho 8954/2020`],
-              ['Ferramenta de cálculo', `Cautela SCIE, versão de ${VERSAO_APP} (regras conferidas com o Diário da República em ${LEI_VERIFICADA_EM})`],
-            ].map(([a, b]) => <tr key={a}><td className="w-[42%] font-semibold">{a}</td><td>{b}</td></tr>)}
-          </tbody>
-        </table>
+        <FichaTecnica p={p} documento={`Relatório de segurança contra incêndio em edifícios — ${p.tipoIntervencao}`} />
         <H1 n="—">Índice</H1>
-        <p className="mb-1.5 flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1 text-[12.5px] font-semibold"><span className="w-6 font-mono text-fire-ink">—</span>Síntese para o cliente</p>
-        <ol className="space-y-1.5 text-[12.5px]">
-          {['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Dimensionamento de extintores', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos'].map((t, i) => (
-            <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire-ink">{i + 1}</span>{t}</li>
-          ))}
-        </ol>
+        <Indice antes="Síntese para o cliente" itens={['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização dos edifícios e das utilizações-tipo', 'Classificação e identificação do risco', 'Cálculo do efetivo', 'Densidade de carga de incêndio modificada', 'Dimensionamento de extintores', 'Condições de segurança exigíveis (anexo IV, II a VII)', 'Análise regulamentar e medidas corretivas', 'Medidas de autoproteção', 'Peças desenhadas', 'Conclusões', 'Termo do autor', 'Anexos']} />
       </Sheet>
 
       {/* ----------------------- SÍNTESE PARA O CLIENTE ------------------- */}
@@ -238,19 +201,7 @@ export default function Relatorio() {
       {/* ------------------------ CORPO DO RELATÓRIO ---------------------- */}
       <Sheet className="page-break">
         <H1 n={S()}>Apresentação da empresa</H1>
-        <div className="mb-6 grid grid-cols-[1fr_190px] gap-6">
-          <div className="whitespace-pre-line text-[12px] leading-[1.65] text-ink-2">{p.empresa.apresentacao || 'Texto de apresentação da empresa por preencher em «Dados, empresa e autor».'}</div>
-          <div className="border-l-[3px] border-fire pl-4 text-[11px] leading-relaxed">
-            {p.empresa.logo && <img src={p.empresa.logo} className="mb-3 h-[64px] w-[64px] object-contain" />}
-            <p className="font-semibold">{p.empresa.nome}</p>
-            <p className="text-ink-3">{p.empresa.morada}</p>
-            {p.empresa.nif && <p>NIF {p.empresa.nif}</p>}
-            {p.empresa.telefone && <p>{p.empresa.telefone}</p>}
-            {p.empresa.email && <p>{p.empresa.email}</p>}
-            {p.empresa.website && <p>{p.empresa.website}</p>}
-            {p.empresa.alvara && <p className="mt-1">Registo ANEPC: {p.empresa.alvara}</p>}
-          </div>
-        </div>
+        <EmpresaBloco p={p} />
 
         <H1 n={S()}>Introdução e enquadramento legal</H1>
         <H2 n={`${sec}.1`}>Objetivo</H2>
@@ -258,8 +209,7 @@ export default function Relatorio() {
         <H2 n={`${sec}.2`}>Localização</H2>
         <P>{[p.morada, p.concelho, p.distrito].filter(Boolean).join(', ') || '—'}{p.coordenadas ? ` (coordenadas ${p.coordenadas})` : ''}.</P>
         <H2 n={`${sec}.3`}>Legislação aplicada</H2>
-        <table className="tbl mb-2"><thead><tr><th>Sigla</th><th>Diploma</th><th>Objeto</th></tr></thead>
-          <tbody>{DIPLOMAS.map((d) => <tr key={d.sigla}><td className="font-semibold">{d.sigla}</td><td>{d.titulo}</td><td>{d.objeto}</td></tr>)}</tbody></table>
+        <TabelaLegislacao />
         <P>{baseLegalDoc(dataPt)} {notaVersao()}</P>
         <P>A estrutura deste relatório segue o conteúdo da memória descritiva e justificativa definido no anexo IV do RJ-SCIE. Todas as exigências indicadas citam o artigo e o quadro de onde resultam.</P>
 
@@ -589,60 +539,21 @@ export default function Relatorio() {
         {maxCat && <P>Entidade competente para a categoria mais gravosa: {maxCat === 1 ? 'câmara municipal' : 'ANEPC'} (RJ-SCIE, art. 5.º).</P>}
         {p.conclusoes && <div className="mt-4 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}
 
-        <div className="avoid-break mt-[30mm]">
-          <H1 n={String(sec + 2)}>Termo do autor</H1>
-          <P>{p.autor.nome || '[Nome do autor]'}{p.autor.qualificacao ? `, ${p.autor.qualificacao}` : ''}{p.autor.ordem ? `, inscrito na ${p.autor.ordem} com o n.º ${p.autor.numero || '—'}` : ''}{p.autor.registoAnepc ? ` e registado na ANEPC com o n.º ${p.autor.registoAnepc}` : ''}, declara que o presente documento foi elaborado com base no Decreto-Lei n.º 220/2008, na redação da Lei n.º 123/2019, na Portaria n.º 1532/2008, na redação da Portaria n.º 135/2020, e no Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020.</P>
-          <div className="mt-14 grid grid-cols-2 gap-10 text-[11.5px]">
-            <div><p>{p.concelho || '__________'}, {dataPt}</p></div>
-            <div className="text-center"><div className="mb-1 border-b border-ink pb-12" /><p className="font-semibold">{p.autor.nome || 'O autor'}</p><p className="text-ink-3">{p.autor.qualificacao}</p></div>
-          </div>
-        </div>
+        <TermoAutor p={p} documento="o presente documento" titulo={<H1 n={String(sec + 2)}>Termo do autor</H1>} />
       </Sheet>
 
       {/* ------------------------------ ANEXOS ----------------------------- */}
       <Sheet className="page-break">
         <H1 n={String(sec + 3)}>Anexos</H1>
-        <H2 n="A">Lista de revisões e alterações</H2>
-        <table className="tbl mb-6"><thead><tr><th className="w-24">Versão</th><th className="w-36">Data</th><th>Descrição</th></tr></thead>
-          <tbody>{(p.revisoes?.length ? p.revisoes : [{ versao: p.versao, data: p.data, descricao: 'Emissão' }]).map((r, i) => (
-            <tr key={i}><td className="num">{r.versao}</td><td>{r.data ? new Date(r.data + 'T00:00').toLocaleDateString('pt-PT') : '—'}</td><td>{r.descricao || '—'}</td></tr>
-          ))}</tbody></table>
-        <H2 n="B">Lista de distribuição de exemplares</H2>
-        {p.distribuicao?.length ? (
-          <table className="tbl mb-6"><thead><tr><th className="w-24">Exemplar</th><th>Entidade / destinatário</th><th className="w-32">Suporte</th></tr></thead>
-            <tbody>{p.distribuicao.map((d, i) => <tr key={i}><td className="num">{d.exemplar}</td><td>{d.entidade || '—'}</td><td>{d.suporte}</td></tr>)}</tbody></table>
-        ) : <P>Sem lista de distribuição definida.</P>}
+        <RevisoesDistribuicao p={p} />
         <H2 n="C">Glossário — definições do RJ-SCIE (art. 2.º)</H2>
         <table className="tbl mb-6"><tbody>{GLOSSARIO.map((g) => (
           <tr key={g.al} className="avoid-break"><td className="w-[30%] font-semibold">{g.termo}<span className="block font-mono text-[9.5px] font-normal text-ink-3">art. 2.º {g.al})</span></td><td className="text-[11px] leading-relaxed">{g.def.charAt(0).toUpperCase() + g.def.slice(1)}.</td></tr>
         ))}</tbody></table>
         <H2 n="D">Lista de abreviaturas</H2>
-        <table className="tbl"><tbody>{ABREVIATURAS.map(([a, d]) => <tr key={a}><td className="w-28 font-mono font-semibold">{a}</td><td className="text-[11.5px]">{d}</td></tr>)}</tbody></table>
+        <Abreviaturas lista={ABREVIATURAS} />
       </Sheet>
     </div>
   );
 }
 
-const ABREVIATURAS: [string, string][] = [
-  ['ANEPC', 'Autoridade Nacional de Emergência e Proteção Civil'],
-  ['RJ-SCIE', 'Regime Jurídico de Segurança Contra Incêndio em Edifícios (DL 220/2008, red. Lei 123/2019)'],
-  ['RT-SCIE', 'Regulamento Técnico de Segurança Contra Incêndio em Edifícios (Portaria 1532/2008, red. Portaria 135/2020)'],
-  ['SCIE', 'Segurança contra incêndio em edifícios'],
-  ['UT', 'Utilização-tipo'],
-  ['MAP', 'Medidas de autoproteção'],
-  ['PEI', 'Plano de emergência interno'],
-  ['RS', 'Responsável de segurança'],
-  ['SSI', 'Serviço de segurança contra incêndio'],
-  ['SADI', 'Sistema automático de deteção de incêndio'],
-  ['CCF', 'Câmara corta-fogo'],
-  ['UP', 'Unidade de passagem'],
-  ['PR', 'Plano de referência'],
-  ['R / E / I', 'Capacidade de suporte de carga / estanquidade / isolamento térmico (resistência ao fogo)'],
-  ['C', 'Fecho automático (portas resistentes ao fogo)'],
-  ['Qs / qs', 'Carga de incêndio modificada (MJ) / densidade de carga de incêndio modificada (MJ/m²)'],
-  ['Hi', 'Poder calorífico inferior (MJ/kg)'],
-  ['Ci', 'Coeficiente de combustibilidade'],
-  ['Rai', 'Coeficiente de ativação'],
-  ['qsi / qvi', 'Valor estatístico da densidade de carga de incêndio (MJ/m²) / por unidade de volume (MJ/m³)'],
-  ['FDS', 'Ficha de dados de segurança'],
-];

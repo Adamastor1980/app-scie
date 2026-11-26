@@ -2,8 +2,9 @@ import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
+import { ABREVIATURAS, Abreviaturas, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor, dataPtDe } from './docComum';
 import { classificar, fmt, pisosUT } from '../engine/calc';
-import { dimensionarExtintores } from '../engine/extintores';
+import { dimensionarExtintores, totaisMapa } from '../engine/extintores';
 import { tituloUT } from '../nome';
 import { baseLegalDoc, notaVersao } from '../versao';
 
@@ -12,9 +13,14 @@ export default function EstudoExtintores() {
   const { p } = useP();
   const { zoom, aGerar, imprimir } = useDocumento(p, 'Estudo de dimensionamento de extintores', 'ext-folhas');
   const uts = p.edificios.flatMap((ed) => ed.uts.map((ut) => ({ ed, ut, cat: classificar(ut).cat })));
-  const dataPt = p.data ? new Date(p.data + 'T00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+  const dataPt = dataPtDe(p);
   const res = uts.map((x) => ({ ...x, r: dimensionarExtintores(x.ut, x.cat) }));
   const falta = res.flatMap((x) => x.r.falta.map((f) => `${tituloUT(x.ut)}: ${f}`));
+  const linhas = res.flatMap(({ r }) => r.mapa);
+  const tot = totaisMapa(linhas);
+  const port = tot.find((g) => g.cat === 'portatil');
+  const DOC = 'Estudo de dimensionamento de extintores';
+  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização e aplicabilidade', 'Critérios de dimensionamento', 'Dimensionamento por utilização-tipo', 'Localização e instalação', 'Mapa de extintores — o quê, onde e quantos', 'Totais de extintores e outros meios', 'Conclusões', 'Termo do autor', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
   return (
@@ -32,19 +38,36 @@ export default function EstudoExtintores() {
         </div>
       </div>
 
-      <Sheet>
-        <p className="label !text-fire-ink">RT-SCIE · art. 163.º · meios portáteis e móveis de extinção</p>
-        <h1 className="h-display mb-1 mt-2 text-[34px]">Estudo de dimensionamento de extintores</h1>
-        <p className="font-display text-[18px] font-bold text-ink-2">{p.nome}</p>
-        <p className="mb-6 text-[12px] text-ink-3">{[p.morada, p.concelho].filter(Boolean).join(', ')}{p.cliente ? ` · ${p.cliente}` : ''}{dataPt ? ` · ${dataPt}` : ''}</p>
+      <Capa p={p} rotulo="Meios portáteis e móveis de extinção · RT-SCIE, art. 163.º" titulo={DOC} />
 
-        <H1 n={S()}>Aplicabilidade</H1>
+      <Sheet className="page-break">
+        <H1 n="—">Ficha técnica</H1>
+        <FichaTecnica p={p} documento={DOC} />
+        <H1 n="—">Índice</H1>
+        <Indice itens={CAPS} />
+      </Sheet>
+
+      <Sheet className="page-break">
+        <H1 n={S()}>Apresentação da empresa</H1>
+        <EmpresaBloco p={p} />
+
+        <H1 n={S()}>Introdução e enquadramento legal</H1>
+        <H2 n={`${n}.1`}>Objetivo</H2>
+        <P>{p.objetivo || `O presente estudo dimensiona os extintores e os outros meios de primeira intervenção de ${p.nome}, por piso e por local, nos termos do art. 163.º do RT-SCIE e das condições específicas de cada utilização-tipo, e indica o quê, onde e quantos.`}</P>
+        <H2 n={`${n}.2`}>Localização</H2>
+        <P>{[p.morada, p.concelho, p.distrito].filter(Boolean).join(', ') || '—'}{p.coordenadas ? ` (coordenadas ${p.coordenadas})` : ''}.</P>
+        <H2 n={`${n}.3`}>Legislação aplicada</H2>
+        <TabelaLegislacao />
+        <P>{baseLegalDoc(dataPt)} {notaVersao()}</P>
+
+        <H1 n={S()}>Caracterização e aplicabilidade</H1>
+        <H2 n={`${n}.1`}>Aplicabilidade</H2>
         <P>Todas as utilizações-tipo são equipadas com extintores, exceto a UT I das 1.ª e 2.ª categorias de risco; nos recintos ao ar livre só os locais de risco C (RT-SCIE, art. 163.º n.os 1 e 8).</P>
         <table className="tbl mb-4"><tbody>
           {res.map(({ ed, ut, r }) => <tr key={ut.id}><td className="w-[40%] text-[11.5px] font-semibold">{ed.nome} · {tituloUT(ut)}</td><td className="text-[11.5px]">{r.motivo}</td></tr>)}
         </tbody></table>
 
-        <H1 n={S()}>Áreas dos pisos</H1>
+        <H2 n={`${n}.2`}>Áreas dos pisos</H2>
         <table className="tbl mb-4"><thead><tr><th>Utilização-tipo</th><th>Pisos e áreas (m²)</th></tr></thead><tbody>
           {res.filter((x) => x.r.geral).map(({ ed, ut }) => <tr key={ut.id}><td className="text-[11.5px]">{ed.nome} · {tituloUT(ut)}</td><td className="text-[11.5px]">{pisosUT(ut).map((q) => `${q.nome}: ${q.area > 0 ? fmt(q.area, 2) : '—'}`).join(' · ') || '—'}</td></tr>)}
         </tbody></table>
@@ -76,8 +99,8 @@ export default function EstudoExtintores() {
 
         <H1 n={S()}>Mapa de extintores — o quê, onde e quantos</H1>
         <MapaExtintores linhas={res.flatMap(({ ed, ut, r }) => r.mapa.map((l) => ({ ut: `${ed.nome} · ${tituloUT(ut)}`, l })))} />
-        <p className="keep-next mb-1 mt-4 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire-ink">Totais</p>
-        <TotaisExtintores linhas={res.flatMap(({ r }) => r.mapa)} />
+        <H1 n={S()}>Totais de extintores e outros meios</H1>
+        <TotaisExtintores linhas={linhas} />
 
         {falta.length > 0 && (
           <div className="no-print mt-6 border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[12px]">
@@ -86,10 +109,17 @@ export default function EstudoExtintores() {
           </div>
         )}
 
-        <div className="avoid-break mt-12 grid grid-cols-2 gap-10 text-[11.5px]">
-          <div><div className="mb-1 h-14 border-b border-ink" /><p className="font-semibold">{p.autor.nome || 'Autor'}</p><p className="text-ink-3">{p.autor.qualificacao}</p></div>
-        </div>
-        <p className="mt-6 border-t border-paper-3 pt-2 text-[10.5px] leading-relaxed text-ink-3">{baseLegalDoc(dataPt)} {notaVersao()}</p>
+        <H1 n={S()}>Conclusões</H1>
+        <P>{port ? <>Ficam previstos <b>{port.total}{port.aberto ? ' ou mais' : ''} extintores portáteis</b>{tot.filter((g) => g.cat !== 'portatil' && g.cat !== 'complemento').map((g) => `, ${g.itens.map((i) => `${i.qtdTxt} × ${i.desc.split(' — ')[0].toLowerCase()}`).join(', ')}`).join('')}, distribuídos conforme o mapa do capítulo 7 e com a exigência legal de cada um no capítulo 8.</> : 'Não resultam extintores do dimensionamento.'}{falta.length ? ' Há dados por preencher: o estudo só fica concluído depois de completos.' : ''}</P>
+        {p.conclusoes && <div className="mt-2 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}
+        <TermoAutor p={p} documento="o presente estudo" titulo={<H1 n={S()}>Termo do autor</H1>} />
+      </Sheet>
+
+      <Sheet className="page-break">
+        <H1 n={S()}>Anexos</H1>
+        <RevisoesDistribuicao p={p} />
+        <H2 n="C">Lista de abreviaturas</H2>
+        <Abreviaturas lista={ABREVIATURAS.filter(([a]) => ['ANEPC', 'RJ-SCIE', 'RT-SCIE', 'SCIE', 'UT', 'PR'].includes(a))} />
       </Sheet>
     </div>
   );
