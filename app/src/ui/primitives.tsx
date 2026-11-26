@@ -120,6 +120,12 @@ export function CatBadge({ cat, size = 'md' }: { cat: Cat | null; size?: 'sm' | 
   return <span className={`inline-flex items-center font-mono font-semibold text-white ${CAT_COR[cat]} ${s}`}>{cat}.ª CAT</span>;
 }
 
+/** Etiqueta dos projetos de dimensionamento de extintores (sem categoria de risco: o art. 163.º n.º 2 só usa a área) */
+export function ExtBadge({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const s = size === 'sm' ? 'h-6 px-2 text-[11px]' : 'h-7 px-2.5 text-[12px]';
+  return <span className={`inline-flex items-center border border-fire font-mono font-semibold text-fire-ink ${s}`} title="Projeto de dimensionamento de extintores (RT-SCIE, art. 163.º)">EXTINTORES</span>;
+}
+
 export function Note({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'warn' | 'fire' }) {
   const c = tone === 'warn' ? 'border-warn bg-warn-soft' : tone === 'fire' ? 'border-alerta bg-alerta-soft' : 'border-ink-4 bg-paper';
   return (

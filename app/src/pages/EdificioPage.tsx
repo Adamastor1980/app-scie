@@ -2,7 +2,7 @@ import { nomeUT } from '../nome';
 import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { go } from '../router';
-import { Area, CatBadge, Empty, Faltas, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
+import { Area, CatBadge, ExtBadge, Empty, Faltas, Field, Note, Num, Section, Text, Toggle } from '../ui/primitives';
 import { classeAltura } from '../data/rtscie';
 import { ROMANO, utInfo } from '../data/rjscie';
 import { classificar, efetivoUT, faltaCaracterizacao, faltaEdificio, fmt, maiorAlturaUT } from '../engine/calc';
@@ -65,13 +65,13 @@ export default function EdificioPage({ eid }: { eid: string }) {
               const ef = efetivoUT(u);
               const c = classificar(u, ef);
               return (
-                <button key={u.id} onClick={() => go(`/p/${p.id}/e/${e.id}/u/${u.id}/fatores`)} className="group flex items-center gap-4 bg-white p-4 text-left hover:bg-paper">
+                <button key={u.id} onClick={() => go(`/p/${p.id}/e/${e.id}/u/${u.id}/${p.modo === 'extintores' ? 'extintores' : 'fatores'}`)} className="group flex items-center gap-4 bg-white p-4 text-left hover:bg-paper">
                   <span className="w-16 font-display text-[36px] font-extrabold leading-none text-fire-ink">{ROMANO[u.tipo]}</span>
                   <span className="flex-1">
                     <span className="block font-semibold">{nomeUT(u).nome}</span>
                     <span className="ref">{utInfo(u.tipo).quadro} · efetivo {fmt(ef.total)} · H {fmt(u.altura, 1)} m</span>
                   </span>
-                  <CatBadge cat={c.falta.length ? null : c.cat} size="sm" />
+                  {p.modo === 'extintores' ? <ExtBadge size="sm" /> : <CatBadge cat={c.falta.length ? null : c.cat} size="sm" />}
                   <ArrowRight size={16} className="text-ink-4 group-hover:text-ink" />
                 </button>
               );

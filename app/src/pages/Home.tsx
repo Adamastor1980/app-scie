@@ -6,7 +6,7 @@ import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
 import { go } from '../router';
 import { classificar } from '../engine/calc';
-import { CatBadge, Empty } from '../ui/primitives';
+import { CatBadge, Empty, ExtBadge } from '../ui/primitives';
 import { ROMANO } from '../data/rjscie';
 import type { Projeto } from '../data/types';
 import { exemploProjeto } from '../exemplo';
@@ -88,7 +88,7 @@ export default function Home() {
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
-                    {uts.length > 0 && <CatBadge cat={max} size="sm" />}
+                    {p.modo === 'extintores' ? <ExtBadge size="sm" /> : uts.length > 0 && <CatBadge cat={max} size="sm" />}
                   </div>
                   <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
