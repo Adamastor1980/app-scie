@@ -295,6 +295,7 @@ async function enviar(inicial: boolean) {
       Promise.all([
         setDoc(doc(db, 'users', u.uid), { apagados }, { merge: true }),
         ...novas.map(([id]) => deleteDoc(doc(db, 'users', u.uid, 'projetos', id))),
+        ...novas.map(([id]) => apagarPublico(id).catch(() => undefined)), // ficha do cliente do projeto apagado
       ]).then(() => {
         Object.assign(lapidesNuvem, apagados);
         const l = lapidesPorEnviar();
@@ -339,7 +340,7 @@ async function enviar(inicial: boolean) {
   }
   // fichas públicas dos planos de manutenção partilhados com o cliente (só leitura, pelo QR)
   for (const p of st.projetos) {
-    if (p.exemplo || !p.manutencao?.partilhar) continue;
+    if (p.exemplo || !p.manutencao?.extintores.length) continue; // sempre: o QR de cada extintor abre a ficha do cliente
     const f = fichaPublica(p, u.uid);
     const sf = estavel(f);
     if (publicosEnviados.get(p.id) === sf) continue;
@@ -394,7 +395,7 @@ export async function terminarSessao() {
 }
 
 
-/** Deixa de partilhar: apaga a ficha pública do projeto */
+/** Apaga a ficha pública de um projeto (projeto apagado) */
 export async function apagarPublico(pid: string) {
   const f = fb();
   if (!f || !useNuvem.getState().user) return;

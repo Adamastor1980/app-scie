@@ -3,7 +3,7 @@ import { Building2, ListPlus, ChevronDown, ChevronRight, Copy, FileText, Plus, Q
 import LerQR from '../ui/LerQR';
 import { PesquisaExt } from './FichaExt';
 import { go } from '../router';
-import { apagarPublico, useNuvem } from '../cloud/sync';
+import { useNuvem } from '../cloud/sync';
 import { lerUrlExt } from '../engine/manutencao';
 import { useP } from './ProjetoShell';
 import VerificacaoExt from './VerificacaoExt';
@@ -116,17 +116,8 @@ export default function Manutencao() {
           <Field label="N.º de registo ANEPC" hint="Obrigatório para empresas de manutenção (RJ-SCIE, art. 23.º)."><Text value={pl.empresa.registoAnepc} onChange={(v) => upPl((x) => { x.empresa.registoAnepc = v; })} /></Field>
           <Field label="Técnico habitual"><Text value={pl.empresa.tecnico} onChange={(v) => upPl((x) => { x.empresa.tecnico = v; })} /></Field>
         </div>
-        <label className={`mt-5 flex max-w-3xl cursor-pointer items-start gap-3 border p-3 ${pl.partilhar ? 'border-ink bg-white' : 'border-paper-3 bg-white/60'}`}>
-          <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-[#14233A]" disabled={!user && !pl.partilhar} checked={!!pl.partilhar} onChange={(e) => {
-            const v = e.target.checked;
-            if (!v) apagarPublico(p.id).catch(() => alert('Não foi possível retirar a ficha pública agora (sem rede?). Tente de novo.'));
-            upPl((x) => { x.partilhar = v; });
-          }} />
-          <span className="text-[13px]"><b>Partilhar o histórico com o cliente</b><span className="block text-[12px] text-ink-3">{user
-            ? 'Quem ler o QR de um extintor (o cliente, sem conta) vê a ficha desse extintor só de leitura: estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado. Desligar retira a ficha.'
-            : 'Exige sessão iniciada com a conta Google: a ficha do cliente fica na nuvem.'}</span></span>
-        </label>
-        {pl.partilhar && avisoPublico && <p className="mt-2 max-w-3xl border-l-[3px] border-alerta bg-alerta-soft px-3 py-2 text-[12.5px] text-alerta">{avisoPublico}</p>}
+        <p className="mt-5 max-w-3xl border-l-[3px] border-ink-4 bg-white px-3 py-2 text-[12.5px] text-ink-2"><b>Ficha do cliente:</b> quem ler o QR de um extintor, mesmo sem conta, vê a ficha desse extintor só de leitura — estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado.{!user && ' Fica disponível quando iniciar sessão com a conta Google.'}</p>
+        {avisoPublico && <p className="mt-2 max-w-3xl border-l-[3px] border-alerta bg-alerta-soft px-3 py-2 text-[12.5px] text-alerta">{avisoPublico}</p>}
       </Section>
 
       <Section n="02" title="Extintores por edifício e piso" sub="Toque num extintor para ver os dados e o registo das manutenções." right={pl.extintores.length > 1 ? (

@@ -405,8 +405,6 @@ export interface PlanoManut {
   confirmados?: Record<string, boolean>;
   /** verificação legal ativada (opcional) */
   verificar?: boolean;
-  /** ficha pública só de leitura (quem ler o QR vê o histórico) — opcional, exige sessão iniciada */
-  partilhar?: boolean;
 }
 
 /** Estudo de sinalética — RT-SCIE, arts. 108.º a 112.º */
