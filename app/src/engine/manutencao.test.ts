@@ -93,3 +93,32 @@ describe('Existente × exigido por piso (RT-SCIE, art. 163.º n.º 2)', () => {
     expect(r.map((x) => [x.piso, x.n, x.cumpre])).toEqual([[0, 0, false], [1, 2, true]]);
   });
 });
+
+import { faltaEmpresa, fichaPublica, lerUrlExt, procurarExt, registoOK, urlExt } from './manutencao';
+
+describe('QR, pesquisa pelo número e registo rápido', () => {
+  it('endereço do QR e leitura', () => {
+    const u = urlExt('p1', 'e9', 'https://cautelaengenharia.pt/');
+    expect(u).toBe('https://cautelaengenharia.pt/#/x/p1/e9');
+    expect(lerUrlExt(u)).toEqual({ pid: 'p1', eid: 'e9' });
+    expect(lerUrlExt('texto qualquer')).toBeNull();
+  });
+  it('pesquisa: «7» encontra EXT-07; «ext 7» e «EXT-07» também; parcial pelo local', () => {
+    const l = [ext('EXT-07', { local: 'Receção' }), ext('EXT-17', { local: 'Armazém' }), ext('A-3', { local: 'Cozinha' })];
+    expect(procurarExt(l, '7')[0].num).toBe('EXT-07');
+    expect(procurarExt(l, 'ext 07')[0].num).toBe('EXT-07');
+    expect(procurarExt(l, 'a-3').map((e) => e.num)).toEqual(['A-3']);
+    expect(procurarExt(l, 'cozin').map((e) => e.num)).toEqual(['A-3']);
+  });
+  it('«tudo OK» regista manutenção conforme de hoje com a empresa; sem registo ANEPC não deixa', () => {
+    const r = registoOK({ nome: 'Firma', registoAnepc: '12', tecnico: 'Rui' }, '2026-11-27');
+    expect(r).toMatchObject({ data: '2026-11-27', tipo: 'manutencao', resultado: 'conforme', empresa: 'Firma', registoAnepc: '12', tecnico: 'Rui' });
+    expect(faltaEmpresa({ nome: 'Firma', registoAnepc: '', tecnico: 'Rui' }).map((f) => f[0])).toEqual(['N.º de registo ANEPC']);
+  });
+  it('ficha pública: só o necessário (sem os outros dados do projeto)', () => {
+    const p = novoProjeto(); p.manutencao = { periodoMeses: 12, empresa: { nome: '', registoAnepc: '', tecnico: '' }, extintores: [ext('EXT-01', { edificio: p.edificios[0].id, registos: [reg('2026-01-01')] })] };
+    const f = fichaPublica(p, 'uid1');
+    expect(f.dono).toBe('uid1'); expect(f.extintores[0]).toMatchObject({ num: 'EXT-01', edificio: 'Edifício 1', desc: 'Pó químico ABC 6 kg' });
+    expect(Object.keys(f)).not.toContain('edificios'); expect(f.extintores[0].registos[0]).not.toHaveProperty('id');
+  });
+});

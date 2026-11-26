@@ -10,6 +10,7 @@ import Conta, { useLigacaoNuvem } from './cloud/Conta';
 import { useNuvem } from './cloud/sync';
 import { nuvemDisponivel } from './cloud/firebase';
 import Entrar from './pages/Entrar';
+import AbrirQR from './pages/AbrirQR';
 import { NomeApp, Simbolo } from './ui/Marca';
 
 function Logo() {
@@ -36,6 +37,10 @@ export default function App() {
   const isTabelas = path.startsWith('/tabelas');
   const isPerfil = path.startsWith('/empresa');
   const { user, verificado } = useNuvem();
+
+  // QR de um extintor: o dono vai para a ficha completa; o cliente (sem sessão) vê a ficha pública só de leitura
+  const mx = match('/x/:pid/:eid', path);
+  if (mx) return ready ? <AbrirQR pid={mx.pid} eid={mx.eid} /> : <div className="grid min-h-[100dvh] place-items-center bg-paper"><Simbolo className="h-16 w-16 animate-pulse" /></div>;
 
   // sem sessão iniciada só se mostra o ecrã de entrada (nenhum dado visível)
   // VITE_SEM_LOGIN: só para testes automáticos locais (nunca definido na publicação)

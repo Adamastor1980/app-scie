@@ -225,6 +225,13 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - ⚠️ **Mínimo, não contagem final:** «1 por cada 30 m» e «1 por saída» são o mínimo que resulta da lei; a visibilidade a partir de qualquer ponto (art. 112.º n.os 1 e 5) só se confirma na planta. Declarado no ecrã e no documento.
 - **Importação:** o n.º de placas «Extintor» por piso pode vir de um projeto de extintores (mapa) ou de manutenção (inventário).
 
+### D-42 — QR nos extintores, pesquisa pelo número e ficha para o cliente ✅
+- **Decisão:** cada extintor do plano de manutenção tem uma etiqueta 50 × 30 mm (A4, 4 × 9) com QR, n.º, edifício, piso, local e tipo. O QR leva o endereço `#/x/projeto/extintor` (identificador interno, não o n.º, para não falhar se se renumerar).
+- **Ao ler:** o técnico (dono do projeto) abre a ficha do extintor — histórico e o botão «Manutenção efetuada — está tudo OK», que regista hoje uma manutenção periódica conforme com a empresa, o n.º de registo ANEPC e o técnico (obrigatórios: RT-SCIE, art. 201.º n.º 1 c); RJ-SCIE, art. 23.º) e recomeça a contagem do período. Com observações, não conforme ou outra intervenção, abre o registo completo.
+- **Leitura:** botão «Ler QR» dentro da app (câmara de trás, leitura no aparelho, funciona sem rede, também no iPhone) e pesquisa pelo n.º escrito no extintor («7» encontra EXT-07). A câmara do telemóvel também abre o endereço (no iPhone, no Safari).
+- **Cliente:** opcional («Partilhar o histórico com o cliente», desligado por omissão, exige sessão). A ficha pública tem só os dados dos extintores (n.º, local, tipo, histórico, empresa); é lida por quem tiver o endereço (QR), não pode ser listada e só o dono a escreve (regras em firebase/firestore.rules — atualizar na consola da Firebase).
+- **Etiqueta:** colocar junto ao extintor sem tapar a marcação do fabricante nem a etiqueta da empresa de manutenção.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Building2, ListPlus, ChevronDown, ChevronRight, Copy, FileText, Plus, Sheet, Trash2, Wrench } from 'lucide-react';
+import { Building2, ListPlus, ChevronDown, ChevronRight, Copy, FileText, Plus, QrCode, ScanLine, Sheet, Trash2, Wrench } from 'lucide-react';
+import LerQR from '../ui/LerQR';
+import { PesquisaExt } from './FichaExt';
+import { go } from '../router';
+import { apagarPublico, useNuvem } from '../cloud/sync';
+import { lerUrlExt } from '../engine/manutencao';
 import { useP } from './ProjetoShell';
 import VerificacaoExt from './VerificacaoExt';
 import { opcoesServe } from '../engine/verificacaoExt';
@@ -51,6 +56,9 @@ export default function Manutencao() {
   const pl = p.manutencao;
   useEffect(() => { if (!p.manutencao) up((q) => { q.manutencao = novoPlanoManut(); }); }, [p.manutencao, up]);
   const [aberto, setAberto] = useState<Set<string>>(new Set());
+  const [qr, setQr] = useState(false);
+  const [etq, setEtq] = useState<{ ed: string; inicio: number } | null>(null);
+  const user = useNuvem((n) => n.user);
   const [lote, setLote] = useState<{ data: string; tipo: TipoManut; ed: string } | null>(null);
   if (!pl) return null;
 
@@ -76,10 +84,26 @@ export default function Manutencao() {
         <h1 className="h-display mt-2 text-[34px] sm:text-[40px]">Plano de manutenção de extintores</h1>
         <p className="mt-2 max-w-3xl text-[13px] text-ink-3">Listagem dos extintores por edifício e por piso, registo de cada intervenção (data, tipo, empresa, técnico e observações) e contagem até à próxima manutenção.</p>
         <div className="mt-4"><ResumoManut pl={pl} /></div>
+        {pl.extintores.length > 0 && <div className="mt-4 max-w-[520px]"><PesquisaExt lista={pl.extintores} abrir={(e) => go(`/p/${p.id}/ext/${e.id}`)} sub={(e) => `${p.edificios.find((z) => z.id === e.edificio)?.nome ?? ''} · ${rotuloPisoInv(e.piso)} · ${e.local || '—'}`} /></div>}
         <div className="mt-4 flex flex-wrap gap-2">
+          <button className="btn-fire h-10 px-4" disabled={!pl.extintores.length} onClick={() => setQr(true)}><ScanLine size={16} /> Ler QR do extintor</button>
+          <button className="btn h-10 px-4" disabled={!pl.extintores.length} onClick={() => setEtq(etq ? null : { ed: '', inicio: 1 })}><QrCode size={15} /> Etiquetas QR (PDF)</button>
           <a className="btn h-10 px-4" href={`${base}/manutencao/doc`}><FileText size={15} /> Registo de manutenção (PDF)</a>
           <button className="btn h-10 px-4" disabled={!pl.extintores.length} onClick={() => import('../exportarManutencao').then((m) => m.exportarManutencaoExcel(p)).catch((e) => alert('Não foi possível exportar: ' + (e as Error).message))}><Sheet size={15} /> Exportar Excel</button>
         </div>
+        {etq && (
+          <div className="mt-3 grid gap-3 border border-ink bg-paper p-3 sm:grid-cols-[1fr_160px_auto]">
+            <Field label="Extintores"><select className="input" value={etq.ed} onChange={(e) => setEtq({ ...etq, ed: e.target.value })}><option value="">Todos ({pl.extintores.length})</option>{p.edificios.map((z) => <option key={z.id} value={z.id}>{z.nome} ({pl.extintores.filter((e) => e.edificio === z.id).length})</option>)}</select></Field>
+            <Field label="Começar na etiqueta n.º" hint="Para aproveitar folhas já usadas (1 a 36)."><Num value={etq.inicio} min={1} onChange={(v) => setEtq({ ...etq, inicio: Math.min(36, Math.max(1, Math.round(v))) })} /></Field>
+            <div className="flex items-end"><button className="btn-fire h-10 w-full px-4" onClick={() => import('../exportarEtiquetas').then((m) => m.exportarEtiquetas(p, ordenar(pl.extintores.filter((e) => !etq.ed || e.edificio === etq.ed), ordemEd), etq.inicio)).catch((e) => alert('Não foi possível gerar: ' + (e as Error).message))}>Gerar PDF</button></div>
+            <p className="text-[11.5px] text-ink-3 sm:col-span-3">Etiquetas de 50 × 30 mm, 36 por folha A4 (4 × 9), em papel autocolante. Cole junto ao extintor (suporte ou parede), sem tapar a marcação do fabricante nem a etiqueta da empresa de manutenção.</p>
+          </div>
+        )}
+        {qr && (
+          <LerQR onLido={(t) => { setQr(false); const u = lerUrlExt(t); if (u) go(u.pid === p.id ? `/p/${p.id}/ext/${u.eid}` : `/x/${u.pid}/${u.eid}`); else alert('Este QR não é de um extintor da Cautela.'); }} onFechar={() => setQr(false)}>
+            <PesquisaExt lista={pl.extintores} abrir={(e) => { setQr(false); go(`/p/${p.id}/ext/${e.id}`); }} />
+          </LerQR>
+        )}
       </div>
 
       <Section n="01" title="Periodicidade e empresa de manutenção" sub="A empresa indicada aqui preenche sozinha os novos registos; pode alterá-los em cada um.">
@@ -91,6 +115,16 @@ export default function Manutencao() {
           <Field label="N.º de registo ANEPC" hint="Obrigatório para empresas de manutenção (RJ-SCIE, art. 23.º)."><Text value={pl.empresa.registoAnepc} onChange={(v) => upPl((x) => { x.empresa.registoAnepc = v; })} /></Field>
           <Field label="Técnico habitual"><Text value={pl.empresa.tecnico} onChange={(v) => upPl((x) => { x.empresa.tecnico = v; })} /></Field>
         </div>
+        <label className={`mt-5 flex max-w-3xl cursor-pointer items-start gap-3 border p-3 ${pl.partilhar ? 'border-ink bg-white' : 'border-paper-3 bg-white/60'}`}>
+          <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-[#14233A]" disabled={!user && !pl.partilhar} checked={!!pl.partilhar} onChange={(e) => {
+            const v = e.target.checked;
+            if (!v) apagarPublico(p.id).catch(() => alert('Não foi possível retirar a ficha pública agora (sem rede?). Tente de novo.'));
+            upPl((x) => { x.partilhar = v; });
+          }} />
+          <span className="text-[13px]"><b>Partilhar o histórico com o cliente</b><span className="block text-[12px] text-ink-3">{user
+            ? 'Quem ler o QR de um extintor (o cliente, sem conta) vê a ficha desse extintor só de leitura: estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado. Desligar retira a ficha.'
+            : 'Exige sessão iniciada com a conta Google: a ficha do cliente fica na nuvem.'}</span></span>
+        </label>
       </Section>
 
       <Section n="02" title="Extintores por edifício e piso" sub="Toque num extintor para ver os dados e o registo das manutenções." right={pl.extintores.length > 1 ? (
@@ -177,7 +211,7 @@ export default function Manutencao() {
 }
 
 
-function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edificios }: {
+export function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edificios }: {
   e: ExtintorInv; pl: PlanoManut; aberto: boolean; alternar: () => void; upExt: (fn: (e: ExtintorInv) => void) => void; duplicar: () => void; apagar: () => void;
   edificios?: { id: string; nome: string }[];
 }) {

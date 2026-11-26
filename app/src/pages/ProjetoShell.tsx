@@ -3,6 +3,7 @@ import Manutencao from './Manutencao';
 import ManutencaoDoc from './ManutencaoDoc';
 import Sinaletica from './Sinaletica';
 import SinaleticaDoc from './SinaleticaDoc';
+import FichaExt from './FichaExt';
 import FichaSeguranca from './FichaSeguranca';
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -61,6 +62,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
 
   const mU = match('/e/:eid/u/:uid/:step', rel) || match('/e/:eid/u/:uid', rel);
   const mE = match('/e/:eid', rel);
+  const mX = match('/ext/:xid', rel);
 
   const adicionarUT = (eid: string, tipo: UTNum, nome: string) => {
     const ut = novaUT(tipo);
@@ -84,6 +86,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   else if (rel === '/extintores') page = <EstudoExtintores />;
   else if (rel === '/manutencao') page = <Manutencao />;
   else if (rel === '/manutencao/doc') page = <ManutencaoDoc />;
+  else if (mX) page = <FichaExt eid={mX.xid} />;
   else if (rel === '/sinaletica') page = <Sinaletica />;
   else if (rel === '/sinaletica/doc') page = <SinaleticaDoc />;
   else if (mU) page = <UTPage eid={mU.eid} uid={mU.uid} step={mU.step ?? 'fatores'} />;

@@ -5,6 +5,10 @@ import { fb } from './firebase';
 import { useStore } from '../store';
 import type { Projeto } from '../data/types';
 import { logoLeve } from '../ui/primitives';
+import { fichaPublica, type FichaPublicaDoc } from '../engine/manutencao';
+
+/** fichas públicas de manutenção já enviadas (por projeto): só se reenvia quando mudam */
+const publicosEnviados = new Map<string, string>();
 
 /**
  * Sincronização com o Firestore.
@@ -331,6 +335,15 @@ async function enviar(inicial: boolean) {
     enviados.delete(pid);
     tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'projetos', pid)));
   }
+  // fichas públicas dos planos de manutenção partilhados com o cliente (só leitura, pelo QR)
+  for (const p of st.projetos) {
+    if (p.exemplo || !p.manutencao?.partilhar) continue;
+    const f = fichaPublica(p, u.uid);
+    const sf = estavel(f);
+    if (publicosEnviados.get(p.id) === sf) continue;
+    publicosEnviados.set(p.id, sf);
+    tarefas.push(setDoc(doc(db, 'publico', p.id), limpo(f)).catch((e) => { publicosEnviados.delete(p.id); throw e; }));
+  }
   if (!inicial) {
     for (const pid of [...enviados.keys()]) {
       if (ids.has(pid)) continue;
@@ -371,4 +384,27 @@ export async function terminarSessao() {
   useStore.setState({ projetos: [], empresaPadrao: null, autorPadrao: null });
   aplicarRemoto = false;
   useNuvem.setState({ estado: 'local', user: null });
+}
+
+
+/** Deixa de partilhar: apaga a ficha pública do projeto */
+export async function apagarPublico(pid: string) {
+  const f = fb();
+  if (!f || !useNuvem.getState().user) return;
+  publicosEnviados.delete(pid);
+  await deleteDoc(doc(f.db, 'publico', pid));
+}
+
+/** Ficha pública de um projeto (lida sem sessão iniciada); null se não estiver partilhada */
+export async function lerPublico(pid: string): Promise<FichaPublicaDoc | null> {
+  const f = fb();
+  if (!f) return null;
+  try {
+    const d = await getDoc(doc(f.db, 'publico', pid));
+    return d.exists() ? (d.data() as FichaPublicaDoc) : null;
+  } catch (e) {
+    // sem permissão = ficha não partilhada (ou regras por atualizar): não é falta de rede
+    if ((e as { code?: string }).code === 'permission-denied') return null;
+    throw e;
+  }
 }

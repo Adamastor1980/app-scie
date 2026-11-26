@@ -1,7 +1,10 @@
 import Rodape from '../ui/Rodape';
 import LogoPreto from '../ui/LogoPreto';
 import { useRef, useState } from 'react';
-import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, Signpost, Trash2, Upload, Wrench } from 'lucide-react';
+import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, ScanLine, Signpost, Trash2, Upload, Wrench } from 'lucide-react';
+import LerQR from '../ui/LerQR';
+import { PesquisaExt } from './FichaExt';
+import { lerUrlExt } from '../engine/manutencao';
 import { resumoManut } from '../engine/manutencao';
 import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
@@ -17,6 +20,8 @@ export default function Home() {
   const projetos = todos.filter((p) => !p.exemplo);
   const fileRef = useRef<HTMLInputElement>(null);
   const [extMenu, setExtMenu] = useState(false);
+  const [qr, setQr] = useState(false);
+  const todosExt = projetos.flatMap((p) => (p.manutencao?.extintores ?? []).map((e) => ({ e, p })));
   const empresa = useStore((s) => s.empresaPadrao);
   const autor = useStore((s) => s.autorPadrao);
 
@@ -59,6 +64,7 @@ export default function Home() {
             )}
           </div>
           <button className="btn h-10 px-4" title="Estudo de sinalética de segurança (RT-SCIE, arts. 108.º a 112.º)" onClick={() => go(`/p/${criar('sinaletica')}`)}><Signpost size={16} /> Sinalética</button>
+          {todosExt.length > 0 && <button className="btn h-10 px-3" onClick={() => setQr(true)}><ScanLine size={16} /> Ler QR</button>}
           <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
           {projetos.length > 0 && (
             <button className="btn h-10 px-3" onClick={() => {
@@ -71,6 +77,12 @@ export default function Home() {
               }}><Download size={15} /> Exportar todos (JSON)</button>
           )}
           <button className="btn h-10 px-3" onClick={() => go(`/p/${abrirExemplo(exemploProjeto())}`)}>Abrir exemplo</button>
+          {qr && (
+            <LerQR onLido={(t) => { setQr(false); const u = lerUrlExt(t); if (u) go(`/x/${u.pid}/${u.eid}`); else alert('Este QR não é de um extintor da Cautela.'); }} onFechar={() => setQr(false)}>
+              <PesquisaExt lista={todosExt.map((x) => x.e)} abrir={(e) => { const x = todosExt.find((z) => z.e.id === e.id)!; setQr(false); go(`/p/${x.p.id}/ext/${e.id}`); }}
+                sub={(e) => { const x = todosExt.find((z) => z.e.id === e.id)!; return `${x.p.nome} · ${x.p.edificios.find((z) => z.id === e.edificio)?.nome ?? ''} · ${e.local || '—'}`; }} />
+            </LerQR>
+          )}
           <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
         </div>
       </div>

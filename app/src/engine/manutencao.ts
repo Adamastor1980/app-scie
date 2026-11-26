@@ -158,3 +158,53 @@ export function comparaEdificio(pl: PlanoManut, edificio: string): ComparaPiso[]
   const pisos = [...new Set([...doEd.map((e) => e.piso as number), ...Object.keys(areas).map(Number)])].sort((a, b) => a - b);
   return pisos.map((pi) => comparaPiso(pi, areas[String(pi)] ?? 0, doEd.filter((e) => e.piso === pi)));
 }
+
+/* ---------- QR, pesquisa pelo número e registo rápido ---------- */
+
+/** Endereço gravado no QR de cada extintor: abre a ficha (dono) ou a ficha pública (cliente) */
+export const urlExt = (pid: string, eid: string, base = `${location.origin}${location.pathname}`) => `${base}#/x/${pid}/${eid}`;
+/** Lê um QR (endereço da app) → { pid, eid } */
+export function lerUrlExt(t: string): { pid: string; eid: string } | null {
+  const m = /#\/x\/([^/?#\s]+)\/([^/?#\s]+)/.exec(t);
+  return m ? { pid: decodeURIComponent(m[1]), eid: decodeURIComponent(m[2]) } : null;
+}
+
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s._-]+/g, '');
+/** Pesquisa pelo número escrito no extintor: exato primeiro («7» encontra EXT-07), depois parcial; também pelo local */
+export function procurarExt(lista: ExtintorInv[], q: string): ExtintorInv[] {
+  const n = norm(q);
+  if (!n) return [];
+  const so = n.replace(/^0+/, '');
+  const num = (e: ExtintorInv) => norm(e.num);
+  const digitos = (e: ExtintorInv) => (/(\d+)\s*$/.exec(e.num)?.[1] ?? '').replace(/^0+/, '');
+  const exatos = lista.filter((e) => num(e) === n || (/^\d+$/.test(n) && digitos(e) === so));
+  const parciais = lista.filter((e) => !exatos.includes(e) && (num(e).includes(n) || norm(e.local).includes(n) || norm(e.serie).includes(n)));
+  return [...exatos, ...parciais];
+}
+
+/** Registo rápido «manutenção efetuada, tudo conforme» com a empresa indicada */
+export const registoOK = (empresa: PlanoManut['empresa'], data = hojeISO(), id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`): RegistoManut => ({
+  id, data, tipo: 'manutencao', resultado: 'conforme', empresa: empresa.nome, registoAnepc: empresa.registoAnepc, tecnico: empresa.tecnico, obs: 'Manutenção efetuada — tudo conforme',
+});
+export const faltaEmpresa = (empresa: PlanoManut['empresa']): [string, string][] => faltaReg({ id: '', data: hojeISO(), tipo: 'manutencao', resultado: 'conforme', empresa: empresa.nome, registoAnepc: empresa.registoAnepc, tecnico: empresa.tecnico, obs: '' });
+
+/** Ficha pública (só leitura): o mínimo para o cliente ver o estado e o histórico de cada extintor */
+export interface FichaPublicaDoc {
+  dono: string; atualizadoEm: number; projeto: string; cliente: string; morada: string;
+  empresa: { nome: string; telefone: string; email: string };
+  periodoMeses: number;
+  extintores: { id: string; num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id'>[] }[];
+}
+export function fichaPublica(p: Projeto, dono: string): FichaPublicaDoc {
+  const pl = p.manutencao!;
+  const nomeEd = (id: string) => p.edificios.find((e) => e.id === id)?.nome ?? '';
+  return {
+    dono, atualizadoEm: p.atualizadoEm, projeto: p.nome, cliente: p.cliente, morada: [p.morada, p.concelho].filter(Boolean).join(', '),
+    empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
+    periodoMeses: pl.periodoMeses,
+    extintores: pl.extintores.map((e) => ({
+      id: e.id, num: e.num, edificio: nomeEd(e.edificio), piso: e.piso, local: e.local, desc: descExt(e), eficacia: e.eficacia, ...(e.ano ? { ano: e.ano } : {}),
+      registos: [...e.registos].sort((a, b) => b.data.localeCompare(a.data)).map(({ id: _i, ...r }) => r), // eslint-disable-line @typescript-eslint/no-unused-vars
+    })),
+  };
+}
