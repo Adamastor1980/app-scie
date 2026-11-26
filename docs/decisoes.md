@@ -1,7 +1,7 @@
 # Registo de decisões — Cautela SCIE
 
 Cada entrada regista uma interpretação da lei feita na aplicação: o que se decidiu, a base legal, porquê, e o que ficou por confirmar.
-Serve de base ao capítulo de metodologia e à secção de limitações do projeto final (Licenciatura em Engenharia da Segurança do Trabalho, ISLA Gaia, 2026/2027).
+Serve de base ao capítulo de metodologia e à secção de limitações do projeto final (Licenciatura em Engenharia da Segurança do Trabalho, Instituto Politécnico de Gestão e Tecnologia, ISLA Gaia, 2026/2027).
 
 **Diplomas** (únicos admitidos como base, textos em `docs/legislacao/`):
 - **RJ-SCIE** — Decreto-Lei n.º 220/2008, de 12 de novembro, na redação da Lei n.º 123/2019, de 18 de outubro;
