@@ -1,5 +1,6 @@
+import { Fragment } from 'react';
 import type { Cat, UT } from '../data/types';
-import { CONVERSAO, NOME_AGENTE, UNIDADE, dimensionarExtintores } from '../engine/extintores';
+import { CONVERSAO, NOTA_RECOM, NOME_AGENTE, UNIDADE, dimensionarExtintores, type LinhaMapa } from '../engine/extintores';
 import { fmt } from '../engine/calc';
 
 /** Quadro de dimensionamento de extintores de uma UT — o mesmo no relatório e no estudo de extintores. */
@@ -27,13 +28,39 @@ export function QuadroExtintores({ ut, cat }: { ut: UT; cat: Cat }) {
           </tbody>
         </table>
       )}
-      {r.extras.length > 0 && (
-        <table className="tbl mb-2"><tbody>
-          {r.extras.map((e, i) => <tr key={i}><td className="text-[11.5px]">{e.texto}</td><td className="w-[30%] text-[10px] text-ink-3">{e.base}</td></tr>)}
-        </tbody></table>
-      )}
-      {r.co2.length > 0 && <p className="mb-1 text-[11px] text-ink-2">Complemento (não conta para a alínea a)): {r.co2.map((k) => `${k.qtd} × CO₂ ${fmt(k.kg, 1)} kg — ${k.local || 'local por indicar'}`).join('; ')}.</p>}
       {(temPo || r.co2.length > 0) && <p className="text-[10.5px] text-ink-3">{[temPo && CONVERSAO.po.texto, r.co2.length > 0 && CONVERSAO.co2.texto].filter(Boolean).join('. ')} — {CONVERSAO.fonte}.</p>}
+    </div>
+  );
+}
+
+/** Mapa final de extintores — o quê, onde e quantos (todas as UT). Exigido por lei e recomendação técnica sempre separados. */
+export function MapaExtintores({ linhas }: { linhas: { ut: string; l: LinhaMapa }[] }) {
+  if (!linhas.length) return null;
+  const temRecom = linhas.some((x) => x.l.recom);
+  const grupos = [...new Set(linhas.map((x) => x.ut))];
+  const cols = temRecom ? 5 : 4;
+  return (
+    <div>
+      <table className="tbl mb-2">
+        <thead><tr><th className="w-[30%]">Onde</th><th className="w-[24%]">O quê</th><th className="w-[9%] text-right">Qtd.</th><th>Exigido por lei</th>{temRecom && <th className="w-[15%]">Recomendação técnica</th>}</tr></thead>
+        <tbody>
+          {grupos.map((g) => (
+            <Fragment key={g}>
+              {<tr><td colSpan={cols} className="bg-paper font-display text-[11.5px] font-bold">{g}</td></tr>}
+              {linhas.filter((x) => x.ut === g).map(({ l }, i) => (
+                <tr key={i} className="avoid-break">
+                  <td className="text-[11px]">{l.onde}</td>
+                  <td className="text-[11.5px] font-semibold">{l.oque}</td>
+                  <td className="num text-right text-[11.5px] font-bold">{l.qtd}</td>
+                  <td className="text-[10.5px]">{l.lei}<span className="ref block">{l.base}</span></td>
+                  {temRecom && <td className="text-[10.5px] italic text-ink-2">{l.recom ?? '—'}</td>}
+                </tr>
+              ))}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+      {temRecom && <p className="text-[10.5px] text-ink-3">{NOTA_RECOM}</p>}
     </div>
   );
 }

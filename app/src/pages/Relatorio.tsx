@@ -1,4 +1,5 @@
-import { QuadroExtintores } from './ExtintoresQuadro';
+import { MapaExtintores, QuadroExtintores } from './ExtintoresQuadro';
+import { dimensionarExtintores } from '../engine/extintores';
 import { LEI_VERIFICADA_EM, VERSAO_APP, baseLegalDoc, notaVersao } from '../versao';
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
 import { GLOSSARIO } from '../data/glossario';
@@ -389,6 +390,10 @@ export default function Relatorio() {
             <QuadroExtintores ut={ut} cat={cls.cat} />
           </div>
         ))}
+        {(() => { const linhas = todas.flatMap(({ ut, ed, cls }) => dimensionarExtintores(ut, cls.cat).mapa.map((l) => ({ ut: `${ed.nome} · ${tituloUT(ut)}`, l }))); return linhas.length > 0 && (<>
+          <H2 n={`${sec}.${todas.length + 1}`}>Mapa de extintores — o quê, onde e quantos</H2>
+          <MapaExtintores linhas={linhas} />
+        </>); })()}
 
         <H1 n={S()}>Condições de segurança exigíveis</H1>
         <P>Organizadas segundo os capítulos II a VII da memória descritiva do anexo IV do RJ-SCIE (art. 2.º), com a mesma numeração. Para cada utilização-tipo, as exigências são concretizadas em função da categoria de risco, da altura do edifício e dos locais de risco. «Verificar» identifica exigências cujo cumprimento depende de elementos de projeto não introduzidos; «n/a» indica a razão legal da não aplicação.</P>

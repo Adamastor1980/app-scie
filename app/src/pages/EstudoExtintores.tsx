@@ -1,7 +1,7 @@
 import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
-import { QuadroExtintores } from './ExtintoresQuadro';
+import { MapaExtintores, QuadroExtintores } from './ExtintoresQuadro';
 import { classificar, fmt, pisosUT } from '../engine/calc';
 import { dimensionarExtintores } from '../engine/extintores';
 import { tituloUT } from '../nome';
@@ -64,7 +64,7 @@ export default function EstudoExtintores() {
         <P>Quando se usa pó químico, a equivalência ao agente padrão segue o critério técnico justificado admitido pelo n.º 2: kg de pó = litros de água ÷ 2. Os extintores de CO₂ são complemento (quadros elétricos, locais técnicos) e não contam para a alínea a), por não terem eficácia em fogos da classe A.</P>
 
         <H1 n={S()}>Dimensionamento por utilização-tipo</H1>
-        <P>Inclui os extintores dos locais e situações específicas: locais de risco C e F (n.º 4), cozinhas e laboratórios (n.º 5), centrais térmicas (n.º 6), tendas e insufláveis (n.º 7) e as condições específicas da UT (arts. 209.º a 211.º, 226.º, 273.º, 286.º e 307.º).</P>
+        <P>Cálculo por piso. Os extintores dos locais e situações específicas — locais de risco C e F (n.º 4), cozinhas e laboratórios (n.º 5), centrais térmicas (n.º 6), tendas e insufláveis (n.º 7) e condições específicas da UT (arts. 209.º a 211.º, 226.º, 273.º, 286.º e 307.º) — estão no mapa final.</P>
         {res.map(({ ed, ut, cat }, i) => (
           <div key={ut.id} className="avoid-break">
             <H2 n={`${n}.${i + 1}`}>{ed.nome} · {tituloUT(ut)}</H2>
@@ -80,7 +80,9 @@ export default function EstudoExtintores() {
           <li>Extintores conformes com as normas EN 3, EN 1866 e NP 4413 (anexo I, art. 8.º n.º 9).</li>
         </ul>
 
-        <H1 n={S()}>Quadro-resumo</H1>
+        <H1 n={S()}>Mapa de extintores — o quê, onde e quantos</H1>
+        <MapaExtintores linhas={res.flatMap(({ ed, ut, r }) => r.mapa.map((l) => ({ ut: `${ed.nome} · ${tituloUT(ut)}`, l })))} />
+        <p className="keep-next mb-1 mt-4 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-fire-ink">Totais</p>
         {tot.size || sit || mov ? (
           <table className="tbl mb-2"><thead><tr><th>Extintor</th><th className="w-24 text-right">Quantidade</th></tr></thead>
             <tbody>{[...tot.entries()].map(([d, q]) => <tr key={d}><td>{d}{d.startsWith('CO₂') ? '' : ' — nos pisos'}</td><td className="num text-right font-semibold">{q}</td></tr>)}
@@ -89,7 +91,6 @@ export default function EstudoExtintores() {
               {mov > 0 && <tr><td>Extintores móveis de 50 kg</td><td className="num text-right font-semibold">{mov}</td></tr>}
             </tbody></table>
         ) : <P>Sem extintores portáteis calculados por piso.</P>}
-        {res.some((x) => x.r.resumo.semQtd) && <p className="text-[11.5px] text-ink-2">Acrescem os meios sem quantidade fixa indicados na secção 4 (ex.: manta ignífuga).</p>}
 
         {falta.length > 0 && (
           <div className="no-print mt-6 border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[12px]">

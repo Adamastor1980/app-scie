@@ -116,3 +116,17 @@ describe('Resumo e localização dos locais C/F', () => {
     expect(dimensionarExtintores(x, 2).resumo.moveis).toBe(3);
   });
 });
+
+describe('Mapa final — o quê, onde e quantos', () => {
+  it('pisos, cozinha (25F + manta, n.º 5), local F com recomendação, central térmica (34 B + areia)', () => {
+    const u = ut(3, [300, 200]);
+    u.extintores = { combustivelCT: 'solido_liquido', queimadores: 2, locais: [{ id: 'a', nome: 'piso −1', tipo: 'C', alinea: 'c' }, { id: 'b', nome: 'piso 0', tipo: 'F', alinea: 'b' }] };
+    const m = dimensionarExtintores(u, 2).mapa;
+    expect(m.filter((l) => l.base.startsWith('RT-SCIE, art. 163.º n.os 1 a 3'))).toHaveLength(2);
+    const coz = m.find((l) => l.onde.includes('Cozinha'))!;
+    expect(coz.oque).toContain('25F'); expect(coz.oque).toContain('manta'); expect(coz.recom).toBeUndefined();
+    expect(m.find((l) => l.onde.includes('Centro de gestão'))!.recom).toContain('CO₂');
+    expect(m.find((l) => l.oque.includes('34 B'))!.qtd).toBe('4');
+    expect(m.some((l) => l.oque.includes('100 l de areia'))).toBe(true);
+  });
+});

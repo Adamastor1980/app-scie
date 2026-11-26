@@ -38,12 +38,28 @@ export interface PisoExt {
 }
 /** qtd = extintores portáteis; moveis = extintores móveis (50 kg); sem nenhum = medida sem quantidade fixa (ex.: manta ignífuga) */
 export interface Extra { texto: string; base: string; qtd?: number; moveis?: number }
+/** Linha do mapa final de extintores: o quê, onde e quantos; «lei» = o que o RT-SCIE exige; «recom» = recomendação técnica quando a lei não fixa o tipo */
+export interface LinhaMapa { onde: string; oque: string; qtd: string; lei: string; base: string; recom?: string }
+
+/** Recomendações técnicas de agente por tipo de local (não exigidas pelo RT-SCIE, que só obriga a que o local seja «dotado de extintores») */
+export const RECOM_LOCAL: Record<string, string> = {
+  'C:a': 'pó químico ABC', 'C:b': 'pó químico ABC ou CO₂ (líquidos inflamáveis)', 'C:d': 'água ou espuma (sólidos — classe A)',
+  'C:e': 'pó químico ABC', 'C:f': 'CO₂ (equipamento elétrico)', 'C:g': 'água ou espuma (papel, cartão — classe A)', 'C:h': 'CO₂ (equipamento elétrico)',
+  'C:i': 'água ou espuma (classe A)', 'C:j': 'CO₂ (equipamento elétrico e eletromecânico)', 'C:k': 'pó químico ABC ou espuma (líquidos inflamáveis)',
+  'C:l': 'pó químico ABC', 'C:m': 'pó químico ABC', 'C:n': 'pó químico ABC',
+  'F:a': 'CO₂ (equipamento eletrónico)', 'F:b': 'CO₂ (equipamento eletrónico)', 'F:c': 'CO₂ (equipamento eletrónico)', 'F:d': 'CO₂ (equipamento eletrónico)',
+  'F:e': 'CO₂ (equipamento eletrónico)', 'F:f': 'pó químico ABC e CO₂', 'F:g': 'CO₂ (equipamento elétrico)',
+};
+export const NOTA_RECOM = 'Recomendação técnica: não é exigida pelo RT-SCIE, que só obriga a que estes locais sejam dotados de extintores (art. 163.º n.º 4); escolher o agente adequado à classe de fogo provável.';
+
 export interface ResultadoExt {
   exigido: boolean; motivo: string;
   geral: boolean; // aplica-se o critério por piso (n.º 2)
   pisos: PisoExt[]; extras: Extra[];
   co2: { local: string; kg: number; qtd: number; litrosEq: number }[];
   totais: { descricao: string; qtd: number }[];
+  /** mapa final: o quê, onde e quantos */
+  mapa: LinhaMapa[];
   /** contagem: portáteis dos pisos, portáteis das situações próprias, móveis, medidas sem quantidade fixa, CO2 */
   resumo: { pisos: number; situacoes: number; moveis: number; semQtd: number; co2: number };
   falta: string[];
@@ -164,6 +180,53 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   for (const k of co2) { const d = `CO₂ ${fmt(k.kg, 1)} kg (complemento)`; mapa.set(d, (mapa.get(d) ?? 0) + k.qtd); }
   const totais = [...mapa.entries()].map(([descricao, qtd]) => ({ descricao, qtd }));
 
+  // mapa final — o quê, onde e quantos
+  const mapaF: LinhaMapa[] = [];
+  for (const p of pisos) if (p.area > 0) mapaF.push({ onde: `${p.nome} — nas circulações e junto às saídas, a ≤ 15 m de qualquer saída de local de risco; manípulo a ≤ 1,2 m`, oque: `Extintor de ${NOME_AGENTE[p.agente]} ${p.cap} ${UNIDADE[p.agente]}`, qtd: String(p.qtd), lei: `${p.minN} no mínimo e ${p.litros} L de água (${fmt(p.area, 2)} m²)`, base: 'RT-SCIE, art. 163.º n.os 1 a 3' });
+  const cozinhaListada = (x.locais ?? []).some((l) => l.tipo === 'C' && ['b', 'c', 'd'].includes(l.alinea ?? '')) || ut.espacos.some((e) => /cozinh|laborat/i.test(e.nome) && (e.local === 'C' || e.local === 'Cag'));
+  for (const l of [...ut.espacos.filter((e) => ['C', 'Cag', 'F'].includes(e.local)).map((e) => ({ nome: e.nome || 'espaço', tipo: (e.local === 'F' ? 'F' : 'C') as 'C' | 'F', alinea: undefined as string | undefined })), ...(x.locais ?? []).filter((l) => l.alinea).map((l) => ({ nome: [descLocal(l.tipo, l.alinea!), l.nome].filter(Boolean).join(' — '), tipo: l.tipo, alinea: l.alinea }))]) {
+    if (arLivre && l.tipo !== 'C') continue;
+    const cozinha = l.tipo === 'C' && (l.alinea === 'c' || l.alinea === 'd' || /cozinh/i.test(l.nome));
+    const lab = l.tipo === 'C' && (l.alinea === 'b' || /laborat/i.test(l.nome));
+    mapaF.push({
+      onde: `Local de risco ${l.tipo}: ${l.nome}`,
+      oque: cozinha ? 'Extintor com eficácia mínima 25F (se houver óleos ou gorduras) + manta ignífuga' : lab ? 'Extintor adequado ao risco + manta ignífuga' : 'Extintor adequado ao risco do local',
+      qtd: cozinha || lab ? '1 + 1 manta' : '1',
+      lei: cozinha ? 'extintor (25F com óleos ou gorduras) e manta ignífuga' : lab ? 'extintor e manta ignífuga' : 'extintor (a lei não fixa o tipo)',
+      base: `RT-SCIE, art. 163.º n.º ${arLivre ? 8 : 4}${cozinha || lab ? ' e n.º 5' : ''}${l.alinea ? `; RJ-SCIE, art. 10.º n.º ${l.tipo === 'C' ? 3 : 6} ${l.alinea})` : ''}`,
+      recom: cozinha ? undefined : l.alinea ? RECOM_LOCAL[`${l.tipo}:${l.alinea}`] : undefined,
+    });
+  }
+  if ((ut.temCozinhaC || ut.factos?.cozinha) && !cozinhaListada) mapaF.push({ onde: 'Cozinha ou laboratório (local C)', oque: 'Extintor com eficácia mínima 25F (se houver óleos ou gorduras) + manta ignífuga', qtd: '1 + 1 manta', lei: 'manta ignífuga em complemento do extintor; 25F com óleos ou gorduras', base: 'RT-SCIE, art. 163.º n.º 5' });
+  if (x.combustivelCT === 'gas') mapaF.push({ onde: 'Central térmica (> 70 kW, a gás)', oque: 'Extintor de pó químico ABC, eficácia mínima 5 A/34 B', qtd: '1', lei: '1 extintor de pó ABC 5 A/34 B', base: 'RT-SCIE, art. 163.º n.º 6 b)' });
+  if (x.combustivelCT === 'solido_liquido') {
+    const q = Math.min(2 * Math.max(1, x.queimadores ?? 1), 4);
+    mapaF.push({ onde: 'Central térmica (> 70 kW, combustível sólido ou líquido)', oque: 'Extintor de eficácia mínima 34 B', qtd: String(q), lei: '2 por queimador, máximo 4', base: 'RT-SCIE, art. 163.º n.º 6 a) ii)' });
+    mapaF.push({ onde: 'Central térmica (> 70 kW, combustível sólido ou líquido)', oque: 'Recipiente com 100 l de areia e pá', qtd: '1', lei: 'recipiente com 100 l de areia e uma pá', base: 'RT-SCIE, art. 163.º n.º 6 a) i)' });
+  }
+  for (const e of extras) {
+    if (e.base.includes('163.º n.º 7')) mapaF.push({ onde: 'Tenda ou estrutura insuflável', oque: 'Extintor móvel de pó químico ABC de 50 kg', qtd: String(e.moveis ?? 0), lei: '1 por cada 8 extintores portáteis ou fração', base: 'RT-SCIE, art. 163.º n.º 7' });
+    if (e.base.includes('209.º')) mapaF.push({ onde: 'Agrupamento de arrecadações — circulações horizontais comuns', oque: 'Extintores', qtd: 'pelo art. 163.º n.º 2', lei: 'extintores nas circulações horizontais comuns', base: 'RT-SCIE, art. 209.º n.º 14 d)' });
+    if (e.base.includes('210.º')) mapaF.push({ onde: 'Sala de condomínio', oque: 'Extintores', qtd: 'pelo art. 163.º n.º 2', lei: 'extintores', base: 'RT-SCIE, art. 210.º n.º 6 d)' });
+    if (e.base.includes('211.º')) mapaF.push({ onde: 'Estacionamento coberto', oque: 'Extintores portáteis', qtd: 'pelo art. 163.º n.º 2', lei: 'extintores portáteis nas condições do regulamento', base: 'RT-SCIE, art. 211.º n.º 4' });
+    if (e.base.includes('226.º n.º 1')) mapaF.push({ onde: 'Cada piso do parque automático, junto ao acesso a cada escada', oque: 'Extintor móvel de CO₂ ou pó químico ABC', qtd: '1 por escada e por piso', lei: 'extintores móveis de CO₂ ou pó ABC', base: 'RT-SCIE, art. 226.º n.º 1' });
+    if (e.base.includes('226.º n.º 2')) {
+      mapaF.push({ onde: 'Posto de controlo do parque exterior', oque: 'Extintor portátil de eficácia mínima 21 A/113 B/C', qtd: '1', lei: 'no mínimo 1', base: 'RT-SCIE, art. 226.º n.º 2' });
+      mapaF.push({ onde: 'Posto de controlo do parque exterior', oque: 'Extintor móvel de CO₂ ou pó químico ABC', qtd: '1', lei: 'no mínimo 1', base: 'RT-SCIE, art. 226.º n.º 2' });
+    }
+    if (e.base.includes('273.º n.º 2')) {
+      mapaF.push({ onde: 'Cada câmara corta-fogo do art. 261.º e posto de segurança (em nicho com porta)', oque: 'Extintor de eficácia mínima 21 A/113 B/C', qtd: '1 em cada', lei: '1 em cada local', base: 'RT-SCIE, art. 273.º n.º 2' });
+      mapaF.push({ onde: 'Cada câmara corta-fogo do art. 261.º e posto de segurança (em nicho com porta)', oque: 'Extintor para riscos elétricos de eficácia mínima 55 B', qtd: '1 em cada', lei: '1 em cada local', base: 'RT-SCIE, art. 273.º n.º 2' });
+    }
+    if (e.base.includes('286.º')) mapaF.push({ onde: 'Cada setor do parque de campismo — posições opostas, junto às vias, em armário', oque: 'Extintor de eficácia mínima 21 A/113 B/C', qtd: String(e.qtd ?? 0), lei: '2 por setor', base: 'RT-SCIE, art. 286.º n.os 1 a) e 2' });
+  }
+  if (t === 12 && (ut.liquidosInflamaveisL ?? 0) > 0) {
+    const r = art307(ut.liquidosInflamaveisL!, x.metalicos);
+    mapaF.push({ onde: 'Compartimentos com combustíveis líquidos', oque: `Extintor de eficácia mínima ${r.eficacia}`, qtd: '1 por compartimento', lei: `eficácia mínima ${r.eficacia} (${fmt(ut.liquidosInflamaveisL!)} l, escalão ${r.escalao})`, base: 'RT-SCIE, art. 307.º' });
+    if (r.moveis) mapaF.push({ onde: 'Compartimentos com combustíveis líquidos', oque: 'Extintor móvel de 50 kg de pó BC ou ABC (ou eficácia equivalente)', qtd: String(r.moveis), lei: 'alíneas d) e e)', base: 'RT-SCIE, art. 307.º' });
+  }
+  for (const k of co2) mapaF.push({ onde: k.local || 'local por indicar', oque: `Extintor de CO₂ ${fmt(k.kg, 1)} kg`, qtd: String(k.qtd), lei: 'não exigido — complemento', base: `critério técnico (CO₂ = L × 0,62)`, recom: 'equipamento elétrico; não conta para os 18 L de água' });
+
   const resumo = {
     pisos: pisos.reduce((a, p) => a + p.qtd, 0),
     situacoes: extras.reduce((a, e) => a + (e.qtd ?? 0), 0),
@@ -171,5 +234,5 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
     semQtd: extras.filter((e) => !e.qtd && !e.moveis).length,
     co2: co2.reduce((a, k) => a + k.qtd, 0),
   };
-  return { exigido: geral || extras.length > 0, motivo, geral, pisos, extras, co2, totais, resumo, falta };
+  return { exigido: geral || extras.length > 0, motivo, geral, pisos, extras, co2, totais, mapa: mapaF, resumo, falta };
 }
