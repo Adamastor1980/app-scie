@@ -210,6 +210,12 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Limite:** a app regista e controla a manutenção feita por empresa registada; não a substitui.
 - **Inventário a partir do dimensionamento:** nos projetos de extintores, o inventário gera-se do mapa — um extintor por unidade (pisos com o agente e a capacidade escolhidos; locais C/F, cozinha 25F, central térmica, móveis e CO₂ com a eficácia exigida). Manta e areia não entram (não são extintores). Itens sem número fixo (ex.: «1 em cada câmara corta-fogo») não são gerados e o técnico é avisado. O local exato fica por indicar (a lei dá o critério, a planta dá o sítio).
 
+### D-40 — Extintores existentes × exigidos (projetos de manutenção) ✅/⚠️
+- **Decisão:** com a área de cada piso (opcional), a app compara os extintores portáteis existentes com o critério geral do RT-SCIE, art. 163.º n.º 2 — a) 18 L de água equivalente por 500 m² ou fração; b) 1 por 200 m² ou fração, mínimo 2 — e indica quantos faltam, com o exemplo em pó ABC 6 kg (12 L).
+- **Contagem:** pó pela conversão de D-36 (kg × 2); CO₂ e extintores móveis (≥ 25 kg) não contam, como no dimensionamento.
+- ⚠️ **Espuma contada como água (1 L = 1 L):** critério técnico (agente de base aquosa); não consta do RT-SCIE. A confirmar com o professor.
+- **Limite declarado no ecrã e no documento:** não verifica locais de risco C e F, cozinhas, centrais térmicas (n.os 4 a 6), a distância máxima de 15 m (n.º 1) nem as exceções da UT I; para isso, o dimensionamento.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

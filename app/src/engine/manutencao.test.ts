@@ -68,3 +68,28 @@ describe('Inventário gerado a partir do mapa de extintores', () => {
     expect(inventarioDoMapa(p, [{ ...novos[0], num: 'EXT-40' }]).novos[0].num).toBe('EXT-41');
   });
 });
+
+import { comparaEdificio, comparaPiso, litrosEqInv } from './manutencao';
+
+describe('Existente × exigido por piso (RT-SCIE, art. 163.º n.º 2)', () => {
+  it('equivalência: água/espuma 1:1, pó × 2; CO₂ e móveis não contam', () => {
+    expect(litrosEqInv(ext('a', { agente: 'agua', cap: 6 }))).toBe(6);
+    expect(litrosEqInv(ext('a', { agente: 'espuma', cap: 9 }))).toBe(9);
+    expect(litrosEqInv(ext('a', { agente: 'po', cap: 6 }))).toBe(12);
+    expect(litrosEqInv(ext('a', { agente: 'co2', cap: 5 }))).toBe(0);
+    expect(litrosEqInv(ext('a', { agente: 'po', cap: 50 }))).toBe(0);
+  });
+  it('450 m² com 2 × pó 6 kg: cumpre a) (24 ≥ 18 L), falha b) (2 < 3) → falta 1', () => {
+    const c = comparaPiso(0, 450, [ext('a'), ext('b'), ext('c', { agente: 'co2', cap: 5 })]);
+    expect(c).toMatchObject({ minN: 3, litros: 18, n: 2, litrosEx: 24, cumpre: false, faltaN: 1, faltaL: 0, sugestao: 1 });
+  });
+  it('600 m² com 3 × água 6 L: falha a) (18 < 36 L) → 2 × pó 6 kg resolvem', () => {
+    const c = comparaPiso(0, 600, ['a', 'b', 'c'].map((x) => ext(x, { agente: 'agua', cap: 6 })));
+    expect(c).toMatchObject({ minN: 3, litros: 36, faltaN: 0, faltaL: 18, sugestao: 2, cumpre: false });
+  });
+  it('pisos do edifício: com extintores ou com área; sem área não cumpre (não verificável)', () => {
+    const pl = { periodoMeses: 12, empresa: { nome: '', registoAnepc: '', tecnico: '' }, extintores: [ext('a', { piso: 1 }), ext('b', { piso: 1 })], areas: { e1: { '0': 150, '1': 150 } } };
+    const r = comparaEdificio(pl, 'e1');
+    expect(r.map((x) => [x.piso, x.n, x.cumpre])).toEqual([[0, 0, false], [1, 2, true]]);
+  });
+});

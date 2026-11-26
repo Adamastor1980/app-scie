@@ -3,7 +3,7 @@ import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TermoAutor, dataPtDe } from './docComum';
-import { TIPO_MANUT, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
+import { TIPO_MANUT, comparaEdificio, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
 import { COR_NIVEL } from './Manutencao';
 import { baseLegalDoc, notaVersao } from '../versao';
 
@@ -21,7 +21,8 @@ export default function ManutencaoDoc() {
   const falta = lista.flatMap((e) => [...faltaExt(e).map((f) => `${e.num}: ${f[0].toLowerCase()}`), ...e.registos.flatMap((g) => faltaReg(g).map((f) => `${e.num}, registo de ${dataPt(g.data)}: ${f[0].toLowerCase()}`))]);
   const urgentes = lista.map((e) => ({ e, s: estadoExt(e, pl!.periodoMeses, hoje) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme);
   const regs = lista.flatMap((e) => e.registos.map((g) => ({ e, g }))).sort((a, b) => b.g.data.localeCompare(a.g.data));
-  const CAPS = ['Apresentação da empresa', 'Enquadramento legal', 'Inventário de extintores por edifício e piso', 'Situação à data', 'Registo de manutenções', 'Termo', 'Anexos'];
+  const comp = pl ? p.edificios.map((ed) => ({ ed, l: comparaEdificio(pl, ed.id).filter((x) => x.area > 0) })).filter((x) => x.l.length) : [];
+  const CAPS = ['Apresentação da empresa', 'Enquadramento legal', 'Inventário de extintores por edifício e piso', 'Situação à data', ...(comp.length ? ['Verificação do número de extintores'] : []), 'Registo de manutenções', 'Termo', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
   return (
@@ -99,6 +100,23 @@ export default function ManutencaoDoc() {
             ))}</tbody>
           </table>
         )}
+
+        {comp.length > 0 && (<>
+          <H1 n={S()}>Verificação do número de extintores</H1>
+          <P>Comparação, por piso, dos extintores portáteis existentes com o critério geral do RT-SCIE, art. 163.º n.º 2: a) 18 L de agente extintor padrão (água) por 500 m² ou fração; b) um extintor por 200 m² ou fração, com o mínimo de dois. Pó químico: kg × 2 e espuma como água (critério técnico); CO₂ e extintores móveis não contam. Não inclui os locais de risco C e F, cozinhas, centrais térmicas, a distância máxima de 15 m (n.os 1 e 4 a 6) nem as exceções da UT I.</P>
+          <table className="tbl mb-4">
+            <thead><tr><th>Edifício · piso</th><th className="text-right">Área (m²)</th><th className="text-right">Exigido</th><th className="text-right">Existente</th><th>Resultado</th></tr></thead>
+            <tbody>{comp.flatMap(({ ed, l }) => l.map((x) => (
+              <tr key={ed.id + x.piso} className="avoid-break">
+                <td className="text-[11px]">{ed.nome} · {rotuloPisoInv(x.piso)}</td>
+                <td className="num text-right text-[11px]">{x.area.toLocaleString('pt-PT')}</td>
+                <td className="num text-right text-[11px]">{x.minN} · {x.litros} L</td>
+                <td className="num text-right text-[11px]">{x.n} · {Math.round(x.litrosEx * 10) / 10} L</td>
+                <td className={`text-[11px] font-semibold ${x.cumpre ? 'text-ok' : 'text-alerta'}`}>{x.cumpre ? 'Cumpre' : `Não cumpre — ${x.sugestao === 1 ? 'falta 1 extintor' : `faltam ${x.sugestao} extintores`} (ex.: ${x.sugestao} × pó ABC 6 kg)`}</td>
+              </tr>
+            )))}</tbody>
+          </table>
+        </>)}
 
         <H1 n={S()}>Registo de manutenções</H1>
         <P>Relação das ações de manutenção, da mais recente para a mais antiga (RT-SCIE, art. 201.º n.º 1 c)).</P>

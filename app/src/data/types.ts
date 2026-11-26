@@ -395,4 +395,6 @@ export interface PlanoManut {
   /** empresa de manutenção habitual: preenche os novos registos */
   empresa: { nome: string; registoAnepc: string; tecnico: string };
   extintores: ExtintorInv[];
+  /** áreas dos pisos (m²) por edifício, para comparar o existente com o art. 163.º n.º 2 — opcional */
+  areas?: Record<string, Record<string, number>>;
 }

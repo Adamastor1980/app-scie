@@ -1,5 +1,5 @@
 import type { AgenteInv, ExtintorInv, PlanoManut, Projeto, RegistoManut, TipoManut } from '../data/types';
-import { dimensionarExtintores } from './extintores';
+import { CONVERSAO, dimensionarExtintores, exigidosPorArea } from './extintores';
 import { classificar } from './calc';
 
 /**
@@ -125,4 +125,36 @@ export function inventarioDoMapa(p: Projeto, existentes: ExtintorInv[] = []): { 
     }
   }
   return { novos, porContar };
+}
+
+/* ---------- existente × exigido por piso (RT-SCIE, art. 163.º n.º 2) ---------- */
+
+/** Litros de água equivalentes de um extintor existente: água e espuma 1:1 (critério técnico, D-40); pó pela conversão do critério técnico (D-36); CO₂ e móveis não contam */
+export function litrosEqInv(e: ExtintorInv): number {
+  if (!(e.cap > 0) || e.cap >= 25) return 0;
+  if (e.agente === 'agua' || e.agente === 'espuma') return e.cap;
+  if (e.agente === 'po') return e.cap / CONVERSAO.po.fator;
+  return 0;
+}
+export const contaParaN2 = (e: ExtintorInv) => litrosEqInv(e) > 0;
+
+export interface ComparaPiso { piso: number; area: number; minN: number; litros: number; n: number; litrosEx: number; cumpre: boolean; faltaN: number; faltaL: number; sugestao: number }
+export function comparaPiso(piso: number, area: number, exts: ExtintorInv[]): ComparaPiso {
+  const { minN, litros } = exigidosPorArea(area);
+  const conta = exts.filter(contaParaN2);
+  const n = conta.length;
+  const litrosEx = conta.reduce((s, e) => s + litrosEqInv(e), 0);
+  const faltaN = Math.max(0, minN - n);
+  const faltaL = Math.max(0, litros - litrosEx);
+  // sugestão: n.º de extintores de pó ABC 6 kg (= 12 L) que resolve as duas alíneas
+  const sugestao = Math.max(faltaN, Math.ceil(faltaL / (6 / CONVERSAO.po.fator)));
+  return { piso, area, minN, litros, n, litrosEx, cumpre: area > 0 && faltaN === 0 && faltaL === 0, faltaN, faltaL, sugestao };
+}
+
+/** Pisos a verificar num edifício: os que têm extintores ou área indicada */
+export function comparaEdificio(pl: PlanoManut, edificio: string): ComparaPiso[] {
+  const areas = pl.areas?.[edificio] ?? {};
+  const doEd = pl.extintores.filter((e) => e.edificio === edificio && e.piso !== null);
+  const pisos = [...new Set([...doEd.map((e) => e.piso as number), ...Object.keys(areas).map(Number)])].sort((a, b) => a - b);
+  return pisos.map((pi) => comparaPiso(pi, areas[String(pi)] ?? 0, doEd.filter((e) => e.piso === pi)));
 }

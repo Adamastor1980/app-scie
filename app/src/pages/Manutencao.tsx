@@ -5,7 +5,7 @@ import type { AgenteInv, ExtintorInv, PlanoManut, RegistoManut, TipoManut } from
 import { novoEdificio, novoPlanoManut, uid } from '../store';
 import { Area, Faltas, Field, Num, Section, Text, mostrarNovo } from '../ui/primitives';
 import {
-  NOME_AGENTE_INV, TIPO_MANUT, inventarioDoMapa, UNID_INV, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, proximoNum, resumoManut, rotuloPisoInv, type EstadoExt,
+  NOME_AGENTE_INV, TIPO_MANUT, comparaEdificio, inventarioDoMapa, UNID_INV, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, proximoNum, resumoManut, rotuloPisoInv, type EstadoExt,
 } from '../engine/manutencao';
 
 const CAPS: Record<AgenteInv, number[]> = { agua: [2, 3, 6, 9], espuma: [2, 3, 6, 9], po: [1, 2, 3, 4, 6, 9, 12, 25, 50], co2: [2, 5], outro: [] };
@@ -168,9 +168,61 @@ export default function Manutencao() {
           <button className="btn h-9 px-3 text-[12.5px]" onClick={() => up((q) => { q.edificios.push(novoEdificio(q.edificios.length + 1)); })}><Plus size={14} /> Acrescentar edifício</button>
         )}
       </Section>
+
+      {soManut && pl.extintores.length > 0 && <Verificacao />}
     </main>
   );
 }
+
+/** Existente × exigido por piso — só o critério geral do RT-SCIE, art. 163.º n.º 2 */
+function Verificacao() {
+  const { p, up } = useP();
+  const pl = p.manutencao!;
+  const setArea = (ed: string, piso: number, v: number | undefined) => up((q) => {
+    const a = ((q.manutencao!.areas ??= {})[ed] ??= {});
+    if (v === undefined) delete a[String(piso)]; else a[String(piso)] = v;
+  });
+  return (
+    <Section n="03" title="Os extintores existentes chegam?" sub="Indique a área de cada piso: a app compara o que existe com o que a lei exige (RT-SCIE, art. 163.º n.º 2). Opcional.">
+      {p.edificios.map((ed) => {
+        const linhas = comparaEdificio(pl, ed.id);
+        const livres = PISOS.filter((n) => !linhas.some((l) => l.piso === n));
+        if (!linhas.length && !pl.extintores.some((e) => e.edificio === ed.id)) return null;
+        return (
+          <div key={ed.id} className="mb-6">
+            <p className="mb-2 flex items-center gap-2 font-display text-[15px] font-bold"><Building2 size={15} /> {ed.nome}</p>
+            <div className="flex flex-col gap-1.5">
+              {linhas.map((l) => (
+                <div key={l.piso} className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-paper-3 bg-white px-3 py-2.5">
+                  <span className="w-[105px] shrink-0 font-mono text-[12px] font-semibold">{rotuloPisoInv(l.piso)}</span>
+                  <div className="w-[130px] shrink-0"><Num value={l.area || undefined} suffix="m²" placeholder="área" onChange={(v, t) => setArea(ed.id, l.piso, t.trim() ? v : undefined)} /></div>
+                  <span className="min-w-0 flex-1 basis-[200px] text-[12.5px]">
+                    {l.area > 0
+                      ? <>Exige <b>{l.minN}</b> extintores e <b>{l.litros} L</b> de água equivalente · existem <b>{l.n}</b> ({fmtL(l.litrosEx)} L)</>
+                      : <span className="text-ink-3">{l.n} {l.n === 1 ? 'extintor que conta' : 'extintores que contam'} — indique a área para verificar</span>}
+                  </span>
+                  {l.area > 0 && (l.cumpre
+                    ? <span className="border border-ok bg-ok-soft px-2 py-0.5 font-mono text-[11px] font-semibold text-ok">Cumpre</span>
+                    : <span className="border border-alerta bg-alerta-soft px-2 py-0.5 font-mono text-[11px] font-semibold text-alerta">
+                        {l.sugestao === 1 ? 'Falta 1 extintor' : `Faltam ${l.sugestao} extintores`} — ex.: {l.sugestao} × pó ABC 6 kg
+                      </span>)}
+                </div>
+              ))}
+            </div>
+            {livres.length > 0 && (
+              <select className="input mt-2 h-9 w-auto py-0 text-[12.5px]" value="" onChange={(e) => e.target.value !== '' && setArea(ed.id, Number(e.target.value), 0)}>
+                <option value="">+ Piso sem extintores…</option>{livres.map((n) => <option key={n} value={n}>{rotuloPisoInv(n)}</option>)}
+              </select>
+            )}
+          </div>
+        );
+      })}
+      <p className="text-[11.5px] leading-relaxed text-ink-3">Por piso: a) 18 L de água equivalente por 500 m² ou fração; b) 1 extintor por 200 m² ou fração, mínimo 2. Contam os portáteis de água, espuma e pó (pó: kg × 2, critério técnico; espuma como água, critério técnico); CO₂ e móveis não contam. Não verifica locais de risco C e F, cozinhas, centrais térmicas, a distância de 15 m nem as exceções da UT I — para isso, faça o dimensionamento.</p>
+    </Section>
+  );
+}
+
+const fmtL = (v: number) => (Math.round(v * 10) / 10).toString().replace('.', ',');
 
 function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edificios }: {
   e: ExtintorInv; pl: PlanoManut; aberto: boolean; alternar: () => void; upExt: (fn: (e: ExtintorInv) => void) => void; duplicar: () => void; apagar: () => void;
