@@ -36,6 +36,8 @@ const assin = (s: string) => `${s.length}:${s.slice(-48)}`;
 /** imagens apagadas pelo utilizador NESTE aparelho (só estas são apagadas da nuvem) */
 let imagensApagar = new Set<string>();
 let perfilEnviado = '';
+/** JSON com as chaves por ordem: a nuvem devolve os campos noutra ordem e a comparação tem de ser pelo conteúdo */
+const estavel = (x: unknown): string => JSON.stringify(x, (_k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) : v));
 // projetos apagados: registo («lápide») guardado na nuvem para que os outros aparelhos não os voltem a enviar
 type Lapides = Record<string, number>;
 const CHAVE_LAPIDES = 'cautela-apagados-por-enviar';
@@ -219,8 +221,10 @@ export async function iniciarSincronizacao(user: User) {
       }
       const pr = (d.data() as { perfil?: { empresa: Projeto['empresa']; autor: Projeto['autor'] } }).perfil;
       if (!pr) return;
-      const s = JSON.stringify(pr);
+      const s = estavel(pr);
       if (s === perfilEnviado) return;
+      // alteração do perfil feita aqui e ainda não enviada (ex.: assinatura acabada de guardar): prevalece a local, que vai ser enviada
+      if (estavel(limpo({ empresa: stA.empresaPadrao, autor: stA.autorPadrao })) !== perfilEnviado) return;
       perfilEnviado = s;
       aplicarRemoto = true;
       useStore.setState((st) => ({ empresaPadrao: pr.empresa, autorPadrao: pr.autor, projetos: st.projetos.map((p) => ({ ...p, empresa: pr.empresa, autor: pr.autor })) }));
@@ -270,7 +274,7 @@ async function enviar(inicial: boolean) {
   const tarefas: Promise<unknown>[] = [];
 
   const perfil = limpo({ empresa: st.empresaPadrao, autor: st.autorPadrao });
-  const sPerfil = JSON.stringify(perfil);
+  const sPerfil = estavel(perfil);
   if (sPerfil !== perfilEnviado && (st.empresaPadrao || st.autorPadrao)) {
     perfilEnviado = sPerfil;
     tarefas.push(setDoc(doc(db, 'users', u.uid), { perfil }, { merge: true }).catch((e) => { perfilEnviado = ''; throw e; }));

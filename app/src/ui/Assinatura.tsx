@@ -22,6 +22,7 @@ export default function Assinatura({ valor, onGuardar }: { valor?: string; onGua
   const ref = useRef<HTMLCanvasElement>(null);
   const [aEditar, setAEditar] = useState(!valor);
   const [temTraco, setTemTraco] = useState(false);
+  const [gravada, setGravada] = useState(false);
   const desenhar = useRef(false);
 
   useEffect(() => {
@@ -36,7 +37,9 @@ export default function Assinatura({ valor, onGuardar }: { valor?: string; onGua
   }, [aEditar]);
 
   const pos = (e: React.PointerEvent<HTMLCanvasElement>) => { const r = e.currentTarget.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top] as const; };
-  const limpar = () => { const c = ref.current!; c.getContext('2d')!.clearRect(0, 0, c.width, c.height); setTemTraco(false); };
+  const limpar = () => { const c = ref.current!; c.getContext('2d')!.clearRect(0, 0, c.width, c.height); setTemTraco(false); setGravada(false); };
+  // grava sozinha no fim de cada traço (como o resto da app): sair da página não perde a assinatura
+  const gravar = () => { const v = ref.current && recortar(ref.current); if (v) { onGuardar(v); setGravada(true); } };
 
   if (!aEditar && valor) return (
     <div className="flex flex-wrap items-end gap-3">
@@ -55,13 +58,13 @@ export default function Assinatura({ valor, onGuardar }: { valor?: string; onGua
         className="block h-[170px] w-full max-w-[520px] cursor-crosshair touch-none border border-dashed border-ink-4 bg-white"
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); desenhar.current = true; const ctx = e.currentTarget.getContext('2d')!; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y + 0.1); ctx.stroke(); setTemTraco(true); }}
         onPointerMove={(e) => { if (!desenhar.current) return; const ctx = e.currentTarget.getContext('2d')!; const [x, y] = pos(e); ctx.lineWidth = e.pointerType === 'pen' && e.pressure ? 1.2 + e.pressure * 2.4 : 2.2; ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }}
-        onPointerUp={() => { desenhar.current = false; }}
-        onPointerCancel={() => { desenhar.current = false; }}
+        onPointerUp={() => { if (desenhar.current) { desenhar.current = false; gravar(); } }}
+        onPointerCancel={() => { if (desenhar.current) { desenhar.current = false; gravar(); } }}
       />
-      <p className="mt-1 text-[11.5px] text-ink-3">Assine dentro do quadro com o dedo, a caneta ou o rato.</p>
+      <p className={`mt-1 text-[11.5px] ${gravada ? 'font-semibold text-ok' : 'text-ink-3'}`}>{gravada ? '✓ Assinatura guardada — aparece nos documentos' : 'Assine dentro do quadro com o dedo, a caneta ou o rato. Fica guardada automaticamente.'}</p>
       <div className="mt-2 flex gap-2">
         <button className="btn-ghost" onClick={limpar}><Eraser size={13} /> Limpar</button>
-        <button className="btn" disabled={!temTraco} onClick={() => { const v = recortar(ref.current!); if (v) { onGuardar(v); setAEditar(false); setTemTraco(false); } }}><Check size={13} /> Guardar assinatura</button>
+        <button className="btn" disabled={!temTraco} onClick={() => { gravar(); setAEditar(false); setTemTraco(false); }}><Check size={13} /> Concluir</button>
         {valor && <button className="btn-ghost" onClick={() => setAEditar(false)}>Cancelar</button>}
       </div>
     </div>
