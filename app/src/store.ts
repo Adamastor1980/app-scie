@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import type { Autoprotecao, Compartimento, Edificio, Espaco, Piso, Projeto, UT, UTNum } from './data/types';
+import type { Autoprotecao, Compartimento, Edificio, Espaco, Piso, PlanoManut, Projeto, UT, UTNum } from './data/types';
 import { utInfo } from './data/rjscie';
 import { normalizarLocal, normalizarPisos } from './engine/calc';
 
@@ -73,6 +73,8 @@ export const novaAutoprotecao = (): Autoprotecao => ({
   registos: [],
 });
 
+export const novoPlanoManut = (): PlanoManut => ({ periodoMeses: 12, empresa: { nome: '', registoAnepc: '', tecnico: '' }, extintores: [] });
+
 export const novoProjeto = (): Projeto => ({
   id: uid(),
   nome: 'Novo projeto',
@@ -99,7 +101,7 @@ interface State {
   projetos: Projeto[];
   empresaPadrao: Projeto['empresa'] | null;
   autorPadrao: Projeto['autor'] | null;
-  criar: (modo?: 'extintores') => string;
+  criar: (modo?: 'extintores' | 'manutencao') => string;
   importar: (p: Projeto) => string;
   /** abre o exemplo (substitui o anterior); não fica nos projetos nem na nuvem */
   abrirExemplo: (p: Projeto) => string;
@@ -121,7 +123,8 @@ export const useStore = create<State>()(
       autorPadrao: null,
       criar: (modo) => {
         const p = novoProjeto();
-        if (modo) { p.modo = modo; p.nome = 'Dimensionamento de extintores'; p.tipoIntervencao = 'Dimensionamento de extintores'; }
+        if (modo === 'extintores') { p.modo = modo; p.nome = 'Dimensionamento de extintores'; p.tipoIntervencao = 'Dimensionamento de extintores'; }
+        if (modo === 'manutencao') { p.modo = modo; p.nome = 'Plano de manutenção de extintores'; p.tipoIntervencao = 'Plano de manutenção de extintores'; p.manutencao = novoPlanoManut(); }
         const { empresaPadrao, autorPadrao } = getS();
         if (empresaPadrao) p.empresa = clone(empresaPadrao);
         if (autorPadrao) p.autor = clone(autorPadrao);

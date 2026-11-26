@@ -292,8 +292,10 @@ export interface Projeto {
   distribuicao?: Distribuicao[];
   /** medidas de autoproteção: organização da segurança e registos (RT-SCIE, título VII) */
   autoprotecao?: Autoprotecao;
-  /** «extintores» = projeto só de dimensionamento de extintores; omisso = projeto SCIE completo */
-  modo?: 'completo' | 'extintores';
+  /** «extintores» = dimensionamento de extintores; «manutencao» = só plano de manutenção de extintores existentes; omisso = projeto SCIE completo */
+  modo?: 'completo' | 'extintores' | 'manutencao';
+  /** plano de manutenção de extintores: inventário e registo das intervenções (RT-SCIE, arts. 201.º n.º 1 c) e 202.º n.º 4) */
+  manutencao?: PlanoManut;
   /** percurso das MAP: passos marcados pelo técnico (datas ISO) */
   percurso?: { entregue?: string; submetido?: string; refSubmissao?: string };
   criadoEm: number;
@@ -353,4 +355,44 @@ export interface Autoprotecao {
   dataFuncionamento?: string;
   /** textos do documento MAP escritos pelo autor, por secção (chave = artigo/alínea) */
   textos?: Record<string, string>;
+}
+
+/** Plano de manutenção de extintores */
+export type AgenteInv = 'agua' | 'espuma' | 'po' | 'co2' | 'outro';
+export type TipoManut = 'manutencao' | 'recarga' | 'prova' | 'substituicao' | 'outra';
+export interface RegistoManut {
+  id: string;
+  /** data da intervenção (ISO AAAA-MM-DD) */
+  data: string;
+  tipo: TipoManut;
+  resultado: '' | 'conforme' | 'nao_conforme';
+  /** empresa de manutenção — registada na ANEPC (RJ-SCIE, art. 23.º) */
+  empresa: string;
+  registoAnepc: string;
+  tecnico: string;
+  /** motivo e observações da empresa */
+  obs: string;
+}
+export interface ExtintorInv {
+  id: string;
+  /** n.º do extintor (EXT-01…) */
+  num: string;
+  /** id do edifício (p.edificios) */
+  edificio: string;
+  piso: number | null;
+  local: string;
+  agente: AgenteInv | '';
+  cap: number;
+  eficacia: string;
+  fabricante: string;
+  serie: string;
+  ano?: number;
+  registos: RegistoManut[];
+}
+export interface PlanoManut {
+  /** periodicidade da manutenção, em meses (12 por omissão — NP 4413) */
+  periodoMeses: number;
+  /** empresa de manutenção habitual: preenche os novos registos */
+  empresa: { nome: string; registoAnepc: string; tecnico: string };
+  extintores: ExtintorInv[];
 }

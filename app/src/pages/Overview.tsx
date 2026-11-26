@@ -8,6 +8,8 @@ import { ROMANO } from '../data/rjscie';
 import { CatBadge, Stat, Empty } from '../ui/primitives';
 import { go } from '../router';
 import type { Cat } from '../data/types';
+import { ChipEstado, ResumoManut } from './Manutencao';
+import { estadoExt, ordenar, rotuloPisoInv } from '../engine/manutencao';
 
 export default function Overview() {
   const { p, up, pedirUT } = useP();
@@ -30,6 +32,43 @@ export default function Overview() {
     { ok: p.edificios.length > 0 && p.edificios.every((e) => !faltaCaracterizacao(e).length), t: 'Caracterização de todos os edifícios (altura e pisos acima)', to: p.edificios.find((e) => faltaCaracterizacao(e).length) ? `/e/${p.edificios.find((e) => faltaCaracterizacao(e).length)!.id}` : '' },
     { ok: p.plantas.length > 0, t: 'Peças desenhadas (plantas)', to: '/plantas' },
   ];
+
+  if (p.modo === 'manutencao') {
+    const pl = p.manutencao;
+    const urg = pl ? ordenar(pl.extintores, p.edificios.map((e) => e.id)).map((e) => ({ e, s: estadoExt(e, pl.periodoMeses) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme) : [];
+    const ord = { atraso: 0, sem: 1, breve: 2, ok: 3 };
+    urg.sort((a, b) => ord[a.s.nivel] - ord[b.s.nivel] || (a.s.dias ?? 0) - (b.s.dias ?? 0));
+    const nomeEd = (id: string) => p.edificios.find((e) => e.id === id)?.nome ?? '—';
+    return (
+      <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
+        <div className="mb-6 border-b-2 border-ink pb-5">
+          <p className="label !text-fire-ink">Plano de manutenção de extintores · RT-SCIE, arts. 201.º e 202.º</p>
+          <h1 className="h-display mt-2 text-[40px]">{p.nome}</h1>
+          <p className="mt-2 text-[13px] text-ink-3">{[p.cliente, p.morada, p.concelho].filter(Boolean).join(' · ') || 'Preencha os dados do projeto.'}</p>
+        </div>
+        <ol className="mb-8 border border-ink bg-white text-[13.5px]">
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">1.</b>Dados do projeto (cliente, morada) — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/dados`)}>abrir</button></li>
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">2.</b>Extintores por edifício e piso, e o registo de cada manutenção — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/manutencao`)}>abrir</button> <span className="text-ink-3">({pl?.extintores.length ?? 0})</span></li>
+          <li className="px-4 py-3"><b className="mr-2 font-mono text-fire-ink">3.</b>Plano e registo de manutenção — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/manutencao/doc`)}>abrir e descarregar PDF</button></li>
+        </ol>
+        <ResumoManut pl={pl} />
+        {urg.length > 0 && (
+          <div className="mt-6 border border-ink bg-white">
+            <p className="border-b border-paper-3 px-4 py-2.5 text-[12.5px] font-semibold">A tratar</p>
+            {urg.slice(0, 12).map(({ e, s }) => (
+              <button key={e.id} onClick={() => go(`${base}/manutencao`)} className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 border-b border-paper-3 px-4 py-2.5 text-left text-[13px] last:border-0 hover:bg-paper">
+                <span className="w-[62px] font-mono font-bold">{e.num}</span>
+                <span className="min-w-0 flex-1 basis-[160px]">{nomeEd(e.edificio)} · {rotuloPisoInv(e.piso)} · {e.local || '—'}</span>
+                {s.naoConforme && <span className="font-mono text-[10.5px] font-semibold text-alerta">NÃO CONFORME</span>}
+                <ChipEstado s={s} />
+              </button>
+            ))}
+            {urg.length > 12 && <p className="px-4 py-2 text-[12px] text-ink-3">e mais {urg.length - 12}…</p>}
+          </div>
+        )}
+      </main>
+    );
+  }
 
   if (p.modo === 'extintores') {
     const res = linhas.map((l) => ({ ...l, r: dimensionarExtintores(l.u, l.c.cat) }));

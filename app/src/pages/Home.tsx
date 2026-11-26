@@ -1,7 +1,8 @@
 import Rodape from '../ui/Rodape';
 import LogoPreto from '../ui/LogoPreto';
-import { useRef } from 'react';
-import { ArrowUpRight, Copy, Download, FireExtinguisher, Flame, Trash2, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, Trash2, Upload, Wrench } from 'lucide-react';
+import { resumoManut } from '../engine/manutencao';
 import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
 import { go } from '../router';
@@ -15,6 +16,7 @@ export default function Home() {
   const { projetos: todos, criar, apagar, duplicar, importar, abrirExemplo } = useStore();
   const projetos = todos.filter((p) => !p.exemplo);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [extMenu, setExtMenu] = useState(false);
   const empresa = useStore((s) => s.empresaPadrao);
   const autor = useStore((s) => s.autorPadrao);
 
@@ -39,7 +41,23 @@ export default function Home() {
         </h1>
         <div className="flex flex-wrap gap-2">
           <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><Flame size={16} /> Novo projeto SCIE</button>
-          <button className="btn h-10 px-4" title="Projeto só de dimensionamento de extintores (RT-SCIE, art. 163.º)" onClick={() => go(`/p/${criar('extintores')}`)}><FireExtinguisher size={16} /> Só extintores</button>
+          <div className="relative">
+            <button className={`btn h-10 px-4 ${extMenu ? '!bg-ink !text-white' : ''}`} aria-expanded={extMenu} onClick={() => setExtMenu(!extMenu)}><FireExtinguisher size={16} /> Extintores</button>
+            {extMenu && <button aria-label="Fechar" className="fixed inset-0 z-30 cursor-default" onClick={() => setExtMenu(false)} />}
+            {extMenu && (
+              <div className="absolute left-0 top-full z-40 mt-1 w-[min(330px,calc(100vw-48px))] border border-ink bg-white shadow-[6px_6px_0_rgba(20,35,58,0.12)]">
+                <p className="border-b border-paper-3 px-4 py-2 text-[12px] font-semibold text-ink-3">O que vai fazer?</p>
+                <button className="flex w-full items-start gap-3 border-b border-paper-3 px-4 py-3 text-left hover:bg-paper" onClick={() => go(`/p/${criar('extintores')}`)}>
+                  <Calculator size={17} className="mt-0.5 shrink-0 text-fire-ink" />
+                  <span><span className="block text-[13.5px] font-semibold">Dimensionamento</span><span className="block text-[12px] text-ink-3">Calcular os extintores exigidos (RT-SCIE, art. 163.º). Inclui também o plano de manutenção.</span></span>
+                </button>
+                <button className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-paper" onClick={() => go(`/p/${criar('manutencao')}`)}>
+                  <Wrench size={17} className="mt-0.5 shrink-0 text-fire-ink" />
+                  <span><span className="block text-[13.5px] font-semibold">Plano de manutenção</span><span className="block text-[12px] text-ink-3">Extintores já instalados: listagem por edifício e piso, registo das manutenções e próximas datas.</span></span>
+                </button>
+              </div>
+            )}
+          </div>
           <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
           {projetos.length > 0 && (
             <button className="btn h-10 px-3" onClick={() => {
@@ -88,7 +106,7 @@ export default function Home() {
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
-                    {p.modo === 'extintores' ? <ExtBadge size="sm" /> : <span className="flex items-center gap-1.5" title="Projeto SCIE completo"><Flame size={17} strokeWidth={2} className="text-fire-ink" />{uts.length > 0 && <CatBadge cat={max} size="sm" />}</span>}
+                    {p.modo === 'manutencao' ? <ExtBadge size="sm" texto="MANUTENÇÃO" /> : p.modo === 'extintores' ? <ExtBadge size="sm" /> : <span className="flex items-center gap-1.5" title="Projeto SCIE completo"><Flame size={17} strokeWidth={2} className="text-fire-ink" />{uts.length > 0 && <CatBadge cat={max} size="sm" />}</span>}
                   </div>
                   <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
@@ -102,6 +120,17 @@ export default function Home() {
                       <p className="mt-1 text-[12.5px] text-ink-3">{[p.cliente, p.concelho].filter(Boolean).join(' · ') || '—'}</p>
                     </span>
                   </button>
+                  {p.modo === 'manutencao' && (() => {
+                    const r = resumoManut(p.manutencao);
+                    return (
+                      <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px]">
+                        <span className="text-ink-3">{r.total} {r.total === 1 ? 'extintor' : 'extintores'}</span>
+                        {r.atraso > 0 && <span className="font-semibold text-alerta">{r.atraso} em atraso</span>}
+                        {r.breve > 0 && <span className="font-semibold text-ink">{r.breve} nos próximos 60 dias</span>}
+                        {r.sem > 0 && <span className="text-ink-3">{r.sem} sem registo</span>}
+                      </p>
+                    );
+                  })()}
                   <div className="mt-3 flex flex-wrap gap-1">
                     {uts.map((u) => (
                       <span key={u.id} className="chip border-ink-4 font-mono text-ink-2">UT {ROMANO[u.tipo]}</span>
@@ -110,7 +139,7 @@ export default function Home() {
                 </div>
                 <div className="mt-5 flex items-center justify-between border-t border-paper-3 pt-3">
                   <span className="font-mono text-[10.5px] text-ink-4">
-                    {p.edificios.length} edif. · {uts.length} UT · {new Date(p.atualizadoEm).toLocaleDateString('pt-PT')}
+                    {p.edificios.length} edif. · {p.modo === 'manutencao' ? `${p.manutencao?.extintores.length ?? 0} ext.` : `${uts.length} UT`} · {new Date(p.atualizadoEm).toLocaleDateString('pt-PT')}
                   </span>
                   <div className="flex items-center">
                     <button className="btn-icon" title="Exportar este projeto (JSON)" onClick={() => exportarJSON(p)}><Download size={15} /></button>

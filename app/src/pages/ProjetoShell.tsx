@@ -1,8 +1,10 @@
 import EstudoExtintores from './EstudoExtintores';
+import Manutencao from './Manutencao';
+import ManutencaoDoc from './ManutencaoDoc';
 import FichaSeguranca from './FichaSeguranca';
 import { nomeUT } from '../nome';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, Sheet, ShieldCheck, X } from 'lucide-react';
+import { Building2, ChevronRight, Download, FileText, Image, LayoutDashboard, Menu, Plus, Settings2, Sheet, ShieldCheck, Wrench, X } from 'lucide-react';
 import { novaUT, novoEdificio, useStore } from '../store';
 import { go, match } from '../router';
 import type { Projeto, UTNum } from '../data/types';
@@ -78,6 +80,8 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
   else if (rel === '/map') page = <MapDocumento />;
   else if (rel === '/ficha') page = <FichaSeguranca />;
   else if (rel === '/extintores') page = <EstudoExtintores />;
+  else if (rel === '/manutencao') page = <Manutencao />;
+  else if (rel === '/manutencao/doc') page = <ManutencaoDoc />;
   else if (mU) page = <UTPage eid={mU.eid} uid={mU.uid} step={mU.step ?? 'fatores'} />;
   else if (mE) page = <EdificioPage eid={mE.eid} />;
   else page = <Overview />;
@@ -100,7 +104,9 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
           <nav className="flex flex-col py-2">
             <NavItem to="" icon={<LayoutDashboard size={15} />} active={rel === '/'}>Painel</NavItem>
             <NavItem to="/dados" icon={<Settings2 size={15} />} active={rel === '/dados'}>Dados do projeto</NavItem>
+            {p.modo === 'manutencao' && <NavItem to="/manutencao" icon={<Wrench size={15} />} active={rel === '/manutencao'}>Extintores e manutenções</NavItem>}
           </nav>
+          {p.modo !== 'manutencao' && (<>
           <div className="flex items-center justify-between px-4 pb-1 pt-3">
             <span className="label">Edifícios e UT</span>
             <button
@@ -145,10 +151,15 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
               </div>
             ))}
           </div>
+          </>)}
           <nav className="mt-auto flex flex-col border-t border-ink-4/40 py-2">
-            {p.modo === 'extintores' ? (
+            {p.modo === 'manutencao' ? (
+              <NavItem to="/manutencao/doc" icon={<FileText size={15} />} active={rel === '/manutencao/doc'}>Registo de manutenção</NavItem>
+            ) : p.modo === 'extintores' ? (<>
               <NavItem to="/extintores" icon={<FileText size={15} />} active={rel === '/extintores'}>Estudo de extintores</NavItem>
-            ) : (<>
+              <NavItem to="/manutencao" icon={<Wrench size={15} />} active={rel === '/manutencao'}>Plano de manutenção</NavItem>
+              {!!p.manutencao?.extintores.length && <NavItem to="/manutencao/doc" icon={<FileText size={15} />} active={rel === '/manutencao/doc'}>Registo de manutenção</NavItem>}
+            </>) : (<>
             <NavItem to="/plantas" icon={<Image size={15} />} active={rel === '/plantas'}>Peças desenhadas</NavItem>
             <NavItem to="/autoprotecao" icon={<ShieldCheck size={15} />} active={rel === '/autoprotecao'}>Autoproteção</NavItem>
             <NavItem to="/map" icon={<FileText size={15} />} active={rel === '/map'}>Documento MAP</NavItem>

@@ -203,6 +203,12 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Base legal:** RJ-SCIE, art. 32.º n.º 3 — nas comunicações eletrónicas exige-se, quando aplicável, assinatura eletrónica que satisfaça pelo menos os requisitos da assinatura eletrónica avançada. Uma imagem desenhada não cumpre.
 - **Porquê:** serve para cópias em papel e para o cliente; para entrega eletrónica à ANEPC ou à câmara o PDF tem de ser assinado também com Cartão de Cidadão ou Chave Móvel Digital. O aviso está junto ao quadro de assinatura.
 
+### D-39 — Plano de manutenção de extintores ✅/⚠️
+- **Decisão:** novo tipo de projeto «Plano de manutenção» (botão «Extintores» › Plano de manutenção), também disponível nos projetos de dimensionamento. Inventário por edifício e piso (EXT-01…), registo de cada intervenção e contagem até à próxima manutenção: verde em dia, laranja a ≤ 60 dias, vermelho em atraso.
+- **Base legal:** RT-SCIE, art. 201.º n.º 1 c) — registo das ações de manutenção com o elemento, o tipo e o motivo, a data e o responsável (campos obrigatórios do registo); art. 202.º n.º 4 — programa com calendário; RJ-SCIE, art. 23.º — empresa de manutenção com registo na ANEPC (campo obrigatório); RJ-SCIE, art. 25.º n.º 1 w) — contraordenação por prazos de manutenção ultrapassados.
+- ⚠️ **Periodicidade:** 12 meses por omissão, contados da última intervenção registada. Não consta do RT-SCIE: vem da NP 4413, para que remete o anexo I, art. 8.º n.º 9. A norma não está em docs/legislacao/; outros prazos (recarga, prova hidráulica, fim de vida) ficam por configurar quando houver o texto da norma.
+- **Limite:** a app regista e controla a manutenção feita por empresa registada; não a substitui.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)
