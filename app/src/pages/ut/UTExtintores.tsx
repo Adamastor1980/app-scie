@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
+import { useP } from '../ProjetoShell';
 import type { AgenteExtintor, ExtintoresUT, Piso } from '../../data/types';
 import { CAPACIDADES, CONVERSAO, UNIDADE, dimensionarExtintores, litrosEquivalentes, totaisMapa } from '../../engine/extintores';
 import { classificar, fmt, numPiso, pisosUT, rotuloPiso } from '../../engine/calc';
@@ -46,6 +47,8 @@ export default function UTExtintores({ ut, upU }: UTProps) {
   useEffect(() => { if (semPisos) setArea(0, 0); }, [semPisos]); // eslint-disable-line react-hooks/exhaustive-deps
   const livres = OPCOES.filter((o) => !r.pisos.some((p) => p.n === o));
   const soPo = t === 8 && x.gare === 'eletrica';
+  // plano de manutenção: os extintores já existem — aqui só se indica o que a lei precisa para verificar
+  const man = useP().p.modo === 'manutencao';
   const Lei = ({ b }: { b: string }) => <button className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei(b)}><BookOpen size={12} /> Ver lei</button>;
 
   return (
@@ -59,19 +62,19 @@ export default function UTExtintores({ ut, upU }: UTProps) {
       </div>
 
       {r.geral && (
-        <Section n="A" title="Extintores por piso" sub="A app propõe a quantidade que cumpre os dois critérios do art. 163.º n.º 2: a) 18 L de água por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2. Só altere se quiser outra solução.">
+        <Section n="A" title={man ? 'Áreas dos pisos' : 'Extintores por piso'} sub={man ? 'A área de cada piso define o que a lei exige: a) 18 L de água por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2 (art. 163.º n.º 2). Os extintores existentes comparam-se no plano de manutenção.' : 'A app propõe a quantidade que cumpre os dois critérios do art. 163.º n.º 2: a) 18 L de água por 500 m² ou fração e b) 1 extintor por 200 m² ou fração, mínimo 2. Só altere se quiser outra solução.'}>
           <div className="border border-ink bg-white">
-            <div className="hidden grid-cols-[90px_110px_1fr_210px_100px_120px] gap-3 border-b border-ink bg-paper px-4 py-2 font-mono text-[10.5px] uppercase tracking-wide text-ink-3 xl:grid">
-              <span>Piso</span><span>Área (m²)</span><span>Exigido</span><span>Extintor</span><span>Quantidade</span><span>Resultado</span><span />
+            <div className={`hidden gap-3 border-b border-ink bg-paper px-4 py-2 font-mono text-[10.5px] uppercase tracking-wide text-ink-3 xl:grid ${man ? 'grid-cols-[90px_140px_1fr_32px]' : 'grid-cols-[90px_110px_1fr_210px_100px_120px]'}`}>
+              <span>Piso</span><span>Área (m²)</span><span>Exigido</span>{!man && <><span>Extintor</span><span>Quantidade</span><span>Resultado</span></>}<span />
             </div>
             {r.pisos.map((p) => (
-              <div key={p.n} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 xl:grid-cols-[90px_110px_1fr_210px_100px_120px_32px]">
+              <div key={p.n} className={`grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-paper-3 px-4 py-3 last:border-0 ${man ? 'xl:grid-cols-[90px_140px_1fr_32px]' : 'xl:grid-cols-[90px_110px_1fr_210px_100px_120px_32px]'}`}>
                 <span className="flex items-center justify-between font-semibold xl:block">{p.nome}
                   <ApagarPiso className="xl:hidden" n={p.n} />
                 </span>
                 <label className={`flex items-center gap-2 ${p.area > 0 ? '' : 'falta'}`}><span className="text-[11px] text-ink-3 xl:hidden">Área</span><Num value={p.area} onChange={(v) => setArea(p.n, v)} suffix="m²" /></label>
                 <span className="col-span-2 text-[12.5px] xl:col-span-1">{p.area > 0 ? <>Exigido: mín. <b>{p.minN}</b> extintores e <b>{p.litros} L</b> de água</> : <span className="text-alerta">Falta preencher: área do piso (para calcular)</span>}</span>
-                <select className="input col-span-2 h-10 py-0 text-[13px] xl:col-span-1" value={`${p.agente}:${p.cap}`} onChange={(e) => { const [a, c] = e.target.value.split(':'); setPiso(p.n, (o) => { o.agente = a as AgenteExtintor; o.cap = Number(c); delete o.qtd; }); }}>
+                {!man && <><select className="input col-span-2 h-10 py-0 text-[13px] xl:col-span-1" value={`${p.agente}:${p.cap}`} onChange={(e) => { const [a, c] = e.target.value.split(':'); setPiso(p.n, (o) => { o.agente = a as AgenteExtintor; o.cap = Number(c); delete o.qtd; }); }}>
                   {opcoesExt(soPo).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
                 <div>
@@ -80,7 +83,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
                 </div>
                 <span className={`text-[12.5px] font-semibold ${p.area > 0 ? (p.cumpre ? 'text-ok' : 'text-alerta') : 'text-ink-3'}`}>
                   {p.area > 0 ? <>{p.cumpre ? '✔ Cumpre' : '✗ Insuficiente'}<span className="block text-[11px] font-normal text-ink-3">{fmt(p.totalL)} L equivalentes</span></> : '—'}
-                </span>
+                </span></>}
                 <ApagarPiso className="hidden xl:flex" n={p.n} />
               </div>
             ))}
@@ -94,8 +97,8 @@ export default function UTExtintores({ ut, upU }: UTProps) {
               </select>
             </div>
           )}
-          <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.po.texto} — {CONVERSAO.fonte}.</p>
-          <p className="mt-1 text-[11.5px] text-ink-3">Capacidades normalizadas da EN 3 (para que remete o RT-SCIE, anexo I, art. 8.º n.º 9). A lei não fixa capacidade mínima: extintores mais pequenos são admitidos, mas são precisos mais para somar os litros exigidos, e cada um apaga menos.</p>
+          {!man && <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.po.texto} — {CONVERSAO.fonte}.</p>}
+          {!man && <p className="mt-1 text-[11.5px] text-ink-3">Capacidades normalizadas da EN 3 (para que remete o RT-SCIE, anexo I, art. 8.º n.º 9). A lei não fixa capacidade mínima: extintores mais pequenos são admitidos, mas são precisos mais para somar os litros exigidos, e cada um apaga menos.</p>}
         </Section>
       )}
 
@@ -166,7 +169,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         )}
       </Section>
 
-      <Section n={r.geral ? 'C' : 'B'} title="Complemento: extintores de CO₂ (opcional)" sub="Para quadros elétricos ou locais técnicos. Não contam para os 18 L de água: o CO₂ não tem eficácia em fogos da classe A (sólidos).">
+      {!man && <Section n={r.geral ? 'C' : 'B'} title="Complemento: extintores de CO₂ (opcional)" sub="Para quadros elétricos ou locais técnicos. Não contam para os 18 L de água: o CO₂ não tem eficácia em fogos da classe A (sólidos).">
         {(x.co2 ?? []).map((k, i) => (
           <div key={k.id} className="mb-1.5 flex flex-wrap items-center gap-2 text-[12.5px]">
             <input className="input h-9 max-w-[240px] py-0" placeholder="Local (ex.: quadro elétrico do piso 0)" value={k.local} onChange={(e) => upX((z) => { z.co2![i].local = e.target.value; })} />
@@ -178,9 +181,10 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         ))}
         <button className="flex items-center gap-1 text-[12px] font-semibold text-fire-ink hover:underline" onClick={() => upX((z) => { (z.co2 ??= []).push({ id: uid(), local: '', kg: 5, qtd: 1 }); })}><Plus size={13} /> Acrescentar extintor de CO₂</button>
         <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.co2.texto} — {CONVERSAO.fonte}.</p>
-      </Section>
+      </Section>}
 
-      {tot.length > 0 && (
+      {man && <p className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">Com estes dados, a verificação dos extintores existentes está no plano de manutenção, secção 03 — botão «Voltar ao plano de manutenção» no fim desta página.</p>}
+      {!man && tot.length > 0 && (
         <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">
           <p className="mb-2 text-[12.5px] font-semibold">Resultado — tudo o que esta UT tem de levar</p>
           <table className="w-full text-[13px]"><tbody>

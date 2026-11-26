@@ -389,6 +389,8 @@ export interface ExtintorInv {
   fabricante: string;
   serie: string;
   ano?: number;
+  /** exigência que o extintor cumpre (chave da verificação); vazio = geral do piso (art. 163.º n.º 2) */
+  serve?: string;
   registos: RegistoManut[];
 }
 export interface PlanoManut {
@@ -399,6 +401,10 @@ export interface PlanoManut {
   extintores: ExtintorInv[];
   /** áreas dos pisos (m²) por edifício, para comparar o existente com o art. 163.º n.º 2 — opcional */
   areas?: Record<string, Record<string, number>>;
+  /** confirmações feitas no local (manta, areia, distância de 15 m, instalação, quantidades «1 em cada»…) */
+  confirmados?: Record<string, boolean>;
+  /** verificação legal ativada (opcional) */
+  verificar?: boolean;
 }
 
 /** Estudo de sinalética — RT-SCIE, arts. 108.º a 112.º */

@@ -210,11 +210,13 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Limite:** a app regista e controla a manutenção feita por empresa registada; não a substitui.
 - **Inventário a partir do dimensionamento:** nos projetos de extintores, o inventário gera-se do mapa — um extintor por unidade (pisos com o agente e a capacidade escolhidos; locais C/F, cozinha 25F, central térmica, móveis e CO₂ com a eficácia exigida). Manta e areia não entram (não são extintores). Itens sem número fixo (ex.: «1 em cada câmara corta-fogo») não são gerados e o técnico é avisado. O local exato fica por indicar (a lei dá o critério, a planta dá o sítio).
 
-### D-40 — Extintores existentes × exigidos (projetos de manutenção) ✅/⚠️
-- **Decisão:** com a área de cada piso (opcional), a app compara os extintores portáteis existentes com o critério geral do RT-SCIE, art. 163.º n.º 2 — a) 18 L de água equivalente por 500 m² ou fração; b) 1 por 200 m² ou fração, mínimo 2 — e indica quantos faltam, com o exemplo em pó ABC 6 kg (12 L).
-- **Contagem:** pó pela conversão de D-36 (kg × 2); CO₂ e extintores móveis (≥ 25 kg) não contam, como no dimensionamento.
-- ⚠️ **Espuma contada como água (1 L = 1 L):** critério técnico (agente de base aquosa); não consta do RT-SCIE. A confirmar com o professor.
-- **Limite declarado no ecrã e no documento:** não verifica locais de risco C e F, cozinhas, centrais térmicas (n.os 4 a 6), a distância máxima de 15 m (n.º 1) nem as exceções da UT I; para isso, o dimensionamento.
+### D-40 — Verificação legal dos extintores existentes (só no plano de manutenção) ✅/⚠️
+- **Decisão (acordada):** no plano de manutenção, a verificação é **opcional e desligada por omissão** — o plano é a listagem e o registo das manutenções. No projeto de extintores não existe, porque o dimensionamento já parte da UT e de todos os dados.
+- **Quando ativada, segue a lei por inteiro:** pede a **utilização-tipo** de cada edifício e os dados do mesmo passo «Extintores» do dimensionamento (áreas, locais de risco C e F, cozinha, central térmica, tendas, condições da UT; na UT I também os fatores da categoria). As exigências saem do mesmo cálculo (dimensionarExtintores): art. 163.º n.os 1 a 8 e arts. 209.º a 211.º, 226.º, 273.º, 286.º e 307.º.
+- **Comparação exigência a exigência:** cada extintor existente serve o geral do piso (por omissão) ou uma exigência própria (campo «Para que serve»). Piso: n.º e litros (n.º 2); exigências próprias: quantidade, eficácia mínima (ex.: 25F, 34 B, 21 A/113 B), agente (ex.: pó ABC na central a gás; sem água com tração elétrica) e capacidade dos móveis. Eficácia por indicar → «Verificar».
+- **Confirmação no local:** manta ignífuga e areia (não são extintores), quantidades sem número fixo («1 em cada…»), distância ≤ 15 m (n.º 1) e instalação (n.º 3) — o técnico confirma.
+- **Contagem para o piso:** pó kg × 2 (D-36); CO₂ e móveis não contam.
+- ⚠️ **Espuma como água (1 L = 1 L):** critério técnico, não consta do RT-SCIE. A confirmar com o professor.
 
 ### D-41 — Estudo de sinalética (só com o RT-SCIE) ✅/⚠️
 - **Decisão (opção B, acordada):** novo tipo de projeto «Sinalética». Por piso, o técnico indica o que está na planta (saídas, vias e comprimentos, mudanças de direção, escadas, extintores, carretéis, botões de alarme, outras); a app dá o **mínimo** de placas e o tamanho mínimo, com o artigo de cada uma.

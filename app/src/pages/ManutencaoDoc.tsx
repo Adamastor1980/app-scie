@@ -3,8 +3,10 @@ import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TermoAutor, dataPtDe } from './docComum';
-import { TIPO_MANUT, comparaEdificio, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
+import { TIPO_MANUT, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
 import { COR_NIVEL } from './Manutencao';
+import { NOME_REQ } from './VerificacaoExt';
+import { verificarEdificio } from '../engine/verificacaoExt';
 import { baseLegalDoc, notaVersao } from '../versao';
 
 /** Documento «Plano e registo de manutenção de extintores» — RT-SCIE, arts. 201.º n.º 1 c) e 202.º n.º 4 */
@@ -21,8 +23,8 @@ export default function ManutencaoDoc() {
   const falta = lista.flatMap((e) => [...faltaExt(e).map((f) => `${e.num}: ${f[0].toLowerCase()}`), ...e.registos.flatMap((g) => faltaReg(g).map((f) => `${e.num}, registo de ${dataPt(g.data)}: ${f[0].toLowerCase()}`))]);
   const urgentes = lista.map((e) => ({ e, s: estadoExt(e, pl!.periodoMeses, hoje) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme);
   const regs = lista.flatMap((e) => e.registos.map((g) => ({ e, g }))).sort((a, b) => b.g.data.localeCompare(a.g.data));
-  const comp = pl ? p.edificios.map((ed) => ({ ed, l: comparaEdificio(pl, ed.id).filter((x) => x.area > 0) })).filter((x) => x.l.length) : [];
-  const CAPS = ['Apresentação da empresa', 'Enquadramento legal', 'Inventário de extintores por edifício e piso', 'Situação à data', ...(comp.length ? ['Verificação do número de extintores'] : []), 'Registo de manutenções', 'Termo', 'Anexos'];
+  const comp = pl?.verificar ? p.edificios.filter((ed) => ed.uts.length).map((ed) => ({ ed, v: verificarEdificio(ed, pl) })) : [];
+  const CAPS = ['Apresentação da empresa', 'Enquadramento legal', 'Inventário de extintores por edifício e piso', 'Situação à data', ...(comp.length ? ['Verificação legal dos extintores existentes'] : []), 'Registo de manutenções', 'Termo', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
   return (
@@ -102,20 +104,23 @@ export default function ManutencaoDoc() {
         )}
 
         {comp.length > 0 && (<>
-          <H1 n={S()}>Verificação do número de extintores</H1>
-          <P>Comparação, por piso, dos extintores portáteis existentes com o critério geral do RT-SCIE, art. 163.º n.º 2: a) 18 L de agente extintor padrão (água) por 500 m² ou fração; b) um extintor por 200 m² ou fração, com o mínimo de dois. Pó químico: kg × 2 e espuma como água (critério técnico); CO₂ e extintores móveis não contam. Não inclui os locais de risco C e F, cozinhas, centrais térmicas, a distância máxima de 15 m (n.os 1 e 4 a 6) nem as exceções da UT I.</P>
-          <table className="tbl mb-4">
-            <thead><tr><th>Edifício · piso</th><th className="text-right">Área (m²)</th><th className="text-right">Exigido</th><th className="text-right">Existente</th><th>Resultado</th></tr></thead>
-            <tbody>{comp.flatMap(({ ed, l }) => l.map((x) => (
-              <tr key={ed.id + x.piso} className="avoid-break">
-                <td className="text-[11px]">{ed.nome} · {rotuloPisoInv(x.piso)}</td>
-                <td className="num text-right text-[11px]">{x.area.toLocaleString('pt-PT')}</td>
-                <td className="num text-right text-[11px]">{x.minN} · {x.litros} L</td>
-                <td className="num text-right text-[11px]">{x.n} · {Math.round(x.litrosEx * 10) / 10} L</td>
-                <td className={`text-[11px] font-semibold ${x.cumpre ? 'text-ok' : 'text-alerta'}`}>{x.cumpre ? 'Cumpre' : `Não cumpre — ${x.sugestao === 1 ? 'falta 1 extintor' : `faltam ${x.sugestao} extintores`} (ex.: ${x.sugestao} × pó ABC 6 kg)`}</td>
-              </tr>
-            )))}</tbody>
-          </table>
+          <H1 n={S()}>Verificação legal dos extintores existentes</H1>
+          <P>Comparação dos extintores existentes com o que exige o RT-SCIE: art. 163.º (critério por piso, locais de risco C e F, cozinhas e laboratórios, centrais térmicas, tendas, distância e instalação) e as condições específicas da utilização-tipo. Pó químico: kg × 2 e espuma como água (critério técnico); CO₂ e extintores móveis não contam para o critério por piso.</P>
+          {comp.map(({ ed, v }, i) => (
+            <div key={ed.id}>
+              <H2 n={`${n}.${i + 1}`}>{ed.nome} · {v.porUT.map((u) => u.ut).join(' · ')}</H2>
+              <table className="tbl mb-4">
+                <thead><tr><th>Exigência</th><th>Situação</th><th className="w-24">Resultado</th></tr></thead>
+                <tbody>{v.res.map((r) => (
+                  <tr key={r.key} className="avoid-break">
+                    <td className="text-[11px]"><b>{r.titulo}</b>{r.tipo !== 'piso' && r.tipo !== 'manual' ? <span className="block text-ink-3">{r.onde}</span> : null}<span className="ref block">{r.base}</span></td>
+                    <td className="text-[11px]">{r.tipo === 'manual' || r.tipo === 'outro' ? (r.estado === 'cumpre' ? 'Confirmado no local' : 'Por confirmar') : r.texto}{r.exts.length ? <span className="block text-ink-3">{r.exts.map((e) => e.num).join(', ')}</span> : null}{r.problemas.map((x, k) => <span key={k} className="block text-alerta">{x}</span>)}</td>
+                    <td className={`text-[11px] font-semibold ${r.estado === 'cumpre' ? 'text-ok' : r.estado === 'falta' ? 'text-alerta' : ''}`}>{NOME_REQ[r.estado]}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ))}
         </>)}
 
         <H1 n={S()}>Registo de manutenções</H1>

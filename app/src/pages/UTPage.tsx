@@ -56,12 +56,13 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       : []),
     ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
     { k: 'categoria', t: 'Categoria', s: cls.falta.length ? 'por atribuir' : CAT_NOME[cls.cat] },
-    { k: 'extintores', t: 'Extintores', s: (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.resumo.pisos + r.resumo.situacoes; return n ? `${n} portáteis` : r.geral ? 'por calcular' : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
+    { k: 'extintores', t: 'Extintores', s: p.modo === 'manutencao' ? 'dados para a verificação' : (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.resumo.pisos + r.resumo.situacoes; return n ? `${n} portáteis` : r.geral ? 'por calcular' : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
   // modo «só extintores»: levantamento, fatores só na UT I (a categoria decide a isenção do art. 163.º n.º 1) e extintores
-  const so = p.modo === 'extintores';
-  const usados = so ? todos.filter((x) => x.k === 'levantamento' || x.k === 'extintores' || (x.k === 'fatores' && ut.tipo === 1)) : todos;
+  const so = p.modo === 'extintores' || p.modo === 'manutencao';
+  const man = p.modo === 'manutencao';
+  const usados = so ? todos.filter((x) => (x.k === 'levantamento' && !man) || x.k === 'extintores' || (x.k === 'fatores' && ut.tipo === 1)) : todos;
   const steps = usados.map((x, i) => ({ ...x, n: String(i + 1).padStart(2, '0') }));
   if (!steps.some((x) => x.k === step)) step = so ? 'extintores' : 'fatores';
   const props: UTProps = { ed, ut, upU };
@@ -149,7 +150,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
             return (
               <>
                 {i > 0 ? <a className="btn" href={`#${base}/${steps[i - 1].k}`}>← {steps[i - 1].t}</a> : <span />}
-                {i < steps.length - 1 ? <a className="btn-primary" href={`#${base}/${steps[i + 1].k}`}>{steps[i + 1].t} →</a> : <a className="btn-fire" href={`#/p/${p.id}/${so ? 'extintores' : 'relatorio'}`}>{so ? 'Estudo de extintores →' : 'Relatório →'}</a>}
+                {i < steps.length - 1 ? <a className="btn-primary" href={`#${base}/${steps[i + 1].k}`}>{steps[i + 1].t} →</a> : <a className="btn-fire" href={`#/p/${p.id}/${man ? 'manutencao' : so ? 'extintores' : 'relatorio'}`}>{man ? 'Voltar ao plano de manutenção →' : so ? 'Estudo de extintores →' : 'Relatório →'}</a>}
               </>
             );
           })()}
