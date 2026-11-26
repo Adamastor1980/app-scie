@@ -416,3 +416,10 @@ export async function lerPublico(pid: string): Promise<FichaPublicaDoc | null> {
     throw e;
   }
 }
+
+/** Volta a enviar as fichas do cliente (ex.: depois de publicar as regras da Firebase) */
+export async function republicarFichas() {
+  publicosEnviados.clear();
+  useNuvem.setState({ avisoPublico: undefined });
+  await enviar(false);
+}

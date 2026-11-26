@@ -3,7 +3,7 @@ import { Building2, ListPlus, ChevronDown, ChevronRight, Copy, FileText, Plus, Q
 import LerQR from '../ui/LerQR';
 import { PesquisaExt } from './FichaExt';
 import { go } from '../router';
-import { useNuvem } from '../cloud/sync';
+import { republicarFichas, useNuvem } from '../cloud/sync';
 import { lerUrlExt } from '../engine/manutencao';
 import { useP } from './ProjetoShell';
 import VerificacaoExt from './VerificacaoExt';
@@ -117,7 +117,12 @@ export default function Manutencao() {
           <Field label="Técnico habitual"><Text value={pl.empresa.tecnico} onChange={(v) => upPl((x) => { x.empresa.tecnico = v; })} /></Field>
         </div>
         <p className="mt-5 max-w-3xl border-l-[3px] border-ink-4 bg-white px-3 py-2 text-[12.5px] text-ink-2"><b>Ficha do cliente:</b> quem ler o QR de um extintor, mesmo sem conta, vê a ficha desse extintor só de leitura — estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado.{!user && ' Fica disponível quando iniciar sessão com a conta Google.'}</p>
-        {avisoPublico && <p className="mt-2 max-w-3xl border-l-[3px] border-alerta bg-alerta-soft px-3 py-2 text-[12.5px] text-alerta">{avisoPublico}</p>}
+        {avisoPublico && (
+          <div className="mt-2 flex max-w-3xl flex-wrap items-center justify-between gap-2 border-l-[3px] border-alerta bg-alerta-soft px-3 py-2 text-[12.5px] text-alerta">
+            <span className="min-w-0 flex-1 basis-[260px]">{avisoPublico}</span>
+            <button className="btn h-8 px-3 text-[12px]" onClick={() => republicarFichas().catch(() => undefined)}>Tentar de novo</button>
+          </div>
+        )}
       </Section>
 
       <Section n="02" title="Extintores por edifício e piso" sub="Toque num extintor para ver os dados e o registo das manutenções." right={pl.extintores.length > 1 ? (
