@@ -94,7 +94,7 @@ describe('Existente × exigido por piso (RT-SCIE, art. 163.º n.º 2)', () => {
   });
 });
 
-import { faltaEmpresa, fichaPublica, lerUrlExt, procurarExt, registoOK, urlExt } from './manutencao';
+import { faltaEmpresa, fichasPublicas, lerUrlExt, procurarExt, registoOK, urlExt } from './manutencao';
 
 describe('QR, pesquisa pelo número e registo rápido', () => {
   it('endereço do QR e leitura', () => {
@@ -115,10 +115,12 @@ describe('QR, pesquisa pelo número e registo rápido', () => {
     expect(r).toMatchObject({ data: '2026-11-27', tipo: 'manutencao', resultado: 'conforme', empresa: 'Firma', registoAnepc: '12', tecnico: 'Rui' });
     expect(faltaEmpresa({ nome: 'Firma', registoAnepc: '', tecnico: 'Rui' }).map((f) => f[0])).toEqual(['N.º de registo ANEPC']);
   });
-  it('ficha pública: só o necessário (sem os outros dados do projeto)', () => {
-    const p = novoProjeto(); p.manutencao = { periodoMeses: 12, empresa: { nome: '', registoAnepc: '', tecnico: '' }, extintores: [ext('EXT-01', { edificio: p.edificios[0].id, registos: [reg('2026-01-01')] })] };
-    const f = fichaPublica(p, 'uid1');
-    expect(f.dono).toBe('uid1'); expect(f.extintores[0]).toMatchObject({ num: 'EXT-01', edificio: 'Edifício 1', desc: 'Pó químico ABC 6 kg' });
-    expect(Object.keys(f)).not.toContain('edificios'); expect(f.extintores[0].registos[0]).not.toHaveProperty('id');
+  it('ficha pública: uma por extintor, sem técnico nem morada, sem os outros extintores', () => {
+    const p = novoProjeto(); p.morada = 'Rua X'; p.manutencao = { periodoMeses: 12, empresa: { nome: '', registoAnepc: '', tecnico: '' }, extintores: [ext('EXT-01', { edificio: p.edificios[0].id, registos: [reg('2026-01-01')] }), ext('EXT-02', { edificio: p.edificios[0].id })] };
+    const f = fichasPublicas(p, 'uid1');
+    expect(f.map((x) => x.id)).toEqual([`${p.id}_EXT-01`, `${p.id}_EXT-02`]);
+    expect(f[0].doc.extintor).toMatchObject({ num: 'EXT-01', edificio: 'Edifício 1', desc: 'Pó químico ABC 6 kg' });
+    expect(f[0].doc.extintor.registos[0]).not.toHaveProperty('tecnico'); expect(f[0].doc.extintor.registos[0]).not.toHaveProperty('id');
+    expect(JSON.stringify(f[0].doc)).not.toContain('Rua X'); expect(JSON.stringify(f[0].doc)).not.toContain('EXT-02');
   });
 });

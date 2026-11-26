@@ -188,23 +188,30 @@ export const registoOK = (empresa: PlanoManut['empresa'], data = hojeISO(), id =
 });
 export const faltaEmpresa = (empresa: PlanoManut['empresa']): [string, string][] => faltaReg({ id: '', data: hojeISO(), tipo: 'manutencao', resultado: 'conforme', empresa: empresa.nome, registoAnepc: empresa.registoAnepc, tecnico: empresa.tecnico, obs: '' });
 
-/** Ficha pública (só leitura): o mínimo para o cliente ver o estado e o histórico de cada extintor */
+/** Ficha pública de UM extintor (só leitura, aberta pelo QR): sem nome do técnico nem morada (dados pessoais / localização) */
 export interface FichaPublicaDoc {
-  dono: string; atualizadoEm: number; projeto: string; cliente: string; morada: string;
+  dono: string; atualizadoEm: number; projeto: string; cliente: string;
   empresa: { nome: string; telefone: string; email: string };
   periodoMeses: number;
-  extintores: { id: string; num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id'>[] }[];
+  extintor: { num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id' | 'tecnico'>[] };
 }
-export function fichaPublica(p: Projeto, dono: string): FichaPublicaDoc {
-  const pl = p.manutencao!;
+/** Identificador do documento público de um extintor */
+export const idPublico = (pid: string, eid: string) => `${pid}_${eid}`;
+/** Fichas públicas de todos os extintores de um plano: uma por extintor */
+export function fichasPublicas(p: Projeto, dono: string): { id: string; doc: FichaPublicaDoc }[] {
+  const pl = p.manutencao;
+  if (!pl) return [];
   const nomeEd = (id: string) => p.edificios.find((e) => e.id === id)?.nome ?? '';
-  return {
-    dono, atualizadoEm: p.atualizadoEm, projeto: p.nome, cliente: p.cliente, morada: [p.morada, p.concelho].filter(Boolean).join(', '),
-    empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
-    periodoMeses: pl.periodoMeses,
-    extintores: pl.extintores.map((e) => ({
-      id: e.id, num: e.num, edificio: nomeEd(e.edificio), piso: e.piso, local: e.local, desc: descExt(e), eficacia: e.eficacia, ...(e.ano ? { ano: e.ano } : {}),
-      registos: [...e.registos].sort((a, b) => b.data.localeCompare(a.data)).map(({ id: _i, ...r }) => r), // eslint-disable-line @typescript-eslint/no-unused-vars
-    })),
-  };
+  return pl.extintores.map((e) => ({
+    id: idPublico(p.id, e.id),
+    doc: {
+      dono, atualizadoEm: p.atualizadoEm, projeto: p.nome, cliente: p.cliente,
+      empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
+      periodoMeses: pl.periodoMeses,
+      extintor: {
+        num: e.num, edificio: nomeEd(e.edificio), piso: e.piso, local: e.local, desc: descExt(e), eficacia: e.eficacia, ...(e.ano ? { ano: e.ano } : {}),
+        registos: [...e.registos].sort((a, b) => b.data.localeCompare(a.data)).map((r) => ({ data: r.data, tipo: r.tipo, resultado: r.resultado, empresa: r.empresa, registoAnepc: r.registoAnepc, obs: r.obs })),
+      },
+    },
+  }));
 }

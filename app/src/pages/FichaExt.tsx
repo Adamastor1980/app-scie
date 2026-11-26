@@ -10,7 +10,7 @@ import { ChipEstado, LinhaExt } from './Manutencao';
 import { TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
 
 /** Histórico de intervenções de um extintor (do mais recente para o mais antigo) */
-export function Historico({ registos }: { registos: Omit<RegistoManut, 'id'>[] }) {
+export function Historico({ registos }: { registos: (Omit<RegistoManut, 'id' | 'tecnico'> & { tecnico?: string })[] }) {
   const regs = [...registos].sort((a, b) => b.data.localeCompare(a.data));
   if (!regs.length) return <p className="text-[13px] text-ink-3">Ainda sem intervenções registadas.</p>;
   return (

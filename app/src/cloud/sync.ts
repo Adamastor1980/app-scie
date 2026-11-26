@@ -5,10 +5,12 @@ import { fb } from './firebase';
 import { useStore } from '../store';
 import type { Projeto } from '../data/types';
 import { logoLeve } from '../ui/primitives';
-import { fichaPublica, type FichaPublicaDoc } from '../engine/manutencao';
+import { fichasPublicas, idPublico, type FichaPublicaDoc } from '../engine/manutencao';
 
 /** fichas públicas de manutenção já enviadas (por projeto): só se reenvia quando mudam */
 const publicosEnviados = new Map<string, string>();
+/** projetos cuja ficha antiga (uma por projeto, versão anterior) já se tentou apagar nesta sessão */
+const legadoApagado = new Set<string>();
 
 /**
  * Sincronização com o Firestore.
@@ -241,6 +243,10 @@ export async function iniciarSincronizacao(user: User) {
     pararFns.push(useStore.subscribe((novo, antigo) => {
       if (aplicarRemoto) return;
       const vivos = new Set(novo.projetos.map((p) => p.id));
+      // fichas do cliente de extintores apagados (ou do projeto apagado)
+      const extDe = (ps: Projeto[]) => new Set(ps.flatMap((p) => (p.manutencao?.extintores ?? []).map((e) => idPublico(p.id, e.id))));
+      const extAgora = extDe(novo.projetos);
+      for (const id of extDe(antigo.projetos)) if (!extAgora.has(id)) apagarPublico(id).catch(() => undefined);
       const removidos = antigo.projetos.filter((p) => !vivos.has(p.id) && !p.exemplo);
       if (removidos.length) {
         const l = lapidesPorEnviar();
@@ -338,19 +344,21 @@ async function enviar(inicial: boolean) {
     enviados.delete(pid);
     tarefas.push(deleteDoc(doc(db, 'users', u.uid, 'projetos', pid)));
   }
-  // fichas públicas dos planos de manutenção partilhados com o cliente (só leitura, pelo QR)
+  // fichas públicas: uma por extintor (só leitura, pelo QR) — sem nome do técnico nem morada
   for (const p of st.projetos) {
-    if (p.exemplo || !p.manutencao?.extintores.length) continue; // sempre: o QR de cada extintor abre a ficha do cliente
-    const f = fichaPublica(p, u.uid);
-    const sf = estavel(f);
-    if (publicosEnviados.get(p.id) === sf) continue;
-    publicosEnviados.set(p.id, sf);
-    // a ficha do cliente não deve pôr a sincronização dos projetos em erro: avisa no plano de manutenção
-    tarefas.push(setDoc(doc(db, 'publico', p.id), limpo(f)).then(() => { if (useNuvem.getState().avisoPublico) useNuvem.setState({ avisoPublico: undefined }); }).catch((e) => {
-      const cod = (e as { code?: string }).code;
-      useNuvem.setState({ avisoPublico: cod === 'permission-denied' ? 'A nuvem recusou a ficha do cliente: falta publicar as regras novas da Firebase (firebase/firestore.rules).' : `A ficha do cliente não foi publicada: ${(e as Error).message}` });
-      if (cod !== 'permission-denied') publicosEnviados.delete(p.id); // erro passageiro: volta a tentar
-    }));
+    if (p.exemplo || !p.manutencao?.extintores.length) continue;
+    if (!legadoApagado.has(p.id)) { legadoApagado.add(p.id); deleteDoc(doc(db, 'publico', p.id)).catch(() => undefined); } // ficha antiga com todos os extintores
+    for (const { id, doc: f } of fichasPublicas(p, u.uid)) {
+      const sf = estavel(f);
+      if (publicosEnviados.get(id) === sf) continue;
+      publicosEnviados.set(id, sf);
+      // a ficha do cliente não deve pôr a sincronização dos projetos em erro: avisa no plano de manutenção
+      tarefas.push(setDoc(doc(db, 'publico', id), limpo(f)).then(() => { if (useNuvem.getState().avisoPublico) useNuvem.setState({ avisoPublico: undefined }); }).catch((e) => {
+        const cod = (e as { code?: string }).code;
+        useNuvem.setState({ avisoPublico: cod === 'permission-denied' ? 'A nuvem recusou a ficha do cliente: falta publicar as regras novas da Firebase (firebase/firestore.rules).' : `A ficha do cliente não foi publicada: ${(e as Error).message}` });
+        if (cod !== 'permission-denied') publicosEnviados.delete(id); // erro passageiro: volta a tentar
+      }));
+    }
   }
   if (!inicial) {
     for (const pid of [...enviados.keys()]) {
@@ -395,7 +403,7 @@ export async function terminarSessao() {
 }
 
 
-/** Apaga a ficha pública de um projeto (projeto apagado) */
+/** Apaga uma ficha pública (extintor ou projeto apagado) */
 export async function apagarPublico(pid: string) {
   const f = fb();
   if (!f || !useNuvem.getState().user) return;
@@ -404,11 +412,11 @@ export async function apagarPublico(pid: string) {
 }
 
 /** Ficha pública de um projeto (lida sem sessão iniciada); null se não estiver partilhada */
-export async function lerPublico(pid: string): Promise<FichaPublicaDoc | null> {
+export async function lerPublico(pid: string, eid: string): Promise<FichaPublicaDoc | null> {
   const f = fb();
   if (!f) return null;
   try {
-    const d = await getDoc(doc(f.db, 'publico', pid));
+    const d = await getDoc(doc(f.db, 'publico', idPublico(pid, eid)));
     return d.exists() ? (d.data() as FichaPublicaDoc) : null;
   } catch (e) {
     // sem permissão = ficha não partilhada (ou regras por atualizar): não é falta de rede

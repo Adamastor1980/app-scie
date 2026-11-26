@@ -24,8 +24,8 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
   useEffect(() => {
     if (tem || aSincronizar || (nuvemDisponivel() && !verificado)) return;
     if (!nuvemDisponivel()) { setPub(null); return; }
-    lerPublico(pid).then(setPub).catch(() => setPub('erro'));
-  }, [tem, aSincronizar, verificado, pid]);
+    lerPublico(pid, eid).then(setPub).catch(() => setPub('erro'));
+  }, [tem, aSincronizar, verificado, pid, eid]);
 
   const quadro = (c: React.ReactNode) => (
     <div className="min-h-[100dvh] bg-paper">
@@ -35,7 +35,7 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
   );
   if (tem || pub === 'a_ler') return quadro(<p className="font-mono text-sm text-ink-3">A abrir o extintor…</p>);
   if (pub === 'erro') return quadro(<p className="text-[14px]">Não foi possível ler a ficha (sem rede?). Tente de novo com ligação à internet.</p>);
-  const e = pub?.extintores.find((x) => x.id === eid);
+  const e = pub?.extintor;
   if (!pub || !e) return quadro(
     <div>
       <p className="font-display text-[20px] font-bold">Ficha não disponível</p>
@@ -43,7 +43,7 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
       <button className="btn mt-4" onClick={() => go('/')}>Entrar na app</button>
     </div>,
   );
-  const s = estadoExt({ ...(e as unknown as ExtintorInv), registos: e.registos.map((r, i) => ({ ...r, id: String(i) })) }, pub.periodoMeses);
+  const s = estadoExt({ ...(e as unknown as ExtintorInv), registos: e.registos.map((r, i) => ({ ...r, tecnico: '', id: String(i) })) }, pub.periodoMeses);
   return quadro(
     <div>
       <p className="label !text-fire-ink">Ficha do extintor · só leitura</p>
