@@ -1,7 +1,7 @@
 import Rodape from '../ui/Rodape';
 import LogoPreto from '../ui/LogoPreto';
 import { useRef } from 'react';
-import { ArrowUpRight, Copy, Download, FilePlus2, Trash2, Upload } from 'lucide-react';
+import { ArrowUpRight, Copy, Download, FireExtinguisher, Flame, Trash2, Upload } from 'lucide-react';
 import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
 import { go } from '../router';
@@ -38,8 +38,8 @@ export default function Home() {
           Classificar. Calcular. <span className="text-fire">Cumprir.</span>
         </h1>
         <div className="flex flex-wrap gap-2">
-          <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><FilePlus2 size={16} /> Novo projeto SCIE</button>
-          <button className="btn h-10 px-4" title="Projeto só de dimensionamento de extintores (RT-SCIE, art. 163.º)" onClick={() => go(`/p/${criar('extintores')}`)}><FilePlus2 size={16} /> Só extintores</button>
+          <button className="btn-fire h-10 px-4" onClick={() => go(`/p/${criar()}`)}><Flame size={16} /> Novo projeto SCIE</button>
+          <button className="btn h-10 px-4" title="Projeto só de dimensionamento de extintores (RT-SCIE, art. 163.º)" onClick={() => go(`/p/${criar('extintores')}`)}><FireExtinguisher size={16} /> Só extintores</button>
           <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
           {projetos.length > 0 && (
             <button className="btn h-10 px-3" onClick={() => {
@@ -88,7 +88,7 @@ export default function Home() {
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
-                    {p.modo === 'extintores' ? <ExtBadge size="sm" /> : uts.length > 0 && <CatBadge cat={max} size="sm" />}
+                    {p.modo === 'extintores' ? <ExtBadge size="sm" /> : <span className="flex items-center gap-1.5" title="Projeto SCIE completo"><Flame size={17} strokeWidth={2} className="text-fire-ink" />{uts.length > 0 && <CatBadge cat={max} size="sm" />}</span>}
                   </div>
                   <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
