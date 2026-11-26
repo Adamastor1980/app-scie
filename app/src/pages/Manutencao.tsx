@@ -4,7 +4,7 @@ import LerQR from '../ui/LerQR';
 import { PesquisaExt } from './FichaExt';
 import { go } from '../router';
 import { republicarFichas, useNuvem } from '../cloud/sync';
-import { lerUrlExt } from '../engine/manutencao';
+import { periodoDe, lerUrlExt } from '../engine/manutencao';
 import { useP } from './ProjetoShell';
 import VerificacaoExt from './VerificacaoExt';
 import { opcoesServe } from '../engine/verificacaoExt';
@@ -46,7 +46,7 @@ export function ResumoManut({ pl }: { pl: PlanoManut | undefined }) {
 }
 
 const novoExt = (lista: ExtintorInv[], edificio: string, base?: Partial<ExtintorInv>): ExtintorInv => ({
-  id: uid(), num: proximoNum(lista), edificio, piso: base?.piso ?? null, local: '', agente: base?.agente ?? '', cap: base?.cap ?? 0, eficacia: base?.eficacia ?? '', fabricante: base?.fabricante ?? '', serie: '', ano: base?.ano, registos: [],
+  id: uid(), num: proximoNum(lista, base?.equip === 'carretel'), ...(base?.equip === 'carretel' ? { equip: 'carretel' as const, mangueira: base.mangueira } : {}), edificio, piso: base?.piso ?? null, local: '', agente: base?.agente ?? '', cap: base?.cap ?? 0, eficacia: base?.eficacia ?? '', fabricante: base?.fabricante ?? '', serie: '', ano: base?.ano, registos: [],
 });
 const novoReg = (pl: PlanoManut, data = hojeISO()): RegistoManut => ({ id: uid(), data, tipo: 'manutencao', resultado: '', empresa: pl.empresa.nome, registoAnepc: pl.empresa.registoAnepc, tecnico: pl.empresa.tecnico, obs: '' });
 
@@ -67,9 +67,10 @@ export default function Manutencao() {
   const upPl = (fn: (pl: PlanoManut) => void) => up((q) => { fn(q.manutencao ??= novoPlanoManut()); });
   const upExt = (id: string, fn: (e: ExtintorInv) => void) => upPl((x) => { const e = x.extintores.find((z) => z.id === id); if (e) fn(e); });
   const alternar = (id: string) => setAberto((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const acrescentar = (edificio: string, modelo?: ExtintorInv) => {
-    const ultimo = modelo ?? [...pl.extintores].reverse().find((e) => e.edificio === edificio);
-    const e = novoExt(pl.extintores, edificio, ultimo ? { piso: ultimo.piso, agente: ultimo.agente, cap: ultimo.cap, eficacia: ultimo.eficacia, fabricante: ultimo.fabricante, ano: modelo?.ano } : undefined);
+  const acrescentar = (edificio: string, modelo?: ExtintorInv, carretel = false) => {
+    const car = modelo ? modelo.equip === 'carretel' : carretel;
+    const ultimo = modelo ?? [...pl.extintores].reverse().find((e) => e.edificio === edificio && (e.equip === 'carretel') === car);
+    const e = novoExt(pl.extintores, edificio, ultimo ? { piso: ultimo.piso, agente: ultimo.agente, cap: ultimo.cap, eficacia: ultimo.eficacia, fabricante: ultimo.fabricante, ano: modelo?.ano, equip: ultimo.equip, mangueira: ultimo.mangueira } : car ? { equip: 'carretel' } : undefined);
     if (modelo) e.local = modelo.local;
     upPl((x) => { x.extintores.push(e); });
     setAberto((s) => new Set(s).add(e.id));
@@ -82,7 +83,7 @@ export default function Manutencao() {
     <main className="mx-auto max-w-[1100px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
       <div className="mb-6 border-b-2 border-ink pb-5">
         <p className="label !text-fire-ink">RT-SCIE, arts. 201.º n.º 1 c) e 202.º n.º 4 · RJ-SCIE, art. 23.º</p>
-        <h1 className="h-display mt-2 text-[34px] sm:text-[40px]">Plano de manutenção de extintores</h1>
+        <h1 className="h-display mt-2 text-[34px] sm:text-[40px]">Plano de manutenção — extintores e carretéis</h1>
         <p className="mt-2 max-w-3xl text-[13px] text-ink-3">Listagem dos extintores por edifício e por piso, registo de cada intervenção (data, tipo, empresa, técnico e observações) e contagem até à próxima manutenção.</p>
         <div className="mt-4"><ResumoManut pl={pl} /></div>
         {pl.extintores.length > 0 && <div className="mt-4 max-w-[520px]"><PesquisaExt lista={pl.extintores} abrir={(e) => go(`/p/${p.id}/ext/${e.id}`)} sub={(e) => `${p.edificios.find((z) => z.id === e.edificio)?.nome ?? ''} · ${rotuloPisoInv(e.piso)} · ${e.local || '—'}`} /></div>}
@@ -109,9 +110,16 @@ export default function Manutencao() {
 
       <Section n="01" title="Periodicidade e empresa de manutenção" sub="A empresa indicada aqui preenche sozinha os novos registos; pode alterá-los em cada um.">
         <div className="grid gap-4 md:grid-cols-4">
-          <Field label="Manutenção a cada" hint="12 meses: periodicidade da NP 4413, a norma de manutenção de extintores para que remete o RT-SCIE (anexo I, art. 8.º n.º 9)." className={pl.periodoMeses > 0 ? '' : 'falta'}>
-            <Num value={pl.periodoMeses} suffix="meses" min={1} onChange={(v) => upPl((x) => { x.periodoMeses = Math.max(1, Math.round(v)); })} />
-          </Field>
+          <div className="flex flex-col gap-3">
+            <Field label="Extintores: a cada" hint="12 meses: NP 4413, a norma de manutenção de extintores para que remete o RT-SCIE (anexo I, art. 8.º n.º 9)." className={pl.periodoMeses > 0 ? '' : 'falta'}>
+              <Num value={pl.periodoMeses} suffix="meses" min={1} onChange={(v) => upPl((x) => { x.periodoMeses = Math.max(1, Math.round(v)); })} />
+            </Field>
+            {pl.extintores.some((e) => e.equip === 'carretel') && (
+              <Field label="Carretéis: a cada" hint="12 meses por omissão: EN 671-3 (manutenção de carretéis), norma fora da base legal da app — confirmar.">
+                <Num value={pl.periodoCarreteis ?? 12} suffix="meses" min={1} onChange={(v) => upPl((x) => { x.periodoCarreteis = Math.max(1, Math.round(v)); })} />
+              </Field>
+            )}
+          </div>
           <Field label="Empresa de manutenção"><Text value={pl.empresa.nome} onChange={(v) => upPl((x) => { x.empresa.nome = v; })} /></Field>
           <Field label="N.º de registo ANEPC" hint="Obrigatório para empresas de manutenção (RJ-SCIE, art. 23.º)."><Text value={pl.empresa.registoAnepc} onChange={(v) => upPl((x) => { x.empresa.registoAnepc = v; })} /></Field>
           <Field label="Técnico habitual"><Text value={pl.empresa.tecnico} onChange={(v) => upPl((x) => { x.empresa.tecnico = v; })} /></Field>
@@ -172,7 +180,7 @@ export default function Manutencao() {
                 {soManut
                   ? <input className="input h-9 max-w-[320px] flex-1 font-display text-[16px] font-bold" value={ed.nome} onChange={(e) => up((q) => { const x = q.edificios.find((z) => z.id === ed.id); if (x) x.nome = e.target.value; })} />
                   : <span className="font-display text-[17px] font-bold">{ed.nome}</span>}
-                <span className="ref">{doEd.length} {doEd.length === 1 ? 'extintor' : 'extintores'}</span>
+                <span className="ref">{(() => { const nc = doEd.filter((e) => e.equip === 'carretel').length, ne = doEd.length - nc; return [ne || !nc ? `${ne} ${ne === 1 ? 'extintor' : 'extintores'}` : '', nc ? `${nc} ${nc === 1 ? 'carretel' : 'carretéis'}` : ''].filter(Boolean).join(' · '); })()}</span>
                 <span className="ml-auto flex gap-1">
                   {soManut && p.edificios.length > 1 && <button className="btn-icon" title="Apagar edifício" onClick={() => {
                     if (doEd.length) return alert(`O edifício «${ed.nome}» tem ${doEd.length} extintores. Apague-os ou mude-os de edifício primeiro.`);
@@ -187,14 +195,17 @@ export default function Manutencao() {
                     {doEd.filter((e) => e.piso === pi).map((e) => (
                       <LinhaExt key={e.id} e={e} pl={pl} aberto={aberto.has(e.id)} alternar={() => alternar(e.id)} upExt={(fn) => upExt(e.id, fn)}
                         duplicar={() => acrescentar(ed.id, e)}
-                        apagar={() => confirm(`Apagar o extintor ${e.num} e o seu registo de manutenções?`) && upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); })}
+                        apagar={() => confirm(`Apagar ${e.num} e o seu registo de manutenções?`) && upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); })}
                         edificios={soManut || p.edificios.length > 1 ? p.edificios.map((z) => ({ id: z.id, nome: z.nome })) : undefined} />
                     ))}
                   </div>
                 </div>
               ))}
               {!doEd.length && <p className="mb-3 text-[12.5px] text-ink-3">Sem extintores neste edifício.</p>}
-              <button className="flex items-center gap-1 text-[13px] font-semibold text-fire-ink hover:underline" onClick={() => acrescentar(ed.id)}><Plus size={14} /> Acrescentar extintor</button>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <button className="flex items-center gap-1 text-[13px] font-semibold text-fire-ink hover:underline" onClick={() => acrescentar(ed.id)}><Plus size={14} /> Acrescentar extintor</button>
+                <button className="flex items-center gap-1 text-[13px] font-semibold text-fire-ink hover:underline" onClick={() => acrescentar(ed.id, undefined, true)}><Plus size={14} /> Acrescentar carretel</button>
+              </div>
             </div>
           );
         })}
@@ -216,7 +227,7 @@ export function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edi
   const { p } = useP();
   const edObj = p.edificios.find((z) => z.id === e.edificio);
   const serveOps = p.modo === 'manutencao' && pl.verificar && edObj ? opcoesServe(edObj) : [];
-  const s = estadoExt(e, pl.periodoMeses);
+  const s = estadoExt(e, periodoDe(pl, e));
   const fe = faltaExt(e);
   const falta = (campo: string) => (fe.some((f) => f[0] === campo) ? 'falta' : '');
   const regs = [...e.registos].sort((a, b) => (b.data || '9').localeCompare(a.data || '9'));
@@ -233,7 +244,7 @@ export function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edi
       {aberto && (
         <div className="border-t border-paper-3 px-3 pb-4 pt-3 sm:px-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Field label="N.º do extintor"><Text value={e.num} onChange={(v) => upExt((x) => { x.num = v; })} /></Field>
+            <Field label={e.equip === 'carretel' ? 'N.º do carretel' : 'N.º do extintor'}><Text value={e.num} onChange={(v) => upExt((x) => { x.num = v; })} /></Field>
             <Field label="Piso" className={falta('Piso')}>
               <select className="input" value={e.piso ?? ''} onChange={(ev) => upExt((x) => { x.piso = ev.target.value === '' ? null : Number(ev.target.value); })}>
                 <option value="">Escolher…</option>{PISOS.map((n) => <option key={n} value={n}>{rotuloPisoInv(n)}</option>)}
@@ -241,6 +252,9 @@ export function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edi
             </Field>
             <Field label="Local" className={`col-span-2 ${falta('Local')}`}><Text value={e.local} placeholder="ex.: corredor, junto à saída da receção" onChange={(v) => upExt((x) => { x.local = v; })} /></Field>
             {edificios && <Field label="Edifício"><select className="input" value={e.edificio} onChange={(ev) => upExt((x) => { x.edificio = ev.target.value; })}>{edificios.map((z) => <option key={z.id} value={z.id}>{z.nome}</option>)}</select></Field>}
+            {e.equip === 'carretel' ? (
+              <Field label="Mangueira"><Num value={e.mangueira} suffix="m" onChange={(v, t) => upExt((x) => { x.mangueira = t.trim() ? v : undefined; })} /></Field>
+            ) : (<>
             <Field label="Agente" className={falta('Agente')}>
               <select className="input" value={e.agente} onChange={(ev) => upExt((x) => { x.agente = ev.target.value as AgenteInv; if (x.agente && CAPS[x.agente].length && !CAPS[x.agente].includes(x.cap)) x.cap = CAPS[x.agente].includes(6) ? 6 : CAPS[x.agente][0]; })}>
                 <option value="">Escolher…</option>{(Object.keys(NOME_AGENTE_INV) as AgenteInv[]).map((a) => <option key={a} value={a}>{NOME_AGENTE_INV[a]}</option>)}
@@ -252,10 +266,11 @@ export function LinhaExt({ e, pl, aberto, alternar, upExt, duplicar, apagar, edi
                 : <Num value={e.cap} onChange={(v) => upExt((x) => { x.cap = v; })} />}
             </Field>
             <Field label="Eficácia"><Text value={e.eficacia} placeholder="ex.: 27A 183B C" onChange={(v) => upExt((x) => { x.eficacia = v; })} /></Field>
+            </>)}
             <Field label="Ano de fabrico"><Num value={e.ano} placeholder="ex.: 2022" onChange={(v, t) => upExt((x) => { x.ano = t.trim() ? Math.round(v) : undefined; })} /></Field>
             <Field label="Fabricante / marca"><Text value={e.fabricante} onChange={(v) => upExt((x) => { x.fabricante = v; })} /></Field>
             <Field label="N.º de série"><Text value={e.serie} onChange={(v) => upExt((x) => { x.serie = v; })} /></Field>
-            {serveOps.length > 0 && (
+            {serveOps.length > 0 && e.equip !== 'carretel' && (
               <Field label="Para que serve" className="col-span-2" hint="Vazio = conta para o piso (art. 163.º n.º 2).">
                 <select className="input" value={e.serve ?? ''} onChange={(ev) => upExt((x) => { x.serve = ev.target.value || undefined; })}>
                   <option value="">Geral do piso (art. 163.º n.º 2)</option>{serveOps.map((o) => <option key={o.v} value={o.v}>{o.t}</option>)}

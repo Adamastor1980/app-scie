@@ -53,3 +53,20 @@ describe('Verificação completa — art. 163.º e condições específicas', ()
     expect(piso.exts.map((e) => e.num)).toEqual(['A', 'B', 'C']); expect(piso.estado).toBe('cumpre');
   });
 });
+
+describe('Verificação legal — carretéis (RIA)', () => {
+  it('compara os carretéis existentes com o mínimo do art. 165.º; carretéis não contam para os extintores do piso', () => {
+    const ed = { ...novoEdificio(1), id: 'E' };
+    const u = novaUT(3); u.id = 'U';
+    u.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 2000 }];
+    u.ria = { cat: 2, mangueira: 25, escadas: 2 };
+    ed.uts.push(u);
+    const car = (n: string) => ext(n, { equip: 'carretel', agente: '', cap: 0 });
+    let res = verificarEdificio(ed, plano([car('CAR-01'), ext('EXT-01')])).res;
+    const ria = res.find((r) => r.tipo === 'ria')!;
+    expect(ria).toMatchObject({ estado: 'falta', qtd: 2 }); expect(ria.texto).toContain('falta 1');
+    expect(res.find((r) => r.tipo === 'piso')!.exts.map((e) => e.num)).toEqual(['EXT-01']);
+    res = verificarEdificio(ed, plano([car('CAR-01'), car('CAR-02')])).res;
+    expect(res.find((r) => r.tipo === 'ria')!.estado).toBe('cumpre');
+  });
+});

@@ -1,6 +1,7 @@
 import type { Edificio, ExtintorInv, PlanoManut } from '../data/types';
 import { classificar, pisosUT } from './calc';
 import { dimensionarExtintores } from './extintores';
+import { dimensionarRIA } from './ria';
 import { comparaPiso, litrosEqInv } from './manutencao';
 import { nomeUT } from '../nome';
 import { ROMANO } from '../data/rjscie';
@@ -15,7 +16,7 @@ import { ROMANO } from '../data/rjscie';
 export type EstadoReq = 'cumpre' | 'falta' | 'verificar' | 'dados';
 export interface Req {
   key: string; utId: string; ut: string;
-  tipo: 'piso' | 'item' | 'outro' | 'manual';
+  tipo: 'piso' | 'item' | 'outro' | 'manual' | 'ria';
   titulo: string; onde: string; base: string;
   qtd: number | null; qtdTxt?: string;
   piso?: number; area?: number; semAgua?: boolean;
@@ -58,6 +59,10 @@ export function requisitos(ed: Edificio): { reqs: Req[]; porUT: { utId: string; 
       const pi = r.pisos.find((x) => x.n === p.n);
       reqs.push({ key: `${ut.id}:piso:${p.n}`, utId: ut.id, ut: nome, tipo: 'piso', titulo: `${p.nome} — extintores do piso`, onde: p.nome, base: 'RT-SCIE, art. 163.º n.º 2', qtd: pi?.minN ?? null, piso: p.n, area: p.area, semAgua: gareEl });
     }
+    // carretéis (RIA): mínimo de bocas por piso (art. 165.º); sem categoria, faltam dados
+    const ria = dimensionarRIA(ut);
+    if (ria.exigida === null) reqs.push({ key: `${ut.id}:ria:cat`, utId: ut.id, ut: nome, tipo: 'ria', titulo: 'Rede de incêndio armada (carretéis)', onde: 'Toda a UT', base: 'RT-SCIE, art. 164.º', qtd: null });
+    else if (ria.exigida && !ria.proibida) for (const p of ria.pisos) reqs.push({ key: `${ut.id}:ria:${p.n}`, utId: ut.id, ut: nome, tipo: 'ria', titulo: `${p.nome} — carretéis (RIA)`, onde: p.nome, base: `${ria.base}; RT-SCIE, art. 165.º`, qtd: ria.falta.length ? null : p.minimo, piso: p.n });
     for (const l of r.mapa) for (const it of l.itens) {
       if (it.cat === 'complemento' || it.base === 'RT-SCIE, art. 163.º n.º 2') continue;
       const key = `${ut.id}:${it.desc}|${l.onde}`;
@@ -89,7 +94,8 @@ function problemasExt(e: ExtintorInv, r: Req): { erro: string[]; verificar: stri
 /** Verificação de um edifício: estado de cada exigência */
 export function verificarEdificio(ed: Edificio, pl: PlanoManut): { porUT: ReturnType<typeof requisitos>['porUT']; res: ResReq[] } {
   const { reqs, porUT } = requisitos(ed);
-  const exts = pl.extintores.filter((e) => e.edificio === ed.id);
+  const exts = pl.extintores.filter((e) => e.edificio === ed.id && e.equip !== 'carretel');
+  const carreteis = pl.extintores.filter((e) => e.edificio === ed.id && e.equip === 'carretel');
   const keys = new Set(reqs.map((r) => r.key));
   const conf = pl.confirmados ?? {};
   // extintores sem exigência própria (ou com uma que já não existe) servem o geral do piso: a primeira UT com esse piso
@@ -97,6 +103,13 @@ export function verificarEdificio(ed: Edificio, pl: PlanoManut): { porUT: Return
   const servidos = (r: Req) => exts.filter((e) => (e.serve && keys.has(e.serve) ? e.serve === r.key : r.tipo === 'piso' && geralDe(e) === r.key));
   const res = reqs.map((r): ResReq => {
     const ex = servidos(r);
+    if (r.tipo === 'ria') {
+      if (r.piso === undefined) return { ...r, exts: [], problemas: [], estado: 'dados', texto: 'Falta a categoria de risco (passo Extintores da UT) para saber se a rede é exigida' };
+      const ex = carreteis.filter((e) => e.piso === r.piso);
+      if (r.qtd == null) return { ...r, exts: ex, problemas: [], estado: 'dados', texto: 'Faltam dados da RIA (mangueira, escadas ou áreas) no passo Extintores da UT' };
+      const falta = Math.max(0, r.qtd - ex.length);
+      return { ...r, exts: ex, problemas: [], estado: falta ? 'falta' : 'cumpre', texto: `Mínimo ${r.qtd} · existem ${ex.length}${falta ? ` — ${falta === 1 ? 'falta 1' : `faltam ${falta}`}` : ''} (cobertura a confirmar na planta)` };
+    }
     if (r.tipo === 'manual' || r.tipo === 'outro') {
       const ok = !!conf[r.key];
       return { ...r, exts: ex, problemas: [], estado: ok ? 'cumpre' : 'verificar', texto: ok ? 'Confirmado' : 'Confirmar no local' };

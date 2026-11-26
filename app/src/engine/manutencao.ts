@@ -1,5 +1,6 @@
 import type { AgenteInv, ExtintorInv, PlanoManut, Projeto, RegistoManut, TipoManut } from '../data/types';
 import { CONVERSAO, dimensionarExtintores, exigidosPorArea } from './extintores';
+import { dimensionarRIA } from './ria';
 import { classificar } from './calc';
 
 /**
@@ -17,7 +18,10 @@ export const TIPO_MANUT: Record<TipoManut, string> = {
 /** dias de antecedência a partir dos quais o aviso passa a laranja */
 export const AVISO_DIAS = 60;
 
-export const descExt = (e: ExtintorInv) => (e.agente ? `${NOME_AGENTE_INV[e.agente]}${e.cap > 0 ? ` ${String(e.cap).replace('.', ',')} ${UNID_INV[e.agente]}` : ''}` : e.eficacia ? `agente por indicar (eficácia ${e.eficacia})` : '—');
+export const eCarretel = (e: ExtintorInv) => e.equip === 'carretel';
+/** Periodicidade do equipamento: extintores (NP 4413) ou carretéis (EN 671-3) */
+export const periodoDe = (pl: Pick<PlanoManut, 'periodoMeses' | 'periodoCarreteis'>, e: ExtintorInv) => (eCarretel(e) ? pl.periodoCarreteis ?? 12 : pl.periodoMeses);
+export const descExt = (e: ExtintorInv) => eCarretel(e) ? `Carretel${e.mangueira ? `, mangueira ${String(e.mangueira).replace('.', ',')} m` : ''}` : (e.agente ? `${NOME_AGENTE_INV[e.agente]}${e.cap > 0 ? ` ${String(e.cap).replace('.', ',')} ${UNID_INV[e.agente]}` : ''}` : e.eficacia ? `agente por indicar (eficácia ${e.eficacia})` : '—');
 export const rotuloPisoInv = (n: number | null) => (n === null ? '—' : n === 0 ? 'Piso 0 (r/c)' : `Piso ${n}`);
 export const dataPt = (iso?: string) => (iso ? new Date(iso + 'T00:00').toLocaleDateString('pt-PT') : '—');
 export const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -53,7 +57,8 @@ export function estadoExt(e: ExtintorInv, periodoMeses: number, hoje = hojeISO()
 /** Campos obrigatórios do extintor por preencher: [campo, para que serve] */
 export function faltaExt(e: ExtintorInv): [string, string][] {
   const f: [string, string][] = [];
-  if (e.piso === null) f.push(['Piso', 'para a listagem por andar e para encontrar o extintor']);
+  if (e.piso === null) f.push(['Piso', `para a listagem por andar e para encontrar o ${eCarretel(e) ? 'carretel' : 'extintor'}`]);
+  if (eCarretel(e)) { if (!e.local.trim()) f.push(['Local', 'onde está o carretel dentro do piso (ex.: junto à saída para a escada A)']); return f; }
   if (!e.local.trim()) f.push(['Local', 'onde está o extintor dentro do piso (ex.: junto à saída da receção)']);
   if (!e.agente) f.push(['Agente', 'tipo de extintor (água, espuma, pó, CO₂)']);
   if (!(e.cap > 0)) f.push(['Capacidade', 'carga do extintor (L ou kg)']);
@@ -70,21 +75,21 @@ export function faltaReg(r: RegistoManut): [string, string][] {
   return f;
 }
 
-/** Próximo n.º livre: EXT-01, EXT-02… */
-export function proximoNum(lista: ExtintorInv[]): string {
-  const max = lista.reduce((m, e) => { const k = /(\d+)\s*$/.exec(e.num); return k ? Math.max(m, Number(k[1])) : m; }, 0);
-  return `EXT-${String(max + 1).padStart(2, '0')}`;
+/** Próximo n.º livre: EXT-01, EXT-02… (extintores) ou CAR-01, CAR-02… (carretéis) */
+export function proximoNum(lista: ExtintorInv[], carretel = false): string {
+  const max = lista.filter((e) => eCarretel(e) === carretel).reduce((m, e) => { const k = /(\d+)\s*$/.exec(e.num); return k ? Math.max(m, Number(k[1])) : m; }, 0);
+  return `${carretel ? 'CAR' : 'EXT'}-${String(max + 1).padStart(2, '0')}`;
 }
 
 /** Ordem da listagem: edifício (ordem do projeto), piso, n.º */
 export function ordenar(lista: ExtintorInv[], ordemEd: string[]): ExtintorInv[] {
-  return [...lista].sort((a, b) => (ordemEd.indexOf(a.edificio) - ordemEd.indexOf(b.edificio)) || ((a.piso ?? 999) - (b.piso ?? 999)) || a.num.localeCompare(b.num, 'pt', { numeric: true }));
+  return [...lista].sort((a, b) => (ordemEd.indexOf(a.edificio) - ordemEd.indexOf(b.edificio)) || ((a.piso ?? 999) - (b.piso ?? 999)) || (Number(a.equip === 'carretel') - Number(b.equip === 'carretel')) || a.num.localeCompare(b.num, 'pt', { numeric: true }));
 }
 
 export function resumoManut(pl: PlanoManut | undefined, hoje = hojeISO()) {
   const r = { total: 0, atraso: 0, breve: 0, ok: 0, sem: 0, naoConforme: 0, incompletos: 0 };
   for (const e of pl?.extintores ?? []) {
-    const s = estadoExt(e, pl!.periodoMeses, hoje);
+    const s = estadoExt(e, periodoDe(pl!, e), hoje);
     r.total++; r[s.nivel]++;
     if (s.naoConforme) r.naoConforme++;
     if (faltaExt(e).length) r.incompletos++;
@@ -100,17 +105,22 @@ const capDeTexto = (t: string): number => { const m = /(\d+(?:,\d+)?)\s*(kg|L)\b
 const eficaciaDeTexto = (t: string): string => { const m = /eficácia mínima (?:de )?([0-9][0-9A-Z /]*[A-Z])/.exec(t); return m ? m[1].trim() : ''; };
 
 /**
- * Um extintor do inventário por cada extintor do mapa: pisos (agente e capacidade escolhidos), locais e situações próprias,
+ * Um equipamento do inventário por cada extintor do mapa e por cada carretel do mínimo da RIA: pisos (agente e capacidade escolhidos), locais e situações próprias,
  * móveis e complemento de CO₂. Os itens sem número fixo («1 em cada», «1 por compartimento») não entram: ficam em «porContar».
  */
 export function inventarioDoMapa(p: Projeto, existentes: ExtintorInv[] = []): { novos: ExtintorInv[]; porContar: string[] } {
   const novos: ExtintorInv[] = [];
   const porContar: string[] = [];
-  let k = existentes.reduce((m, e) => { const x = /(\d+)\s*$/.exec(e.num); return x ? Math.max(m, Number(x[1])) : m; }, 0);
-  const mk = (edificio: string, x: Partial<ExtintorInv>): ExtintorInv => ({
-    id: `${Date.now().toString(36)}-${(++k).toString(36)}-${Math.random().toString(36).slice(2, 7)}`, num: `EXT-${String(k).padStart(2, '0')}`,
-    edificio, piso: null, local: '', agente: '', cap: 0, eficacia: '', fabricante: '', serie: '', registos: [], ...x,
-  });
+  const maxDe = (car: boolean) => existentes.filter((e) => eCarretel(e) === car).reduce((m, e) => { const x = /(\d+)\s*$/.exec(e.num); return x ? Math.max(m, Number(x[1])) : m; }, 0);
+  let k = maxDe(false), kc = maxDe(true), seq = 0;
+  const mk = (edificio: string, x: Partial<ExtintorInv>): ExtintorInv => {
+    const car = x.equip === 'carretel';
+    const n = car ? ++kc : ++k;
+    return {
+      id: `${Date.now().toString(36)}-${(++seq).toString(36)}-${Math.random().toString(36).slice(2, 7)}`, num: `${car ? 'CAR' : 'EXT'}-${String(n).padStart(2, '0')}`,
+      edificio, piso: null, local: '', agente: '', cap: 0, eficacia: '', fabricante: '', serie: '', registos: [], ...x,
+    };
+  };
   for (const ed of p.edificios) for (const ut of ed.uts) {
     const r = dimensionarExtintores(ut, classificar(ut).cat);
     for (const pi of r.pisos) for (let i = 0; i < (pi.area > 0 ? pi.qtd : 0); i++) novos.push(mk(ed.id, { piso: pi.n, agente: pi.agente, cap: pi.cap }));
@@ -123,6 +133,9 @@ export function inventarioDoMapa(p: Projeto, existentes: ExtintorInv[] = []): { 
         agente: agenteDeTexto(it.desc), cap: movel && /50 kg/.test(it.desc) ? 50 : capDeTexto(it.desc), eficacia: eficaciaDeTexto(it.desc) || (/25F/.test(it.desc) ? '25F' : ''),
       }));
     }
+    // carretéis da rede de incêndio armada (art. 165.º): o mínimo de bocas por piso
+    const ria = dimensionarRIA(ut);
+    if (ria.exigida && !ria.proibida) for (const pi of ria.pisos) for (let i = 0; i < pi.minimo; i++) novos.push(mk(ed.id, { equip: 'carretel', piso: pi.n, mangueira: ria.alcance ? ria.alcance - 5 : undefined }));
   }
   return { novos, porContar };
 }
@@ -207,7 +220,7 @@ export function fichasPublicas(p: Projeto, dono: string): { id: string; doc: Fic
     doc: {
       dono, atualizadoEm: p.atualizadoEm, projeto: p.nome, cliente: p.cliente,
       empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
-      periodoMeses: pl.periodoMeses,
+      periodoMeses: periodoDe(pl, e),
       extintor: {
         num: e.num, edificio: nomeEd(e.edificio), piso: e.piso, local: e.local, desc: descExt(e), eficacia: e.eficacia, ...(e.ano ? { ano: e.ano } : {}),
         registos: [...e.registos].sort((a, b) => b.data.localeCompare(a.data)).map((r) => ({ data: r.data, tipo: r.tipo, resultado: r.resultado, empresa: r.empresa, registoAnepc: r.registoAnepc, obs: r.obs })),

@@ -184,7 +184,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.co2.texto} — {CONVERSAO.fonte}.</p>
       </Section>}
 
-      {!man && <UTRia ut={ut} upU={upU} n={r.geral ? 'D' : 'C'} verLei={setLei} />}
+      <UTRia ut={ut} upU={upU} n={man ? (r.geral ? 'C' : 'B') : r.geral ? 'D' : 'C'} verLei={setLei} />
       {man && <p className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">Com estes dados, a verificação dos extintores existentes está no plano de manutenção, secção 03 — botão «Voltar ao plano de manutenção» no fim desta página.</p>}
       {!man && tot.length > 0 && (
         <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">

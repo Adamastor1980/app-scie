@@ -7,7 +7,7 @@ import { go } from '../router';
 import { Faltas, Field, Text } from '../ui/primitives';
 import LerQR from '../ui/LerQR';
 import { ChipEstado, LinhaExt } from './Manutencao';
-import { TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
+import { periodoDe, TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
 
 /** Histórico de intervenções de um extintor (do mais recente para o mais antigo) */
 export function Historico({ registos }: { registos: (Omit<RegistoManut, 'id' | 'tecnico'> & { tecnico?: string })[] }) {
@@ -66,7 +66,7 @@ export default function FichaExt({ eid }: { eid: string }) {
       <button className="btn" onClick={() => go(`${base}/manutencao`)}>Plano de manutenção</button>
     </main>
   );
-  const s = estadoExt(e, pl.periodoMeses);
+  const s = estadoExt(e, periodoDe(pl, e));
   const hoje = hojeISO();
   const jaHoje = e.registos.find((r) => r.data === hoje && r.tipo === 'manutencao' && r.resultado === 'conforme');
   const fe = faltaEmpresa(pl.empresa);
@@ -106,9 +106,9 @@ export default function FichaExt({ eid }: { eid: string }) {
         {feito ? (
           <div>
             <p className="text-[15px] font-semibold text-ok">✓ Registado: manutenção de {dataPt(hoje)}, conforme.</p>
-            <p className="mt-1 text-[13px]">Próxima manutenção: <b>{dataPt(estadoExt(e, pl.periodoMeses).proxima)}</b></p>
+            <p className="mt-1 text-[13px]">Próxima manutenção: <b>{dataPt(estadoExt(e, periodoDe(pl, e)).proxima)}</b></p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button className="btn-fire h-11 px-4" onClick={() => setQr(true)}><ScanLine size={16} /> Ler o próximo extintor</button>
+              <button className="btn-fire h-11 px-4" onClick={() => setQr(true)}><ScanLine size={16} /> Ler o próximo</button>
               <button className="btn-ghost" onClick={anular}><Undo2 size={14} /> Anular</button>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function FichaExt({ eid }: { eid: string }) {
             <button className="mt-3 flex min-h-[56px] w-full items-center justify-center gap-2 bg-ok px-4 text-[16px] font-bold text-white disabled:opacity-40" disabled={fe.length > 0} onClick={ok}>
               <Check size={20} /> Manutenção efetuada — está tudo OK
             </button>
-            <p className="mt-1.5 text-[12px] text-ink-3">Regista hoje ({dataPt(hoje)}) uma manutenção periódica conforme; a próxima passa a contar daqui a {pl.periodoMeses} meses.</p>
+            <p className="mt-1.5 text-[12px] text-ink-3">Regista hoje ({dataPt(hoje)}) uma manutenção periódica conforme; a próxima passa a contar daqui a {periodoDe(pl, e)} meses.</p>
           </>
         )}
         <button className="mt-3 text-[13px] font-semibold text-fire-ink hover:underline" onClick={() => setAberto(!aberto)}>{aberto ? 'Fechar' : 'Registar com observações, não conforme, recarga ou outra intervenção'}</button>
@@ -134,7 +134,7 @@ export default function FichaExt({ eid }: { eid: string }) {
         <div className="mt-3">
           <LinhaExt e={e} pl={pl} aberto alternar={() => setAberto(false)} upExt={upExt}
             duplicar={() => go(`${base}/manutencao`)}
-            apagar={() => { if (confirm(`Apagar o extintor ${e.num} e o seu registo de manutenções?`)) { upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); }); go(`${base}/manutencao`); } }} />
+            apagar={() => { if (confirm(`Apagar ${e.num} e o seu registo de manutenções?`)) { upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); }); go(`${base}/manutencao`); } }} />
         </div>
       )}
 

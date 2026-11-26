@@ -9,7 +9,7 @@ import { CatBadge, Stat, Empty } from '../ui/primitives';
 import { go } from '../router';
 import type { Cat } from '../data/types';
 import { ChipEstado, ResumoManut } from './Manutencao';
-import { estadoExt, ordenar, rotuloPisoInv } from '../engine/manutencao';
+import { periodoDe, estadoExt, ordenar, rotuloPisoInv } from '../engine/manutencao';
 import { faltaPiso, totaisSinal } from '../engine/sinaletica';
 
 export default function Overview() {
@@ -62,7 +62,7 @@ export default function Overview() {
 
   if (p.modo === 'manutencao') {
     const pl = p.manutencao;
-    const urg = pl ? ordenar(pl.extintores, p.edificios.map((e) => e.id)).map((e) => ({ e, s: estadoExt(e, pl.periodoMeses) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme) : [];
+    const urg = pl ? ordenar(pl.extintores, p.edificios.map((e) => e.id)).map((e) => ({ e, s: estadoExt(e, periodoDe(pl, e)) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme) : [];
     const ord = { atraso: 0, sem: 1, breve: 2, ok: 3 };
     urg.sort((a, b) => ord[a.s.nivel] - ord[b.s.nivel] || (a.s.dias ?? 0) - (b.s.dias ?? 0));
     const nomeEd = (id: string) => p.edificios.find((e) => e.id === id)?.nome ?? '—';

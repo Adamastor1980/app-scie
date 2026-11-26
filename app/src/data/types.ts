@@ -379,6 +379,10 @@ export interface RegistoManut {
 }
 export interface ExtintorInv {
   id: string;
+  /** equipamento: extintor (omisso) ou boca de incêndio do tipo carretel */
+  equip?: 'extintor' | 'carretel';
+  /** carretel: comprimento da mangueira (m) */
+  mangueira?: number;
   /** n.º do extintor (EXT-01…) */
   num: string;
   /** id do edifício (p.edificios) */
@@ -398,6 +402,8 @@ export interface ExtintorInv {
 export interface PlanoManut {
   /** periodicidade da manutenção, em meses (12 por omissão — NP 4413) */
   periodoMeses: number;
+  /** periodicidade dos carretéis, em meses (12 por omissão — EN 671-3, fora da base legal da app) */
+  periodoCarreteis?: number;
   /** empresa de manutenção habitual: preenche os novos registos */
   empresa: { nome: string; registoAnepc: string; tecnico: string };
   extintores: ExtintorInv[];

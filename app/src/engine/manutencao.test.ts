@@ -124,3 +124,23 @@ describe('QR, pesquisa pelo número e registo rápido', () => {
     expect(JSON.stringify(f[0].doc)).not.toContain('Rua X'); expect(JSON.stringify(f[0].doc)).not.toContain('EXT-02');
   });
 });
+
+import { periodoDe } from './manutencao';
+
+describe('Carretéis no plano de manutenção', () => {
+  it('numeração própria (CAR-01), periodicidade própria e só piso e local obrigatórios', () => {
+    const l = [ext('EXT-01'), ext('EXT-02'), ext('CAR-01', { equip: 'carretel' })];
+    expect(proximoNum(l)).toBe('EXT-03'); expect(proximoNum(l, true)).toBe('CAR-02');
+    const pl = { periodoMeses: 12, periodoCarreteis: 6 };
+    expect(periodoDe(pl, l[2])).toBe(6); expect(periodoDe(pl, l[0])).toBe(12);
+    expect(faltaExt(ext('CAR-01', { equip: 'carretel', agente: '', cap: 0 }))).toEqual([]);
+  });
+  it('inventário gerado: carretéis do mínimo da RIA, com a mangueira', () => {
+    const p = novoProjeto(); const u = novaUT(3);
+    u.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 2000 }];
+    u.ria = { cat: 2, mangueira: 25, escadas: 2 };
+    p.edificios[0].uts.push(u);
+    const car = inventarioDoMapa(p).novos.filter((e) => e.equip === 'carretel');
+    expect(car.map((e) => e.num)).toEqual(['CAR-01', 'CAR-02']); expect(car[0]).toMatchObject({ piso: 0, mangueira: 25 });
+  });
+});

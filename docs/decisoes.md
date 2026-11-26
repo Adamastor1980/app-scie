@@ -239,6 +239,12 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Caudal (art. 167.º):** 1,5 l/s por boca com metade das bocas abertas (máximo 4), K ≥ 42; 1 l/s com K = 64 na alimentação pela rede pública com garantias (1.ª e 2.ª categorias, n.os 3 e 5). Alimentação conforme os n.os 4 a 6; regras de instalação do art. 166.º.
 - **Projeto só de extintores:** a categoria não é calculada; o técnico indica a do projeto de SCIE ou da ficha de segurança (campo obrigatório para decidir a), b) e c)); os documentos dizem que foi indicada e não calculada. A alínea d) aplica-se mesmo sem categoria.
 
+### D-44 — Carretéis no plano de manutenção (meios de 1.ª intervenção completos) ✅/⚠️
+- **Decisão:** o plano de manutenção passa a incluir as bocas de incêndio do tipo carretel (meio de 1.ª intervenção — RT-SCIE, anexo I, art. 8.º n.º 6) ao lado dos extintores: numeração própria (CAR-01…), mangueira, QR, «está tudo OK», histórico, ficha do cliente, documento e Excel.
+- **Inventário a partir do dimensionamento:** nos projetos de extintores, o mínimo de bocas da RIA (D-43) gera os carretéis, por piso, com o comprimento da mangueira.
+- **Verificação legal (opcional):** compara os carretéis existentes em cada piso com o mínimo do art. 165.º (e diz quando falta a categoria ou dados da RIA); os carretéis não contam como extintores.
+- ⚠️ **Periodicidade dos carretéis:** 12 meses por omissão, configurável à parte dos extintores — vem da EN 671-3, norma fora da base legal da aplicação (como a NP 4413 para os extintores). A confirmar.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

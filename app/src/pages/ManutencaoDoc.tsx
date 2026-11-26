@@ -3,7 +3,7 @@ import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TermoAutor, dataPtDe } from './docComum';
-import { TIPO_MANUT, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
+import { periodoDe, TIPO_MANUT, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, resumoManut, rotuloPisoInv } from '../engine/manutencao';
 import { COR_NIVEL } from './Manutencao';
 import { NOME_REQ } from './VerificacaoExt';
 import { verificarEdificio } from '../engine/verificacaoExt';
@@ -12,7 +12,8 @@ import { baseLegalDoc, notaVersao } from '../versao';
 /** Documento «Plano e registo de manutenção de extintores» — RT-SCIE, arts. 201.º n.º 1 c) e 202.º n.º 4 */
 export default function ManutencaoDoc() {
   const { p } = useP();
-  const DOC = 'Plano e registo de manutenção de extintores';
+  const comCar = !!p.manutencao?.extintores.some((e) => e.equip === 'carretel');
+  const DOC = comCar ? 'Plano e registo de manutenção de extintores e carretéis' : 'Plano e registo de manutenção de extintores';
   const { zoom, aGerar, imprimir } = useDocumento(p, DOC, 'man-folhas');
   const [comAss, setComAss] = useState(true);
   const pl = p.manutencao;
@@ -21,7 +22,7 @@ export default function ManutencaoDoc() {
   const r = resumoManut(pl, hoje);
   const nomeEd = (id: string) => p.edificios.find((e) => e.id === id)?.nome ?? '—';
   const falta = lista.flatMap((e) => [...faltaExt(e).map((f) => `${e.num}: ${f[0].toLowerCase()}`), ...e.registos.flatMap((g) => faltaReg(g).map((f) => `${e.num}, registo de ${dataPt(g.data)}: ${f[0].toLowerCase()}`))]);
-  const urgentes = lista.map((e) => ({ e, s: estadoExt(e, pl!.periodoMeses, hoje) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme);
+  const urgentes = lista.map((e) => ({ e, s: estadoExt(e, periodoDe(pl!, e), hoje) })).filter((x) => x.s.nivel !== 'ok' || x.s.naoConforme);
   const regs = lista.flatMap((e) => e.registos.map((g) => ({ e, g }))).sort((a, b) => b.g.data.localeCompare(a.g.data));
   const comp = pl?.verificar ? p.edificios.filter((ed) => ed.uts.length).map((ed) => ({ ed, v: verificarEdificio(ed, pl) })) : [];
   const CAPS = ['Apresentação da empresa', 'Enquadramento legal', 'Inventário de extintores por edifício e piso', 'Situação à data', ...(comp.length ? ['Verificação legal dos extintores existentes'] : []), 'Registo de manutenções', 'Termo', 'Anexos'];
@@ -62,6 +63,7 @@ export default function ManutencaoDoc() {
           <li>A manutenção segue um programa com calendário e verificação periódica (RT-SCIE, art. 202.º n.º 4).</li>
           <li>As entidades que fazem a manutenção de equipamentos de SCIE estão sujeitas a registo na ANEPC (RJ-SCIE, art. 23.º).</li>
           <li>Os extintores cumprem as normas EN 3, EN 1866 e NP 4413 (RT-SCIE, anexo I, art. 8.º n.º 9). Periodicidade adotada: manutenção a cada <b>{pl?.periodoMeses ?? 12} meses</b>, contada a partir da última intervenção registada.</li>
+          {comCar && <li>Bocas de incêndio do tipo carretel conformes com a EN 671-1 e sinalizadas (RT-SCIE, arts. 164.º e 166.º). Periodicidade adotada: manutenção a cada <b>{pl?.periodoCarreteis ?? 12} meses</b> (EN 671-3, norma fora da base legal da aplicação).</li>}
           <li>Extintores com o prazo de manutenção ultrapassado constituem contraordenação (RJ-SCIE, art. 25.º n.º 1 w)).</li>
         </ul>
         <P>{baseLegalDoc(dataPtDe(p))} {notaVersao()}</P>
@@ -72,9 +74,9 @@ export default function ManutencaoDoc() {
           <div key={ed.id}>
             <H2 n={`${n}.${i + 1}`}>{ed.nome}</H2>
             <table className="tbl mb-4">
-              <thead><tr><th>N.º</th><th>Piso</th><th>Local</th><th>Extintor</th><th>Eficácia</th><th>Fabricante · série · ano</th><th>Última</th><th>Próxima</th></tr></thead>
+              <thead><tr><th>N.º</th><th>Piso</th><th>Local</th><th>Equipamento</th><th>Eficácia</th><th>Fabricante · série · ano</th><th>Última</th><th>Próxima</th></tr></thead>
               <tbody>{lista.filter((e) => e.edificio === ed.id).map((e) => {
-                const s = estadoExt(e, pl!.periodoMeses, hoje);
+                const s = estadoExt(e, periodoDe(pl!, e), hoje);
                 return (
                   <tr key={e.id} className="avoid-break">
                     <td className="whitespace-nowrap font-mono text-[11px] font-semibold">{e.num}</td><td className="whitespace-nowrap text-[11px]">{rotuloPisoInv(e.piso)}</td><td className="text-[11px]">{e.local || '—'}</td>
@@ -127,7 +129,7 @@ export default function ManutencaoDoc() {
         <P>Relação das ações de manutenção, da mais recente para a mais antiga (RT-SCIE, art. 201.º n.º 1 c)).</P>
         {regs.length ? (
           <table className="tbl mb-4">
-            <thead><tr><th>Data</th><th>Extintor</th><th>Tipo</th><th>Resultado</th><th>Empresa (registo ANEPC) · técnico</th><th>Motivo e observações</th></tr></thead>
+            <thead><tr><th>Data</th><th>Equipamento</th><th>Tipo</th><th>Resultado</th><th>Empresa (registo ANEPC) · técnico</th><th>Motivo e observações</th></tr></thead>
             <tbody>{regs.map(({ e, g }) => (
               <tr key={g.id} className="avoid-break">
                 <td className="whitespace-nowrap text-[11px]">{dataPt(g.data)}</td>
