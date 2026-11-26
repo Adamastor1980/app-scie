@@ -44,3 +44,27 @@ describe('Obrigatórios, numeração e ordem', () => {
     expect(r).toMatchObject({ total: 3, sem: 1, atraso: 1, ok: 1 });
   });
 });
+
+import { inventarioDoMapa } from './manutencao';
+import { novaUT, novoProjeto } from '../store';
+
+describe('Inventário gerado a partir do mapa de extintores', () => {
+  it('um por extintor: pisos com agente e capacidade, cozinha 25F com piso, central 34 B, CO₂; manta e areia não entram', () => {
+    const p = novoProjeto();
+    const u = novaUT(3);
+    u.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 300 }, { id: 'b', n: 1, nome: 'Piso 1', cota: 3, area: 150 }];
+    u.extintores = { pisos: { '0': { agente: 'po', cap: 6 } }, combustivelCT: 'solido_liquido', queimadores: 1,
+      locais: [{ id: 'l', nome: 'piso −1', tipo: 'C', alinea: 'c' }], co2: [{ id: 'k', local: 'Quadro elétrico, piso 1', kg: 5, qtd: 1 }] };
+    p.edificios[0].uts.push(u);
+    const { novos, porContar } = inventarioDoMapa(p);
+    const piso0 = novos.filter((e) => e.piso === 0 && e.agente === 'po');
+    expect(piso0).toHaveLength(2); expect(piso0[0].cap).toBe(6);           // 300 m²: 2 × pó 6 kg (= 24 L ≥ 18 L)
+    expect(novos.filter((e) => e.piso === 1 && e.agente === 'agua')).toHaveLength(3); // 150 m²: 18 L / 6 L
+    const coz = novos.find((e) => e.eficacia === '25F')!; expect(coz.piso).toBe(-1);
+    expect(novos.filter((e) => e.eficacia === '34 B')).toHaveLength(2);
+    expect(novos.find((e) => e.agente === 'co2')).toMatchObject({ cap: 5, piso: 1 });
+    expect(novos.map((e) => e.num)).toEqual(novos.map((_, i) => `EXT-${String(i + 1).padStart(2, '0')}`));
+    expect(porContar).toEqual([]);
+    expect(inventarioDoMapa(p, [{ ...novos[0], num: 'EXT-40' }]).novos[0].num).toBe('EXT-41');
+  });
+});

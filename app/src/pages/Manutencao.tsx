@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Building2, ChevronDown, ChevronRight, Copy, FileText, Plus, Sheet, Trash2, Wrench } from 'lucide-react';
+import { Building2, ListPlus, ChevronDown, ChevronRight, Copy, FileText, Plus, Sheet, Trash2, Wrench } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import type { AgenteInv, ExtintorInv, PlanoManut, RegistoManut, TipoManut } from '../data/types';
 import { novoEdificio, novoPlanoManut, uid } from '../store';
 import { Area, Faltas, Field, Num, Section, Text, mostrarNovo } from '../ui/primitives';
 import {
-  NOME_AGENTE_INV, TIPO_MANUT, UNID_INV, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, proximoNum, resumoManut, rotuloPisoInv, type EstadoExt,
+  NOME_AGENTE_INV, TIPO_MANUT, inventarioDoMapa, UNID_INV, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, proximoNum, resumoManut, rotuloPisoInv, type EstadoExt,
 } from '../engine/manutencao';
 
-const CAPS: Record<AgenteInv, number[]> = { agua: [2, 3, 6, 9], espuma: [2, 3, 6, 9], po: [1, 2, 3, 4, 6, 9, 12], co2: [2, 5], outro: [] };
+const CAPS: Record<AgenteInv, number[]> = { agua: [2, 3, 6, 9], espuma: [2, 3, 6, 9], po: [1, 2, 3, 4, 6, 9, 12, 25, 50], co2: [2, 5], outro: [] };
 const PISOS = Array.from({ length: 36 }, (_, k) => 30 - k); // 30 … −5
 
 export const COR_NIVEL: Record<EstadoExt['nivel'], string> = {
@@ -94,6 +94,22 @@ export default function Manutencao() {
       <Section n="02" title="Extintores por edifício e piso" sub="Toque num extintor para ver os dados e o registo das manutenções." right={pl.extintores.length > 1 ? (
         <button className="btn h-9 px-3 text-[12.5px]" onClick={() => setLote(lote ? null : { data: hojeISO(), tipo: 'manutencao', ed: '' })}><Wrench size={14} /> Registar em vários</button>
       ) : undefined}>
+        {!soManut && (() => {
+          const g = inventarioDoMapa(p, pl.extintores);
+          if (!g.novos.length) return <p className="mb-5 text-[12.5px] text-ink-3">Quando o dimensionamento tiver extintores calculados, pode gerar daqui o inventário.</p>;
+          const gerar = () => {
+            if (pl.extintores.length && !confirm(`Acrescentar ${g.novos.length} extintores do mapa aos ${pl.extintores.length} existentes? Verifique depois se há repetidos.`)) return;
+            upPl((x) => { x.extintores.push(...inventarioDoMapa(p, x.extintores).novos); });
+            if (g.porContar.length) alert(`Não entram por não terem número fixo (indique-os à mão):\n• ${g.porContar.join('\n• ')}`);
+          };
+          if (pl.extintores.length) return <button className="mb-5 flex items-center gap-1 text-[12.5px] font-semibold text-ink-3 hover:text-fire-ink hover:underline" onClick={gerar}><ListPlus size={14} /> Acrescentar de novo os {g.novos.length} extintores do mapa</button>;
+          return (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-l-[3px] border-fire bg-fire-soft px-4 py-3">
+              <p className="min-w-0 flex-1 basis-[260px] text-[13px]">{pl.extintores.length ? <>Já tem {pl.extintores.length} extintores no inventário. Pode <b>acrescentar</b> os {g.novos.length} do mapa de extintores (não apaga os existentes).</> : <>O mapa de extintores tem <b>{g.novos.length} extintores</b>. Gere o inventário e complete só o local exato de cada um.</>}</p>
+              <button className="btn-fire h-10 px-4" onClick={gerar}><ListPlus size={16} /> {pl.extintores.length ? 'Acrescentar do mapa' : 'Gerar a partir do mapa'}</button>
+            </div>
+          );
+        })()}
         {lote && (
           <div className="mb-5 border border-ink bg-paper p-4">
             <p className="mb-3 text-[13px] font-semibold">Registar a mesma intervenção em todos os extintores {lote.ed ? 'do edifício escolhido' : 'do projeto'}</p>

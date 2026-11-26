@@ -208,6 +208,7 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Base legal:** RT-SCIE, art. 201.º n.º 1 c) — registo das ações de manutenção com o elemento, o tipo e o motivo, a data e o responsável (campos obrigatórios do registo); art. 202.º n.º 4 — programa com calendário; RJ-SCIE, art. 23.º — empresa de manutenção com registo na ANEPC (campo obrigatório); RJ-SCIE, art. 25.º n.º 1 w) — contraordenação por prazos de manutenção ultrapassados.
 - ⚠️ **Periodicidade:** 12 meses por omissão, contados da última intervenção registada. Não consta do RT-SCIE: vem da NP 4413, para que remete o anexo I, art. 8.º n.º 9. A norma não está em docs/legislacao/; outros prazos (recarga, prova hidráulica, fim de vida) ficam por configurar quando houver o texto da norma.
 - **Limite:** a app regista e controla a manutenção feita por empresa registada; não a substitui.
+- **Inventário a partir do dimensionamento:** nos projetos de extintores, o inventário gera-se do mapa — um extintor por unidade (pisos com o agente e a capacidade escolhidos; locais C/F, cozinha 25F, central térmica, móveis e CO₂ com a eficácia exigida). Manta e areia não entram (não são extintores). Itens sem número fixo (ex.: «1 em cada câmara corta-fogo») não são gerados e o técnico é avisado. O local exato fica por indicar (a lei dá o critério, a planta dá o sítio).
 
 ---
 

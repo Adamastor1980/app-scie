@@ -1,4 +1,6 @@
-import type { AgenteInv, ExtintorInv, PlanoManut, RegistoManut, TipoManut } from '../data/types';
+import type { AgenteInv, ExtintorInv, PlanoManut, Projeto, RegistoManut, TipoManut } from '../data/types';
+import { dimensionarExtintores } from './extintores';
+import { classificar } from './calc';
 
 /**
  * Plano de manutenção de extintores.
@@ -15,7 +17,7 @@ export const TIPO_MANUT: Record<TipoManut, string> = {
 /** dias de antecedência a partir dos quais o aviso passa a laranja */
 export const AVISO_DIAS = 60;
 
-export const descExt = (e: ExtintorInv) => (e.agente ? `${NOME_AGENTE_INV[e.agente]}${e.cap > 0 ? ` ${String(e.cap).replace('.', ',')} ${UNID_INV[e.agente]}` : ''}` : '—');
+export const descExt = (e: ExtintorInv) => (e.agente ? `${NOME_AGENTE_INV[e.agente]}${e.cap > 0 ? ` ${String(e.cap).replace('.', ',')} ${UNID_INV[e.agente]}` : ''}` : e.eficacia ? `agente por indicar (eficácia ${e.eficacia})` : '—');
 export const rotuloPisoInv = (n: number | null) => (n === null ? '—' : n === 0 ? 'Piso 0 (r/c)' : `Piso ${n}`);
 export const dataPt = (iso?: string) => (iso ? new Date(iso + 'T00:00').toLocaleDateString('pt-PT') : '—');
 export const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -88,4 +90,39 @@ export function resumoManut(pl: PlanoManut | undefined, hoje = hojeISO()) {
     if (faltaExt(e).length) r.incompletos++;
   }
   return r;
+}
+
+/* ---------- inventário gerado a partir do mapa de extintores (projetos de dimensionamento) ---------- */
+
+const pisoDeTexto = (t: string): number | null => { const m = /piso\s*([−-]?\d+)/i.exec(t); return m ? Number(m[1].replace('−', '-')) : null; };
+const agenteDeTexto = (t: string): AgenteInv | '' => (/CO₂/.test(t) ? 'co2' : /pó/i.test(t) ? 'po' : /água/i.test(t) ? 'agua' : /espuma/i.test(t) ? 'espuma' : '');
+const capDeTexto = (t: string): number => { const m = /(\d+(?:,\d+)?)\s*(kg|L)\b/.exec(t); return m ? Number(m[1].replace(',', '.')) : 0; };
+const eficaciaDeTexto = (t: string): string => { const m = /eficácia mínima (?:de )?([0-9][0-9A-Z /]*[A-Z])/.exec(t); return m ? m[1].trim() : ''; };
+
+/**
+ * Um extintor do inventário por cada extintor do mapa: pisos (agente e capacidade escolhidos), locais e situações próprias,
+ * móveis e complemento de CO₂. Os itens sem número fixo («1 em cada», «1 por compartimento») não entram: ficam em «porContar».
+ */
+export function inventarioDoMapa(p: Projeto, existentes: ExtintorInv[] = []): { novos: ExtintorInv[]; porContar: string[] } {
+  const novos: ExtintorInv[] = [];
+  const porContar: string[] = [];
+  let k = existentes.reduce((m, e) => { const x = /(\d+)\s*$/.exec(e.num); return x ? Math.max(m, Number(x[1])) : m; }, 0);
+  const mk = (edificio: string, x: Partial<ExtintorInv>): ExtintorInv => ({
+    id: `${Date.now().toString(36)}-${(++k).toString(36)}-${Math.random().toString(36).slice(2, 7)}`, num: `EXT-${String(k).padStart(2, '0')}`,
+    edificio, piso: null, local: '', agente: '', cap: 0, eficacia: '', fabricante: '', serie: '', registos: [], ...x,
+  });
+  for (const ed of p.edificios) for (const ut of ed.uts) {
+    const r = dimensionarExtintores(ut, classificar(ut).cat);
+    for (const pi of r.pisos) for (let i = 0; i < (pi.area > 0 ? pi.qtd : 0); i++) novos.push(mk(ed.id, { piso: pi.n, agente: pi.agente, cap: pi.cap }));
+    for (const l of r.mapa) for (const it of l.itens) {
+      if (it.cat === 'outro' || it.base === 'RT-SCIE, art. 163.º n.º 2') continue; // manta e areia não são extintores; pisos já contados
+      if (it.qtd == null) { porContar.push(`${it.desc} (${it.qtdTxt})`); continue; }
+      const movel = it.cat === 'movel';
+      for (let i = 0; i < it.qtd; i++) novos.push(mk(ed.id, {
+        piso: pisoDeTexto(l.onde), local: movel ? `${l.onde} — extintor móvel` : l.onde,
+        agente: agenteDeTexto(it.desc), cap: movel && /50 kg/.test(it.desc) ? 50 : capDeTexto(it.desc), eficacia: eficaciaDeTexto(it.desc) || (/25F/.test(it.desc) ? '25F' : ''),
+      }));
+    }
+  }
+  return { novos, porContar };
 }
