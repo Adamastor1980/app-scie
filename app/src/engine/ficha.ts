@@ -4,7 +4,7 @@ import { ENVOLVENTE_LOCAIS, QUADRO_XXV, quadroIX, quadroX, quadroXIX, quadroXXII
 import { contexto, gerarMedidas, type Medida } from './medidas';
 import { alturaEdificio, cargaUT, efetivoEspaco, efetivoUT, faltaEdificio, faltaParaMedidas, fmt, pisosUT } from './calc';
 import { desconformidades, porVerificar, verDe } from './verificacao';
-import { dimensionarExtintores } from './extintores';
+import { dimensionarExtintores, totaisMapa } from './extintores';
 
 /**
  * Dados para a ficha de segurança da 1.ª categoria (RJ-SCIE, art. 17.º n.º 2 e anexo V),
@@ -186,7 +186,7 @@ export function fichaSeguranca(p: Projeto, ed: Edificio, ut: UT): FichaDados {
       alarme: de(ms, ut, ['VII.3']), configuracao: config,
       fumo: de(ms, ut, ['VII.4']), espacosFumo: fumo ? fumo.exigencia.split('.')[0] : '—',
       intervencao: de(ms, ut, ['VII.5']),
-      extintores: !dim.exigido ? 'não exigidos' : dim.totais.length ? `${dim.totais.map((z) => `${z.qtd} × ${z.descricao}`).join('; ')}${dim.extras.length ? `; mais: ${dim.extras.map((e) => e.texto).join('; ')}` : ''}${extFaltaArea ? ' (há pisos sem área indicada)' : ''}` : dim.extras.length ? dim.extras.map((e) => e.texto).join('; ') : 'indique a área de cada piso (passo «Extintores»)',
+      extintores: !dim.exigido ? 'não exigidos' : dim.mapa.length ? `${totaisMapa(dim.mapa).flatMap((g) => g.itens.map((i) => `${i.qtdTxt} × ${i.desc}${g.cat === 'complemento' ? ' (complemento)' : ''}`)).join('; ')}${extFaltaArea ? ' (há pisos sem área indicada)' : ''}` : 'indique a área de cada piso (passo «Extintores»)',
       distanciaExtintor: ext?.estado === 'nao' ? '—' : '15 m (de qualquer saída de local de risco)',
       carretel: carr ? (carr.estado === 'aplica' ? 'Sim, exigida' : 'Não exigida') : '—',
       gas: de(ms, ut, ['VII.9']), poluicao: de(ms, ut, ['VII.8']),

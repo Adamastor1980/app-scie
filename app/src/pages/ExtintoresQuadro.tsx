@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { Cat, UT } from '../data/types';
-import { CONVERSAO, NOTA_RECOM, NOME_AGENTE, UNIDADE, dimensionarExtintores, type LinhaMapa } from '../engine/extintores';
+import { CONVERSAO, NOTA_RECOM, NOME_AGENTE, UNIDADE, dimensionarExtintores, totaisMapa, type LinhaMapa } from '../engine/extintores';
 import { fmt } from '../engine/calc';
 
 /** Quadro de dimensionamento de extintores de uma UT — o mesmo no relatório e no estudo de extintores. */
@@ -62,5 +62,33 @@ export function MapaExtintores({ linhas }: { linhas: { ut: string; l: LinhaMapa 
       </table>
       {temRecom && <p className="text-[10.5px] text-ink-3">{NOTA_RECOM}</p>}
     </div>
+  );
+}
+
+/** Totais — todos os meios do mapa, por categoria e tipo, cada um com a exigência legal */
+export function TotaisExtintores({ linhas }: { linhas: LinhaMapa[] }) {
+  const g = totaisMapa(linhas);
+  if (!g.length) return <p className="text-[12px] text-ink-2">Sem extintores calculados.</p>;
+  return (
+    <table className="tbl mb-2">
+      <thead><tr><th>Meio</th><th className="w-24 text-right">Quantidade</th><th className="w-[34%]">Exigência</th></tr></thead>
+      <tbody>
+        {g.map((c) => (
+          <Fragment key={c.cat}>
+            <tr><td colSpan={3} className="bg-paper font-display text-[11.5px] font-bold">{c.nome}</td></tr>
+            {c.itens.map((i) => (
+              <tr key={i.desc} className="avoid-break">
+                <td className="text-[11.5px]">{i.desc}</td>
+                <td className="num text-right text-[11.5px] font-semibold">{i.qtdTxt}</td>
+                <td className="ref text-[10.5px]">{i.base}</td>
+              </tr>
+            ))}
+            {c.cat === 'portatil' && (
+              <tr className="border-t-2 border-ink"><td className="font-bold">Total de extintores portáteis</td><td className="num text-right font-bold">{c.total}{c.aberto ? ' +' : ''}</td><td className="text-[10.5px] text-ink-3">{c.aberto ? 'mais os fixados por local (ver acima)' : ''}</td></tr>
+            )}
+          </Fragment>
+        ))}
+      </tbody>
+    </table>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { art307, dimensionarExtintores, exigidosPorArea, litrosEquivalentes, kgCO2 } from './extintores';
+import { art307, dimensionarExtintores, exigidosPorArea, litrosEquivalentes, kgCO2, totaisMapa } from './extintores';
 import { novaUT, novoEspaco } from '../store';
 import type { UTNum } from '../data/types';
 
@@ -128,5 +128,23 @@ describe('Mapa final — o quê, onde e quantos', () => {
     expect(m.find((l) => l.onde.includes('Centro de gestão'))!.recom).toContain('CO₂');
     expect(m.find((l) => l.oque.includes('34 B'))!.qtd).toBe('4');
     expect(m.some((l) => l.oque.includes('100 l de areia'))).toBe(true);
+  });
+});
+
+describe('Totais — todos os meios, com a exigência de cada um', () => {
+  it('portáteis por tipo (pisos + 25F + 34 B + local F), total; outros meios (manta, areia); complemento CO₂ à parte', () => {
+    const u = ut(3, [300, 200]);
+    u.extintores = { pisos: { '0': { agente: 'po', cap: 6 }, '1': { agente: 'po', cap: 6 } }, combustivelCT: 'solido_liquido', queimadores: 1, co2: [{ id: 'k', local: 'quadro elétrico', kg: 5, qtd: 1 }],
+      locais: [{ id: 'a', nome: 'piso −1', tipo: 'C', alinea: 'c' }, { id: 'b', nome: 'piso 0', tipo: 'F', alinea: 'b' }] };
+    const g = totaisMapa(dimensionarExtintores(u, 2).mapa);
+    const port = g.find((c) => c.cat === 'portatil')!;
+    expect(port.itens.find((i) => i.desc.includes('pó químico ABC 6 kg'))!.qtd).toBe(4);
+    expect(port.itens.find((i) => i.desc.includes('25F'))!.base).toContain('n.os 4 e 5');
+    expect(port.itens.find((i) => i.desc.includes('34 B'))!.qtd).toBe(2);
+    expect(port.total).toBe(4 + 1 + 2 + 1);
+    const outros = g.find((c) => c.cat === 'outro')!.itens.map((i) => i.desc).join(' ');
+    expect(outros).toContain('Manta ignífuga'); expect(outros).toContain('areia');
+    expect(g.find((c) => c.cat === 'complemento')!.total).toBe(1);
+    expect(g.map((c) => c.cat)).toEqual(['portatil', 'outro', 'complemento']);
   });
 });

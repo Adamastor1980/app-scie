@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
 import type { AgenteExtintor, ExtintoresUT, Piso } from '../../data/types';
-import { CAPACIDADES, CONVERSAO, UNIDADE, dimensionarExtintores, litrosEquivalentes } from '../../engine/extintores';
+import { CAPACIDADES, CONVERSAO, UNIDADE, dimensionarExtintores, litrosEquivalentes, totaisMapa } from '../../engine/extintores';
 import { classificar, fmt, numPiso, pisosUT, rotuloPiso } from '../../engine/calc';
 import { Faltas, Num, Section, Toggle } from '../../ui/primitives';
 import { novoPiso, uid } from '../../store';
@@ -18,6 +18,7 @@ const opcoesExt = (soPo: boolean) => (['agua', 'po'] as AgenteExtintor[]).filter
 export default function UTExtintores({ ut, upU }: UTProps) {
   const cls = classificar(ut);
   const r = dimensionarExtintores(ut, cls.cat);
+  const tot = totaisMapa(r.mapa);
   const [lei, setLei] = useState<string | null>(null);
   const t = ut.tipo;
   const x = ut.extintores ?? {};
@@ -178,17 +179,18 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.co2.texto} — {CONVERSAO.fonte}.</p>
       </Section>
 
-      {(r.resumo.pisos + r.resumo.situacoes + r.resumo.moveis + r.resumo.semQtd + r.resumo.co2) > 0 && (
+      {tot.length > 0 && (
         <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">
-          <p className="mb-2 text-[12.5px] font-semibold">Resultado — extintores desta UT</p>
+          <p className="mb-2 text-[12.5px] font-semibold">Resultado — tudo o que esta UT tem de levar</p>
           <table className="w-full text-[13px]"><tbody>
-            {r.resumo.pisos > 0 && <tr><td className="py-0.5 pr-3">Nos pisos (A — art. 163.º n.º 2)</td><td className="py-0.5 text-right">{r.totais.filter((x2) => !x2.descricao.startsWith('CO₂')).map((x2) => `${x2.qtd} × ${x2.descricao}`).join(' + ')}</td></tr>}
-            {r.resumo.situacoes > 0 && <tr><td className="py-0.5 pr-3">Nos locais e situações próprias (B)</td><td className="py-0.5 text-right">{r.resumo.situacoes} {r.resumo.situacoes === 1 ? 'extintor portátil' : 'extintores portáteis'}</td></tr>}
-            <tr className="border-t border-fire/40 font-semibold"><td className="pt-1 pr-3">Total de extintores portáteis</td><td className="pt-1 text-right text-[15px]">{r.resumo.pisos + r.resumo.situacoes}</td></tr>
-            {r.resumo.moveis > 0 && <tr><td className="py-0.5 pr-3">Extintores móveis de 50 kg (B)</td><td className="py-0.5 text-right font-semibold">{r.resumo.moveis}</td></tr>}
-            {r.resumo.co2 > 0 && <tr><td className="py-0.5 pr-3">Complemento CO₂ (C — fora do cálculo)</td><td className="py-0.5 text-right">{r.totais.filter((x2) => x2.descricao.startsWith('CO₂')).map((x2) => `${x2.qtd} × ${x2.descricao.replace(' (complemento)', '')}`).join(' + ')}</td></tr>}
+            {tot.map((g) => (
+              <Fragment key={g.cat}>
+                <tr><td colSpan={2} className="pt-2 pb-0.5 text-[11.5px] font-bold uppercase tracking-wide text-fire-ink">{g.nome}</td></tr>
+                {g.itens.map((i) => <tr key={i.desc}><td className="py-0.5 pr-3">{i.desc}<span className="ref block">{i.base}</span></td><td className="py-0.5 text-right align-top font-semibold">{i.qtdTxt}</td></tr>)}
+                {g.cat === 'portatil' && <tr className="border-t border-fire/40 font-semibold"><td className="pt-1 pr-3">Total de extintores portáteis</td><td className="pt-1 text-right text-[15px]">{g.total}{g.aberto ? ' +' : ''}</td></tr>}
+              </Fragment>
+            ))}
           </tbody></table>
-          {r.resumo.semQtd > 0 && <p className="mt-2 text-[12px] text-ink-2">Mais {r.resumo.semQtd === 1 ? 'a medida' : `as ${r.resumo.semQtd} medidas`} da secção B sem quantidade fixa (ex.: manta ignífuga, extintores nas circulações comuns).</p>}
         </div>
       )}
       <Faltas itens={r.falta.map((f) => { const [a, b] = f.split(' — '); return [a, b ?? ''] as [string, string]; })} />

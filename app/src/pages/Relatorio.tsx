@@ -1,4 +1,4 @@
-import { MapaExtintores, QuadroExtintores } from './ExtintoresQuadro';
+import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
 import { dimensionarExtintores } from '../engine/extintores';
 import { LEI_VERIFICADA_EM, VERSAO_APP, baseLegalDoc, notaVersao } from '../versao';
 import { codigosEspacos, justificacaoLocal, nomeUT, tituloUT } from '../nome';
@@ -393,6 +393,8 @@ export default function Relatorio() {
         {(() => { const linhas = todas.flatMap(({ ut, ed, cls }) => dimensionarExtintores(ut, cls.cat).mapa.map((l) => ({ ut: `${ed.nome} · ${tituloUT(ut)}`, l }))); return linhas.length > 0 && (<>
           <H2 n={`${sec}.${todas.length + 1}`}>Mapa de extintores — o quê, onde e quantos</H2>
           <MapaExtintores linhas={linhas} />
+          <H2 n={`${sec}.${todas.length + 2}`}>Totais de extintores e outros meios</H2>
+          <TotaisExtintores linhas={linhas.map((x) => x.l)} />
         </>); })()}
 
         <H1 n={S()}>Condições de segurança exigíveis</H1>
