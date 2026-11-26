@@ -1,5 +1,4 @@
 import Rodape from '../ui/Rodape';
-import LogoPreto from '../ui/LogoPreto';
 import { useRef, useState } from 'react';
 import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, ScanLine, Signpost, Trash2, Upload, Wrench } from 'lucide-react';
 import LerQR from '../ui/LerQR';
@@ -125,7 +124,7 @@ export default function Home() {
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
                     <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden border border-paper-3 bg-white">
                       {p.clienteLogo
-                        ? <LogoPreto src={p.clienteLogo} className="h-full w-full object-contain p-1.5" />
+                        ? <img src={p.clienteLogo} alt="" className="h-full w-full object-contain p-1.5" />
                         : <span className="font-display text-[17px] font-extrabold tracking-tight text-ink-4">{iniciais(p.cliente || p.nome)}</span>}
                     </span>
                     <span className="min-w-0">
