@@ -216,6 +216,13 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - ⚠️ **Espuma contada como água (1 L = 1 L):** critério técnico (agente de base aquosa); não consta do RT-SCIE. A confirmar com o professor.
 - **Limite declarado no ecrã e no documento:** não verifica locais de risco C e F, cozinhas, centrais térmicas (n.os 4 a 6), a distância máxima de 15 m (n.º 1) nem as exceções da UT I; para isso, o dimensionamento.
 
+### D-41 — Estudo de sinalética (só com o RT-SCIE) ✅/⚠️
+- **Decisão (opção B, acordada):** novo tipo de projeto «Sinalética». Por piso, o técnico indica o que está na planta (saídas, vias e comprimentos, mudanças de direção, escadas, extintores, carretéis, botões de alarme, outras); a app dá o **mínimo** de placas e o tamanho mínimo, com o artigo de cada uma.
+- **Regras:** aplicabilidade (art. 108.º n.º 4); 1 placa por saída (art. 112.º n.os 1 e 5); vias horizontais: 1 placa de sentido por cada 30 m ou fração (n.º 4, distância máxima entre placas); 1 por mudança de direção (n.º 3); escadas: patamar de acesso e patamar intermédio (n.º 6); extintores (art. 163.º n.º 3), carretéis (art. 164.º), meios de alarme (art. 112.º n.º 2); tamanho A ≥ d²/2000, d entre 6 e 50 m (art. 109.º); regras de instalação dos arts. 110.º a 112.º.
+- ⚠️ **Não verificado:** pictogramas, cores e formatos (DL 141/95, Portaria 1456-A/95, EN ISO 7010, ISO 3864, ISO 16069 — art. 108.º n.º 1): citados, textos fora de docs/legislacao/.
+- ⚠️ **Mínimo, não contagem final:** «1 por cada 30 m» e «1 por saída» são o mínimo que resulta da lei; a visibilidade a partir de qualquer ponto (art. 112.º n.os 1 e 5) só se confirma na planta. Declarado no ecrã e no documento.
+- **Importação:** o n.º de placas «Extintor» por piso pode vir de um projeto de extintores (mapa) ou de manutenção (inventário).
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

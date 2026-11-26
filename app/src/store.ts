@@ -101,7 +101,7 @@ interface State {
   projetos: Projeto[];
   empresaPadrao: Projeto['empresa'] | null;
   autorPadrao: Projeto['autor'] | null;
-  criar: (modo?: 'extintores' | 'manutencao') => string;
+  criar: (modo?: 'extintores' | 'manutencao' | 'sinaletica') => string;
   importar: (p: Projeto) => string;
   /** abre o exemplo (substitui o anterior); não fica nos projetos nem na nuvem */
   abrirExemplo: (p: Projeto) => string;
@@ -124,6 +124,7 @@ export const useStore = create<State>()(
       criar: (modo) => {
         const p = novoProjeto();
         if (modo === 'extintores') { p.modo = modo; p.nome = 'Dimensionamento de extintores'; p.tipoIntervencao = 'Dimensionamento de extintores'; }
+        if (modo === 'sinaletica') { p.modo = modo; p.nome = 'Estudo de sinalética'; p.tipoIntervencao = 'Estudo de sinalética de segurança'; p.sinaletica = { aplic: 'exigida', pisos: [] }; }
         if (modo === 'manutencao') { p.modo = modo; p.nome = 'Plano de manutenção de extintores'; p.tipoIntervencao = 'Plano de manutenção de extintores'; p.manutencao = novoPlanoManut(); }
         const { empresaPadrao, autorPadrao } = getS();
         if (empresaPadrao) p.empresa = clone(empresaPadrao);

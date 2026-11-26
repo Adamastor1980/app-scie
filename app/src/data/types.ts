@@ -293,7 +293,9 @@ export interface Projeto {
   /** medidas de autoproteção: organização da segurança e registos (RT-SCIE, título VII) */
   autoprotecao?: Autoprotecao;
   /** «extintores» = dimensionamento de extintores; «manutencao» = só plano de manutenção de extintores existentes; omisso = projeto SCIE completo */
-  modo?: 'completo' | 'extintores' | 'manutencao';
+  modo?: 'completo' | 'extintores' | 'manutencao' | 'sinaletica';
+  /** estudo de sinalética (RT-SCIE, arts. 108.º a 112.º) */
+  sinaletica?: PlanoSinal;
   /** plano de manutenção de extintores: inventário e registo das intervenções (RT-SCIE, arts. 201.º n.º 1 c) e 202.º n.º 4) */
   manutencao?: PlanoManut;
   /** percurso das MAP: passos marcados pelo técnico (datas ISO) */
@@ -397,4 +399,27 @@ export interface PlanoManut {
   extintores: ExtintorInv[];
   /** áreas dos pisos (m²) por edifício, para comparar o existente com o art. 163.º n.º 2 — opcional */
   areas?: Record<string, Record<string, number>>;
+}
+
+/** Estudo de sinalética — RT-SCIE, arts. 108.º a 112.º */
+export interface SinalPiso {
+  id: string;
+  edificio: string;
+  piso: number | null;
+  /** maior distância a que as placas devem ser vistas (m) — art. 109.º */
+  dist?: number;
+  saidas: number;
+  /** comprimento de cada via horizontal de evacuação (m) — art. 112.º n.º 4 */
+  corredores: { id: string; nome: string; comp: number }[];
+  mudancas: number;
+  escadas: number;
+  extintores: number;
+  carreteis: number;
+  botoes: number;
+  outros: { id: string; texto: string; qtd: number }[];
+}
+export interface PlanoSinal {
+  /** art. 108.º n.º 4: exigida, exceto espaços comuns da UT I da 1.ª categoria e fogos de habitação */
+  aplic: 'exigida' | 'fogos' | 'ut1cat1';
+  pisos: SinalPiso[];
 }

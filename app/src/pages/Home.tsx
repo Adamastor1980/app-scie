@@ -1,7 +1,7 @@
 import Rodape from '../ui/Rodape';
 import LogoPreto from '../ui/LogoPreto';
 import { useRef, useState } from 'react';
-import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, Trash2, Upload, Wrench } from 'lucide-react';
+import { ArrowUpRight, Calculator, Copy, Download, FireExtinguisher, Flame, Signpost, Trash2, Upload, Wrench } from 'lucide-react';
 import { resumoManut } from '../engine/manutencao';
 import { exportarJSON } from './ProjetoShell';
 import { useStore } from '../store';
@@ -58,6 +58,7 @@ export default function Home() {
               </div>
             )}
           </div>
+          <button className="btn h-10 px-4" title="Estudo de sinalética de segurança (RT-SCIE, arts. 108.º a 112.º)" onClick={() => go(`/p/${criar('sinaletica')}`)}><Signpost size={16} /> Sinalética</button>
           <button className="btn h-10 px-3" onClick={() => fileRef.current?.click()}><Upload size={15} /> Importar (JSON)</button>
           {projetos.length > 0 && (
             <button className="btn h-10 px-3" onClick={() => {
@@ -106,7 +107,7 @@ export default function Home() {
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <span className="ref">{p.referencia || 'S/ referência'} · v{p.versao}</span>
-                    {p.modo === 'manutencao' ? <ExtBadge size="sm" texto="MANUTENÇÃO" /> : p.modo === 'extintores' ? <ExtBadge size="sm" /> : <span className="flex items-center gap-1.5" title="Projeto SCIE completo"><Flame size={17} strokeWidth={2} className="text-fire-ink" />{uts.length > 0 && <CatBadge cat={max} size="sm" />}</span>}
+                    {p.modo === 'sinaletica' ? <ExtBadge size="sm" texto="SINALÉTICA" icone={<Signpost size={13} strokeWidth={2} />} /> : p.modo === 'manutencao' ? <ExtBadge size="sm" texto="MANUTENÇÃO" /> : p.modo === 'extintores' ? <ExtBadge size="sm" /> : <span className="flex items-center gap-1.5" title="Projeto SCIE completo"><Flame size={17} strokeWidth={2} className="text-fire-ink" />{uts.length > 0 && <CatBadge cat={max} size="sm" />}</span>}
                   </div>
                   <button onClick={() => go(`/p/${p.id}`)} className="flex w-full items-center gap-3.5 text-left">
                     {/* logótipo do cliente (Dados do projeto); sem logótipo: iniciais do cliente/projeto */}
@@ -139,7 +140,7 @@ export default function Home() {
                 </div>
                 <div className="mt-5 flex items-center justify-between border-t border-paper-3 pt-3">
                   <span className="font-mono text-[10.5px] text-ink-4">
-                    {p.edificios.length} edif. · {p.modo === 'manutencao' ? `${p.manutencao?.extintores.length ?? 0} ext.` : `${uts.length} UT`} · {new Date(p.atualizadoEm).toLocaleDateString('pt-PT')}
+                    {p.edificios.length} edif. · {p.modo === 'manutencao' ? `${p.manutencao?.extintores.length ?? 0} ext.` : p.modo === 'sinaletica' ? `${p.sinaletica?.pisos.length ?? 0} pisos` : `${uts.length} UT`} · {new Date(p.atualizadoEm).toLocaleDateString('pt-PT')}
                   </span>
                   <div className="flex items-center">
                     <button className="btn-icon" title="Exportar este projeto (JSON)" onClick={() => exportarJSON(p)}><Download size={15} /></button>

@@ -10,6 +10,7 @@ import { go } from '../router';
 import type { Cat } from '../data/types';
 import { ChipEstado, ResumoManut } from './Manutencao';
 import { estadoExt, ordenar, rotuloPisoInv } from '../engine/manutencao';
+import { faltaPiso, totaisSinal } from '../engine/sinaletica';
 
 export default function Overview() {
   const { p, up, pedirUT } = useP();
@@ -32,6 +33,32 @@ export default function Overview() {
     { ok: p.edificios.length > 0 && p.edificios.every((e) => !faltaCaracterizacao(e).length), t: 'Caracterização de todos os edifícios (altura e pisos acima)', to: p.edificios.find((e) => faltaCaracterizacao(e).length) ? `/e/${p.edificios.find((e) => faltaCaracterizacao(e).length)!.id}` : '' },
     { ok: p.plantas.length > 0, t: 'Peças desenhadas (plantas)', to: '/plantas' },
   ];
+
+  if (p.modo === 'sinaletica') {
+    const pl = p.sinaletica;
+    const t = pl ? totaisSinal(pl) : { itens: [], total: 0 };
+    const falta = (pl?.pisos ?? []).filter((s) => faltaPiso(s).length).length;
+    return (
+      <main className="mx-auto max-w-[1000px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
+        <div className="mb-6 border-b-2 border-ink pb-5">
+          <p className="label !text-fire-ink">Estudo de sinalética · RT-SCIE, arts. 108.º a 112.º</p>
+          <h1 className="h-display mt-2 text-[40px]">{p.nome}</h1>
+          <p className="mt-2 text-[13px] text-ink-3">{[p.cliente, p.morada, p.concelho].filter(Boolean).join(' · ') || 'Preencha os dados do projeto.'}</p>
+        </div>
+        <ol className="mb-8 border border-ink bg-white text-[13.5px]">
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">1.</b>Dados do projeto (cliente, morada) — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/dados`)}>abrir</button></li>
+          <li className="border-b border-paper-3 px-4 py-3"><b className="mr-2 font-mono text-fire-ink">2.</b>Pisos: saídas, vias, mudanças de direção, escadas e equipamentos — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/sinaletica`)}>abrir</button> <span className="text-ink-3">({pl?.pisos.length ?? 0})</span>{falta > 0 && <span className="ml-2 text-[12px] font-semibold text-alerta">Falta preencher em {falta} {falta === 1 ? 'piso' : 'pisos'}</span>}</li>
+          <li className="px-4 py-3"><b className="mr-2 font-mono text-fire-ink">3.</b>Estudo de sinalética — <button className="font-semibold text-fire-ink hover:underline" onClick={() => go(`${base}/sinaletica/doc`)}>abrir e descarregar PDF</button></li>
+        </ol>
+        {t.total > 0 && (
+          <div className="border border-ink bg-white">
+            <p className="border-b border-paper-3 px-4 py-2.5 text-[12.5px] font-semibold">Placas no mínimo: {t.total}</p>
+            {t.itens.map((i) => <p key={i.tipo} className="flex justify-between gap-3 border-b border-paper-3 px-4 py-2 text-[13px] last:border-0"><span>{i.tipo}</span><b>{i.qtd}</b></p>)}
+          </div>
+        )}
+      </main>
+    );
+  }
 
   if (p.modo === 'manutencao') {
     const pl = p.manutencao;
