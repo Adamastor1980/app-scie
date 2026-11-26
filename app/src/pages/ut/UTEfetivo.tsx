@@ -28,7 +28,7 @@ function efeitoPublico(e: Espaco, efetivo: number): string {
 /** Pisos em relação ao plano de referência (o piso de cada espaço define os pisos da UT e do edifício). */
 const OPCOES_PISO: { v: string; l: string }[] = [
   { v: '', l: 'Escolher piso…' },
-  ...Array.from({ length: 51 }, (_, k) => 40 - k).map((n) => ({ v: String(n), l: n === 0 ? 'Piso 0 (ref.)' : `Piso ${n}` })),
+  ...Array.from({ length: 51 }, (_, k) => 40 - k).map((n) => ({ v: String(n), l: n === 0 ? 'Piso 0 (plano de referência)' : `Piso ${n}` })),
 ];
 
 const CRITERIOS: { v: CriterioEfetivo; l: string; uts?: number[] }[] = [

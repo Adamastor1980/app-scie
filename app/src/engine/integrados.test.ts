@@ -95,3 +95,13 @@ describe('Juntar UT do mesmo tipo (art. 8.º)', async () => {
     expect(a.indicados).toEqual({ altura: true, pisos: true });
   });
 });
+
+describe('Pisos acima do edifício: o piso 0 conta sempre (RJ-SCIE, art. 2.º q))', () => {
+  it('0 pisos acima é erro; 1 é válido', async () => {
+    const { faltaCaracterizacao } = await import('./calc');
+    const { novoEdificio } = await import('../store');
+    const ed = { ...novoEdificio(1), altura: 3, alturaIndicada: true, pisosAcima: 0, pisosAcimaIndicado: true, pisosAbaixo: 1, pisosAbaixoIndicado: true };
+    expect(faltaCaracterizacao(ed).find(([k]) => k === 'Pisos acima')?.[1]).toContain('mínimo é 1');
+    expect(faltaCaracterizacao({ ...ed, pisosAcima: 2 }).some(([k]) => k === 'Pisos acima')).toBe(false);
+  });
+});

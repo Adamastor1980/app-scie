@@ -411,6 +411,7 @@ export function faltaCaracterizacao(ed: Edificio): [string, string][] {
   const f = [...faltaEdificio(ed)];
   const ac = pisosAcimaDerivado(ed);
   if (!ed.pisosAcimaIndicado) f.push(['Pisos acima', `n.º de pisos do edifício «${ed.nome}» acima do plano de referência, incluindo o piso do plano de referência (caracterização do edifício, anexo IV do RJ-SCIE)`]);
+  else if (ed.pisosAcima < 1) f.push(['Pisos acima', 'o piso 0 — o piso ao nível do plano de referência (RJ-SCIE, art. 2.º q)) — conta sempre como piso acima: o mínimo é 1']);
   else if (ac !== null && ac > ed.pisosAcima) f.push(['Pisos acima', `indicou ${ed.pisosAcima}, mas há espaços até ao piso ${ac - 1} (${ac} pisos do 0 ao ${ac - 1}): corrija`]);
   const ab = Math.max(0, ...ed.uts.map((u) => Math.max(u.pisosAbaixo || 0, negativosEspacos(u).length)));
   if (!ed.pisosAbaixoIndicado && !(ed.pisosAbaixo > 0)) f.push(['Pisos abaixo', `n.º de pisos do edifício «${ed.nome}» abaixo do plano de referência; 0 tem de ser confirmado (caracterização do edifício)`]);

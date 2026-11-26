@@ -54,6 +54,7 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Decisão:** pisos acima = do piso 0 ao último piso (r/c com cave = 1 acima e 1 abaixo).
 - **Base:** RJ-SCIE, art. 2.º a) — a altura mede-se a partir do plano de referência, e o piso desse plano está acima do solo; caracterização do edifício (anexo IV).
 - **Histórico:** chegou a ser alterado para não contar o r/c e foi reposto.
+- **Validação:** «0 pisos acima» é erro (a vermelho): o piso 0 está sempre ao nível do plano de referência, que é a cota do acesso das viaturas de socorro junto a uma saída direta para o exterior (RJ-SCIE, art. 2.º q); RT-SCIE, anexo I, n.º 54). Com 1 piso acima e altura > 0, a app pede confirmação (só possível com o piso 0 acima do plano de referência).
 
 ### D-09 — A categoria da UT é a mais alta entre os seus critérios ✅
 - **Decisão:** cada fator dá uma categoria pelo seu quadro; a categoria da UT é a mais alta. O relatório mostra, para a carga de incêndio, a linha do quadro IX/X com a categoria por esse critério e a categoria final.
