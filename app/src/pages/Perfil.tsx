@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { novoProjeto, useStore } from '../store';
 import { Area, Field, Section, Text, logoLeve, readFile } from '../ui/primitives';
+import Assinatura from '../ui/Assinatura';
 
 /** Enquadra a imagem num quadrado branco (sem cortar nem deformar o logótipo) */
 async function quadrado(dataUrl: string, lado = 600): Promise<string> {
@@ -73,6 +74,11 @@ export default function Perfil() {
           <Field label="N.º de membro"><Text value={a.numero} onChange={(v) => setPerfil((_, aa) => { aa.numero = v; })} /></Field>
           <Field label="N.º de registo ANEPC"><Text value={a.registoAnepc} onChange={(v) => setPerfil((_, aa) => { aa.registoAnepc = v; })} /></Field>
         </div>
+      </Section>
+
+      <Section n="03" title="Assinatura" sub="Assine uma vez; aparece no termo do autor do relatório, do estudo de extintores e do documento MAP (em cada documento pode tirá-la).">
+        <Assinatura valor={a.assinatura} onGuardar={(v) => setPerfil((_, aa) => { aa.assinatura = v; })} />
+        <p className="mt-3 max-w-2xl border-l-[3px] border-fire bg-fire-soft px-3 py-2 text-[12px] text-ink-2">Esta assinatura é uma imagem: serve para cópias em papel e para o cliente. Para entrega eletrónica à ANEPC ou à câmara, assine também o PDF com o Cartão de Cidadão ou a Chave Móvel Digital — a lei exige, pelo menos, assinatura eletrónica avançada (RJ-SCIE, art. 32.º n.º 3).</p>
       </Section>
 
     </main>

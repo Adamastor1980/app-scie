@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Eye, Loader2, PenLine, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { H1, H2, P, Sheet, useDocumento } from './doc';
+import { BotaoAssinatura, LinhaAssinatura } from './docComum';
 import { novaAutoprotecao } from '../store';
 import { MAP_INFO, type MAP } from '../data/rtscie';
 import { ROMANO } from '../data/rjscie';
@@ -62,6 +63,7 @@ export default function MapDocumento() {
   const ap = p.autoprotecao ?? novaAutoprotecao();
   const textos = ap.textos ?? {};
   const [editar, setEditar] = useState(true);
+  const [comAss, setComAss] = useState(true);
   const { zoom, aGerar, imprimir } = useDocumento(p, 'Medidas de Autoproteção', 'map-folhas');
 
   const setTexto = (k: string, v: string) => up((x) => { x.autoprotecao ??= novaAutoprotecao(); (x.autoprotecao.textos ??= {})[k] = v; });
@@ -298,7 +300,7 @@ export default function MapDocumento() {
         )}
 
         <div className="avoid-break mt-12 grid grid-cols-2 gap-10 text-[11.5px]">
-          <div><div className="mb-1 h-14 border-b border-ink" /><p className="font-semibold">{p.autor.nome || 'Autor das medidas de autoproteção'}</p><p className="text-ink-3">{p.autor.qualificacao}</p></div>
+          <LinhaAssinatura p={p} com={comAss} nome={p.autor.nome || 'Autor das medidas de autoproteção'} sub={p.autor.qualificacao} />
           <div><div className="mb-1 h-14 border-b border-ink" /><p className="font-semibold">{ap.rs.nome || 'Responsável de segurança'}</p><p className="text-ink-3">Responsável de segurança</p></div>
         </div>
       </Sheet>
@@ -320,6 +322,7 @@ export default function MapDocumento() {
             <button className={`flex h-10 items-center gap-1.5 px-3 text-[13px] font-semibold ${editar ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => setEditar(true)}><PenLine size={15} /> Editar</button>
             <button className={`flex h-10 items-center gap-1.5 px-3 text-[13px] font-semibold ${!editar ? 'bg-ink text-white' : 'bg-white'}`} onClick={() => setEditar(false)}><Eye size={15} /> Pré-visualizar</button>
           </div>
+          <BotaoAssinatura p={p} com={comAss} set={setComAss} />
           <button className="btn-fire h-11 px-5" disabled={!!aGerar} onClick={() => imprimir(async () => { setEditar(false); await new Promise((r) => setTimeout(r, 120)); })}>
             {aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}
           </button>

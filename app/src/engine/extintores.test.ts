@@ -148,3 +148,12 @@ describe('Totais — todos os meios, com a exigência de cada um', () => {
     expect(g.map((c) => c.cat)).toEqual(['portatil', 'outro', 'complemento']);
   });
 });
+
+describe('Capacidades normalizadas (EN 3) — sem capacidade mínima no RT-SCIE', () => {
+  it('por omissão água 6 L; pó 2 kg (= 4 L) em 300 m² → 5 extintores para somar 18 L', () => {
+    const u = ut(3, [300]);
+    expect(dimensionarExtintores(u, 2).pisos[0]).toMatchObject({ agente: 'agua', cap: 6, proposta: 3 });
+    u.extintores = { pisos: { '0': { agente: 'po', cap: 2 } } };
+    expect(dimensionarExtintores(u, 2).pisos[0]).toMatchObject({ cap: 2, eqL: 4, proposta: 5, cumpre: true });
+  });
+});

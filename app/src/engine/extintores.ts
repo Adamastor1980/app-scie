@@ -18,7 +18,10 @@ export const CONVERSAO = {
   fonte: 'critério técnico indicado em formação académica (ISLA Gaia, 2026), adotado ao abrigo do art. 163.º n.º 2 do RT-SCIE; não consta do regulamento',
 } as const;
 
-export const CAPACIDADES: Record<AgenteExtintor, number[]> = { agua: [6, 9], po: [6, 9, 12] };
+/** Cargas normalizadas (EN 3-7, para que remete o anexo I, art. 8.º n.º 9). O RT-SCIE não fixa capacidade mínima: conta o total de agente (n.º 2 a)) e o n.º de extintores (n.º 2 b)). */
+export const CAPACIDADES: Record<AgenteExtintor, number[]> = { agua: [2, 3, 6, 9], po: [1, 2, 3, 4, 6, 9, 12] };
+/** Capacidade proposta por omissão (a mais comum) */
+export const CAP_OMISSAO: Record<AgenteExtintor, number> = { agua: 6, po: 6 };
 export const NOME_AGENTE: Record<AgenteExtintor, string> = { agua: 'água', po: 'pó químico ABC' };
 export const UNIDADE: Record<AgenteExtintor, string> = { agua: 'L', po: 'kg' };
 
@@ -139,7 +142,7 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
     const esc = x.pisos?.[String(p.n)] ?? {};
     let agente: AgenteExtintor = esc.agente ?? (gareEletrica ? 'po' : 'agua');
     if (gareEletrica) agente = 'po';
-    const cap = esc.cap && CAPACIDADES[agente].includes(esc.cap) ? esc.cap : CAPACIDADES[agente][0];
+    const cap = esc.cap && CAPACIDADES[agente].includes(esc.cap) ? esc.cap : CAP_OMISSAO[agente];
     const eqL = litrosEquivalentes(agente, cap);
     const proposta = p.area > 0 ? Math.max(minN, Math.ceil(litros / eqL)) : 0;
     const qtd = esc.qtd ?? proposta;

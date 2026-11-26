@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
-import { ABREVIATURAS, Abreviaturas, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor, dataPtDe } from './docComum';
+import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor, dataPtDe } from './docComum';
 import { classificar, fmt, pisosUT } from '../engine/calc';
 import { dimensionarExtintores, totaisMapa } from '../engine/extintores';
 import { tituloUT } from '../nome';
@@ -14,6 +15,7 @@ export default function EstudoExtintores() {
   const { zoom, aGerar, imprimir } = useDocumento(p, 'Estudo de dimensionamento de extintores', 'ext-folhas');
   const uts = p.edificios.flatMap((ed) => ed.uts.map((ut) => ({ ed, ut, cat: classificar(ut).cat })));
   const dataPt = dataPtDe(p);
+  const [comAss, setComAss] = useState(true);
   const res = uts.map((x) => ({ ...x, r: dimensionarExtintores(x.ut, x.cat) }));
   const falta = res.flatMap((x) => x.r.falta.map((f) => `${tituloUT(x.ut)}: ${f}`));
   const linhas = res.flatMap(({ r }) => r.mapa);
@@ -32,6 +34,7 @@ export default function EstudoExtintores() {
             <p className="font-display text-[17px] font-bold">Estudo de dimensionamento de extintores</p>
             <p className={`text-[12px] ${falta.length ? 'text-alerta' : 'text-ok'}`}>{falta.length ? `Falta preencher: ${falta.length} ${falta.length === 1 ? 'dado' : 'dados'} (ver no fim)` : 'Dados completos'}</p>
           </div>
+          <BotaoAssinatura p={p} com={comAss} set={setComAss} />
           <button className="btn-fire h-11 px-5" disabled={!!aGerar} onClick={() => imprimir()}>
             {aGerar ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} {aGerar || 'Descarregar PDF'}
           </button>
@@ -112,7 +115,7 @@ export default function EstudoExtintores() {
         <H1 n={S()}>Conclusões</H1>
         <P>{port ? <>Ficam previstos <b>{port.total}{port.aberto ? ' ou mais' : ''} extintores portáteis</b>{tot.filter((g) => g.cat !== 'portatil' && g.cat !== 'complemento').map((g) => `, ${g.itens.map((i) => `${i.qtdTxt} × ${i.desc.split(' — ')[0].toLowerCase()}`).join(', ')}`).join('')}, distribuídos conforme o mapa do capítulo 7 e com a exigência legal de cada um no capítulo 8.</> : 'Não resultam extintores do dimensionamento.'}{falta.length ? ' Há dados por preencher: o estudo só fica concluído depois de completos.' : ''}</P>
         {p.conclusoes && <div className="mt-2 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}
-        <TermoAutor p={p} documento="o presente estudo" titulo={<H1 n={S()}>Termo do autor</H1>} />
+        <TermoAutor p={p} com={comAss} documento="o presente estudo" titulo={<H1 n={S()}>Termo do autor</H1>} />
       </Sheet>
 
       <Sheet className="page-break">

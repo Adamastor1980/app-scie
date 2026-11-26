@@ -41,6 +41,8 @@ export interface Autor {
   numero: string;
   registoAnepc: string;
   email: string;
+  /** assinatura desenhada (PNG) — imagem, não é assinatura eletrónica avançada (RJ-SCIE, art. 32.º n.º 3) */
+  assinatura?: string;
 }
 
 export interface Planta {

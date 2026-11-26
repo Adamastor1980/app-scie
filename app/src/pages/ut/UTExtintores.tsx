@@ -95,6 +95,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
             </div>
           )}
           <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.po.texto} — {CONVERSAO.fonte}.</p>
+          <p className="mt-1 text-[11.5px] text-ink-3">Capacidades normalizadas da EN 3 (para que remete o RT-SCIE, anexo I, art. 8.º n.º 9). A lei não fixa capacidade mínima: extintores mais pequenos são admitidos, mas são precisos mais para somar os litros exigidos, e cada um apaga menos.</p>
         </Section>
       )}
 

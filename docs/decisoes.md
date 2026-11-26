@@ -193,6 +193,16 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Mapa final (o quê, onde, quantos):** no relatório e no Estudo, cada linha separa o que o RT-SCIE exige (com artigo) da **recomendação técnica** de agente, que só aparece onde a lei não fixa o tipo (locais C e F genéricos — art. 163.º n.º 4) e vem assinalada como não obrigatória (ex.: CO₂ em locais com equipamento eletrónico; água ou espuma em arquivos). Onde a lei fixa o tipo (cozinhas 25F e manta, centrais térmicas 34 B e areia, campismo 21 A/113 B/C, gares 55 B, UT XII por eficácia), só se indica a exigência legal.
 - **Projeto «só extintores»:** pede só o que o art. 163.º usa (UT, pisos e áreas, situações próprias; categoria só na UT I) e gera o «Estudo de dimensionamento de extintores»; pode passar a projeto completo sem perder dados.
 
+### D-37 — Capacidades dos extintores: cargas normalizadas, sem mínimo legal ✅
+- **Decisão:** a app oferece as cargas normalizadas da EN 3 — água 2, 3, 6 e 9 L; pó químico 1, 2, 3, 4, 6, 9 e 12 kg; CO₂ 2 e 5 kg — e propõe 6 L / 6 kg por omissão.
+- **Base legal:** o RT-SCIE não fixa capacidade mínima; o art. 163.º n.º 2 conta o total de agente padrão (alínea a)) e o n.º de extintores (alínea b)); os extintores devem cumprir a EN 3 (anexo I, art. 8.º n.º 9).
+- **Porquê:** permite mais extintores mais pequenos (ex.: 5 × pó 2 kg em vez de 3 × água 6 L em 300 m²), cumprindo as duas alíneas. Nota técnica mostrada ao técnico: cada extintor pequeno tem menor eficácia.
+
+### D-38 — Assinatura desenhada nos documentos ✅
+- **Decisão:** o autor assina uma vez em «A minha empresa» (dedo, caneta ou rato); a imagem aparece no termo do autor do relatório, do estudo de extintores e do documento MAP, e pode ser retirada em cada documento.
+- **Base legal:** RJ-SCIE, art. 32.º n.º 3 — nas comunicações eletrónicas exige-se, quando aplicável, assinatura eletrónica que satisfaça pelo menos os requisitos da assinatura eletrónica avançada. Uma imagem desenhada não cumpre.
+- **Porquê:** serve para cópias em papel e para o cliente; para entrega eletrónica à ANEPC ou à câmara o PDF tem de ser assinado também com Cartão de Cidadão ou Chave Móvel Digital. O aviso está junto ao quadro de assinatura.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

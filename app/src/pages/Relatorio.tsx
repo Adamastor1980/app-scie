@@ -1,4 +1,4 @@
-import { ABREVIATURAS, Abreviaturas, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor } from './docComum';
+import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor } from './docComum';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
 import { dimensionarExtintores } from '../engine/extintores';
 import { baseLegalDoc, notaVersao } from '../versao';
@@ -45,6 +45,7 @@ export default function Relatorio() {
   const { p } = useP();
   const [incluirNao, setIncluirNao] = useState(false);
   const [incluirEvid, setIncluirEvid] = useState(false);
+  const [comAss, setComAss] = useState(true);
   const [incluirVerif, setIncluirVerif] = useState(false);
   // no telemóvel/tablet a folha A4 (210 mm ≈ 794 px) é reduzida para caber no ecrã; na impressão volta a 100 %
   const escala = () => Math.min(1, (window.innerWidth - 16) / 800);
@@ -124,6 +125,7 @@ export default function Relatorio() {
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirVerif} onChange={setIncluirVerif} label="Incluir medidas por decidir" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirNao} onChange={setIncluirNao} label="Incluir não aplicáveis" /></div>
           <div className="w-full sm:w-[230px]"><Toggle checked={incluirEvid} onChange={setIncluirEvid} label="Incluir evidências de conformidade" /></div>
+          <BotaoAssinatura p={p} com={comAss} set={setComAss} />
           <button className="btn h-11 w-full justify-center px-4 sm:w-auto" disabled={!!aGerar} onClick={async () => {
             const raiz = document.getElementById('relatorio-folhas');
             if (!raiz) return;
@@ -539,7 +541,7 @@ export default function Relatorio() {
         {maxCat && <P>Entidade competente para a categoria mais gravosa: {maxCat === 1 ? 'câmara municipal' : 'ANEPC'} (RJ-SCIE, art. 5.º).</P>}
         {p.conclusoes && <div className="mt-4 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}
 
-        <TermoAutor p={p} documento="o presente documento" titulo={<H1 n={String(sec + 2)}>Termo do autor</H1>} />
+        <TermoAutor p={p} com={comAss} documento="o presente documento" titulo={<H1 n={String(sec + 2)}>Termo do autor</H1>} />
       </Sheet>
 
       {/* ------------------------------ ANEXOS ----------------------------- */}

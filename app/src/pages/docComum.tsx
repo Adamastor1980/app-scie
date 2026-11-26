@@ -92,14 +92,34 @@ export function TabelaLegislacao() {
   );
 }
 
-export function TermoAutor({ p, documento, titulo }: { p: Projeto; documento: string; titulo: ReactNode }) {
+/** Assinatura do autor sobre a linha de assinatura (se existir e estiver ligada) */
+export function LinhaAssinatura({ p, com, nome, sub }: { p: Projeto; com: boolean; nome: string; sub?: string }) {
+  return (
+    <div className="text-center">
+      <div className="relative mb-1 h-[56px] border-b border-ink">{com && p.autor.assinatura && <img src={p.autor.assinatura} alt="" className="absolute bottom-0 left-1/2 max-h-[64px] max-w-[85%] -translate-x-1/2 object-contain" />}</div>
+      <p className="font-semibold">{nome}</p>{sub && <p className="text-ink-3">{sub}</p>}
+    </div>
+  );
+}
+
+/** Botão da barra do documento: pôr ou tirar a assinatura guardada em «A minha empresa» */
+export function BotaoAssinatura({ p, com, set }: { p: Projeto; com: boolean; set: (v: boolean) => void }) {
+  if (!p.autor.assinatura) return <a href="#/empresa" className="text-[12px] font-semibold text-ink-3 hover:text-fire-ink hover:underline">Sem assinatura guardada — assinar em «A minha empresa»</a>;
+  return (
+    <label className="flex h-10 cursor-pointer items-center gap-2 border border-ink bg-white px-3 text-[13px] font-semibold">
+      <input type="checkbox" className="h-4 w-4 accent-[#14233A]" checked={com} onChange={(e) => set(e.target.checked)} /> Com assinatura
+    </label>
+  );
+}
+
+export function TermoAutor({ p, documento, titulo, com = true }: { p: Projeto; documento: string; titulo: ReactNode; com?: boolean }) {
   return (
     <div className="avoid-break mt-[30mm]">
       {titulo}
       <P>{p.autor.nome || '[Nome do autor]'}{p.autor.qualificacao ? `, ${p.autor.qualificacao}` : ''}{p.autor.ordem ? `, inscrito na ${p.autor.ordem} com o n.º ${p.autor.numero || '—'}` : ''}{p.autor.registoAnepc ? ` e registado na ANEPC com o n.º ${p.autor.registoAnepc}` : ''}, declara que {documento} foi elaborado com base no Decreto-Lei n.º 220/2008, na redação da Lei n.º 123/2019, na Portaria n.º 1532/2008, na redação da Portaria n.º 135/2020, e no Despacho n.º 2074/2009, na redação do Despacho n.º 8954/2020.</P>
       <div className="mt-14 grid grid-cols-2 gap-10 text-[11.5px]">
         <div><p>{p.concelho || '__________'}, {dataPtDe(p)}</p></div>
-        <div className="text-center"><div className="mb-1 border-b border-ink pb-12" /><p className="font-semibold">{p.autor.nome || 'O autor'}</p><p className="text-ink-3">{p.autor.qualificacao}</p></div>
+        <LinhaAssinatura p={p} com={com} nome={p.autor.nome || 'O autor'} sub={p.autor.qualificacao} />
       </div>
     </div>
   );
