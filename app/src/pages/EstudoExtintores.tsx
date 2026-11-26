@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
+import { QuadroRIA, temRIA } from './RiaDoc';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor, dataPtDe } from './docComum';
 import { classificar, fmt, pisosUT } from '../engine/calc';
@@ -22,7 +23,8 @@ export default function EstudoExtintores() {
   const tot = totaisMapa(linhas);
   const port = tot.find((g) => g.cat === 'portatil');
   const DOC = 'Estudo de dimensionamento de extintores';
-  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização e aplicabilidade', 'Critérios de dimensionamento', 'Dimensionamento por utilização-tipo', 'Localização e instalação', 'Mapa de extintores — o quê, onde e quantos', 'Totais de extintores e outros meios', 'Conclusões', 'Termo do autor', 'Anexos'];
+  const comRIA = temRIA(uts);
+  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização e aplicabilidade', 'Critérios de dimensionamento', 'Dimensionamento por utilização-tipo', 'Localização e instalação', 'Mapa de extintores — o quê, onde e quantos', 'Totais de extintores e outros meios', ...(comRIA ? ['Rede de incêndio armada (carretéis)'] : []), 'Conclusões', 'Termo do autor', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
   return (
@@ -104,6 +106,12 @@ export default function EstudoExtintores() {
         <MapaExtintores linhas={res.flatMap(({ ed, ut, r }) => r.mapa.map((l) => ({ ut: `${ed.nome} · ${tituloUT(ut)}`, l })))} />
         <H1 n={S()}>Totais de extintores e outros meios</H1>
         <TotaisExtintores linhas={linhas} />
+
+        {comRIA && (<>
+          <H1 n={S()}>Rede de incêndio armada (carretéis)</H1>
+          <P>Quando exigida, a rede de incêndio armada com bocas do tipo carretel completa os meios de primeira intervenção (RT-SCIE, arts. 164.º a 167.º).</P>
+          <QuadroRIA uts={uts} />
+        </>)}
 
         {falta.length > 0 && (
           <div className="no-print mt-6 border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[12px]">

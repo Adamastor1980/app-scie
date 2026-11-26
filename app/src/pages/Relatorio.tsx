@@ -1,4 +1,5 @@
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor } from './docComum';
+import { QuadroRIA, temRIA } from './RiaDoc';
 import { MapaExtintores, QuadroExtintores, TotaisExtintores } from './ExtintoresQuadro';
 import { dimensionarExtintores } from '../engine/extintores';
 import { baseLegalDoc, notaVersao } from '../versao';
@@ -347,6 +348,10 @@ export default function Relatorio() {
           <MapaExtintores linhas={linhas} />
           <H2 n={`${sec}.${todas.length + 2}`}>Totais de extintores e outros meios</H2>
           <TotaisExtintores linhas={linhas.map((x) => x.l)} />
+          {temRIA(todas) && (<>
+            <H2 n={`${sec}.${todas.length + 3}`}>Rede de incêndio armada (carretéis)</H2>
+            <QuadroRIA uts={todas.map(({ ut, ed }) => ({ ut, ed }))} />
+          </>)}
         </>); })()}
 
         <H1 n={S()}>Condições de segurança exigíveis</H1>

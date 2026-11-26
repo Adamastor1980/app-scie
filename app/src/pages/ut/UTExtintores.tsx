@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import type { UTProps } from '../UTPage';
 import { useP } from '../ProjetoShell';
+import UTRia from './UTRia';
 import type { AgenteExtintor, ExtintoresUT, Piso } from '../../data/types';
 import { CAPACIDADES, CONVERSAO, UNIDADE, dimensionarExtintores, litrosEquivalentes, totaisMapa } from '../../engine/extintores';
 import { classificar, fmt, numPiso, pisosUT, rotuloPiso } from '../../engine/calc';
@@ -183,6 +184,7 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.co2.texto} — {CONVERSAO.fonte}.</p>
       </Section>}
 
+      {!man && <UTRia ut={ut} upU={upU} n={r.geral ? 'D' : 'C'} verLei={setLei} />}
       {man && <p className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">Com estes dados, a verificação dos extintores existentes está no plano de manutenção, secção 03 — botão «Voltar ao plano de manutenção» no fim desta página.</p>}
       {!man && tot.length > 0 && (
         <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">

@@ -7,6 +7,7 @@ import {
 } from '../data/rtscie';
 import TITULO_VIII from '../data/tituloVIII.json';
 import { NOME_AGENTE, UNIDADE, art307, dimensionarExtintores } from './extintores';
+import { dimensionarRIA } from './ria';
 import { classificar, efetivoEspaco, efetivoUT, fmt, type Classificacao, type EfetivoUT, pisosAbaixoIndicados, alturaEdificio, pisosAbaixoUT, pisosUT, pisoAbaixo, nPiso } from './calc';
 
 export type Estado = 'aplica' | 'verificar' | 'nao';
@@ -619,17 +620,15 @@ export function gerarMedidas(ctx: Contexto): Medida[] {
     base: 'RT-SCIE, art. 163.º', estado: extIsento || (ut.arLivre && !temC) ? 'nao' : 'aplica',
     motivo: extIsento ? 'UT I das 1.ª e 2.ª categorias (art. 163.º n.º 1).' : ut.arLivre && !temC ? 'Ao ar livre só são exigidos em locais de risco C (art. 163.º n.º 8): não existem.' : undefined,
   });
-  const carretelCond =
-    ([2, 3, 4, 5, 6, 7, 8, 11, 12].includes(t) && cat >= 2) ||
-    (t === 2 && cat === 1 && !ut.arLivre && ut.areaBruta > 500) ||
-    ([1, 9, 10].includes(t) && cat >= 3) ||
-    ut.espacos.some((e) => efetivoEspaco(e).valor > 200);
+  // o mesmo cálculo do passo «Extintores» (engine/ria.ts): uma só resposta em toda a app
+  const ria = dimensionarRIA(ut, cat);
+  const carretelCond = ria.exigida === true && !ria.proibida;
   const ruralVII = t === 7 && cat === 2 && ut.turismoRural;
   add({
     tema: 'VII.5', titulo: 'Rede de incêndio armada tipo carretel',
     exigencia: 'Carretéis EN 671-1 que cubram todos os pontos a ≤ 5 m de uma agulheta; distância entre bocas ≤ 2× o comprimento da mangueira; junto às saídas para vias verticais (< 3 m) e junto às saídas de locais com > 200 pessoas; manípulo ≤ 1,5 m; tambor fixo só à face da parede, encastrados de rodar ou pivotar, armários homologados com porta a abrir 170°; espaço livre de 1 m de raio e 2 m de altura (art. 166.º). Caudal de 1,5 l/s por boca com metade abertas (máx. 4) e K ≥ 42 (1 l/s com K = 64 nos casos do n.º 3); canalização independente; ' + (cat <= 2 ? 'rede pública admitida se houver garantia de pressão e caudal; senão ' : '') + 'depósito privativo com grupo sobrepressor apoiado por fonte de emergência; manómetros nos pontos mais desfavoráveis (art. 167.º).',
     base: 'RT-SCIE, arts. 164.º a 167.º', estado: ruralVII ? 'nao' : sim(carretelCond),
-    motivo: ruralVII ? 'UT VII da 2.ª categoria de turismo no espaço rural dispensada (art. 257.º).' : carretelCond ? undefined : 'Não preenche as condições do art. 164.º.',
+    motivo: ruralVII ? 'UT VII da 2.ª categoria de turismo no espaço rural dispensada (art. 257.º).' : carretelCond ? (ria.total ? `${ria.motivo} Mínimo de ${ria.total} bocas (passo «Extintores»).` : ria.motivo) : ria.proibida ? 'Plataformas com tração elétrica: proibidos meios com água (art. 273.º n.º 1).' : 'Não preenche as condições do art. 164.º.',
   });
   const seg = cat >= 3 ? 'húmida' : (t === 1 || t === 2) && cat === 2 ? 'seca ou húmida' : '';
   add({

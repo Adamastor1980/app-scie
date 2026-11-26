@@ -232,6 +232,13 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Cliente (decisão do utilizador: sempre, não opcional):** cada extintor tem a sua ficha pública (documento `publico/projeto_extintor`), publicada automaticamente com sessão iniciada. Cada QR dá acesso só ao seu extintor. Contém n.º, local, edifício, piso, tipo, eficácia, ano, estado e histórico (data, tipo, resultado, empresa e registo ANEPC, observações), o nome do projeto e do cliente e o contacto da empresa. **Não contém** o nome do técnico (dado pessoal de terceiro — RGPD) nem a morada. Não pode ser listada; só o dono escreve ou apaga; apagar o extintor ou o projeto apaga a ficha. Regras em firebase/firestore.rules (publicar uma vez na consola da Firebase).
 - **Etiqueta:** colocar junto ao extintor sem tapar a marcação do fabricante nem a etiqueta da empresa de manutenção.
 
+### D-43 — Rede de incêndio armada do tipo carretel ✅/⚠️
+- **Quando é exigida (art. 164.º):** a) UT II a VIII, XI e XII da 2.ª categoria ou superior; b) UT II da 1.ª categoria com espaços cobertos > 500 m²; c) UT I, IX e X da 3.ª categoria ou superior; d) locais que possam receber mais de 200 pessoas (detetados pelo efetivo dos espaços ou indicados à mão). Específicas: sala de condomínio > 200 m² (art. 210.º n.º 6 e)); UT VII rural da 2.ª categoria dispensada (art. 257.º); plataformas com tração elétrica sem meios com água (art. 273.º n.º 1); parques de campismo da 2.ª categoria ou superior (art. 286.º n.º 1 b)). Um só cálculo (engine/ria.ts) para o passo «Extintores», o Estudo, o relatório e as medidas exigíveis.
+- **Mínimo de bocas (art. 165.º):** por piso, o maior entre a cobertura e as bocas obrigatórias junto às escadas (c)) e às saídas de locais > 200 pessoas (d)).
+- ⚠️ **Cobertura — critério técnico:** cada boca conta com o quadrado inscrito no círculo de alcance (mangueira + 5 m), ou seja 2·(L+5)² m². A lei exige que todos os pontos fiquem a ≤ 5 m da agulheta e bocas a ≤ 2 L entre si (a) e b)); isso só se confirma na planta. Declarado no ecrã e nos documentos como mínimo.
+- **Caudal (art. 167.º):** 1,5 l/s por boca com metade das bocas abertas (máximo 4), K ≥ 42; 1 l/s com K = 64 na alimentação pela rede pública com garantias (1.ª e 2.ª categorias, n.os 3 e 5). Alimentação conforme os n.os 4 a 6; regras de instalação do art. 166.º.
+- **Projeto só de extintores:** a categoria não é calculada; o técnico indica a do projeto de SCIE ou da ficha de segurança (campo obrigatório para decidir a), b) e c)); os documentos dizem que foi indicada e não calculada. A alínea d) aplica-se mesmo sem categoria.
+
 ---
 
 ## 9. Limitações conhecidas (para a tese)

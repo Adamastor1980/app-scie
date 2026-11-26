@@ -238,6 +238,8 @@ export interface UT {
   levantamento?: Anexo[];
   /** factos do local que decidem a aplicabilidade das medidas (Sim/Não); ausente = por responder */
   extintores?: ExtintoresUT;
+  /** rede de incêndio armada do tipo carretel (RT-SCIE, arts. 164.º a 167.º) */
+  ria?: RiaUT;
   factos?: Record<string, boolean>;
 }
 
@@ -428,4 +430,20 @@ export interface PlanoSinal {
   /** art. 108.º n.º 4: exigida, exceto espaços comuns da UT I da 1.ª categoria e fogos de habitação */
   aplic: 'exigida' | 'fogos' | 'ut1cat1';
   pisos: SinalPiso[];
+}
+
+/** Rede de incêndio armada do tipo carretel — dados para o cálculo (RT-SCIE, arts. 164.º a 167.º) */
+export interface RiaUT {
+  /** comprimento da mangueira dos carretéis (m) — art. 165.º a) e b) */
+  mangueira?: number;
+  /** escadas (caminhos verticais) que servem os pisos — art. 165.º c) */
+  escadas?: number;
+  /** locais que podem receber mais de 200 pessoas, por piso — arts. 164.º d) e 165.º d) */
+  locais200?: Record<string, number>;
+  /** alimentação pela rede pública com garantias de pressão e caudal (só 1.ª e 2.ª categorias — art. 167.º n.º 5) */
+  publica?: boolean;
+  /** categoria de risco indicada pelo técnico (projeto de SCIE ou ficha de segurança), quando a app não a calcula (projetos só de extintores) */
+  cat?: Cat;
+  /** UT I: sala de condomínio com área bruta superior a 200 m² — art. 210.º n.º 6 e) */
+  salaCondominio200?: boolean;
 }
