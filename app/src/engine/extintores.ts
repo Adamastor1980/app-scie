@@ -36,13 +36,16 @@ export interface PisoExt {
   /** quantidade escolhida (proposta se o técnico não alterar) */ qtd: number;
   totalL: number; cumpre: boolean;
 }
-export interface Extra { texto: string; base: string; qtd?: number }
+/** qtd = extintores portáteis; moveis = extintores móveis (50 kg); sem nenhum = medida sem quantidade fixa (ex.: manta ignífuga) */
+export interface Extra { texto: string; base: string; qtd?: number; moveis?: number }
 export interface ResultadoExt {
   exigido: boolean; motivo: string;
   geral: boolean; // aplica-se o critério por piso (n.º 2)
   pisos: PisoExt[]; extras: Extra[];
   co2: { local: string; kg: number; qtd: number; litrosEq: number }[];
   totais: { descricao: string; qtd: number }[];
+  /** contagem: portáteis dos pisos, portáteis das situações próprias, móveis, medidas sem quantidade fixa, CO2 */
+  resumo: { pisos: number; situacoes: number; moveis: number; semQtd: number; co2: number };
   falta: string[];
 }
 
@@ -81,6 +84,7 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
     ...(x.locais ?? []).filter((l) => l.alinea).map((l) => ({ nome: [descLocal(l.tipo, l.alinea!), l.nome].filter(Boolean).join(' — '), tipo: l.tipo, alinea: l.alinea })),
   ];
 
+  for (const l of x.locais ?? []) if (l.alinea && !l.nome.trim()) falta.push(`localização do local ${l.tipo} — indique onde fica, para se saber onde colocar o extintor (art. 163.º n.º 4)`);
   for (const l of x.locais ?? []) if (!l.alinea) falta.push(`tipo do local${l.nome ? ` «${l.nome}»` : ''} — escolha na lista do RJ-SCIE, art. 10.º, se é mesmo local C ou F (cada um exige extintor próprio)`);
   // n.º 1 e n.º 8 — aplicabilidade
   const isentoUTI = t === 1 && c <= 2;
@@ -127,7 +131,7 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   const totalPortateis = pisos.reduce((s, p) => s + p.qtd, 0);
   if (ut.factos?.tendas && totalPortateis > 0) {
     const q = Math.ceil(totalPortateis / 8);
-    extras.push({ texto: `Tenda ou estrutura insuflável: ${q} extintor(es) móvel(eis) de pó ABC de 50 kg (1 por cada 8 portáteis ou fração)`, base: 'RT-SCIE, art. 163.º n.º 7', qtd: q });
+    extras.push({ texto: `Tenda ou estrutura insuflável: ${q} extintor(es) móvel(eis) de pó ABC de 50 kg (1 por cada 8 portáteis ou fração)`, base: 'RT-SCIE, art. 163.º n.º 7', moveis: q });
   }
   // UT I — espaços com extintores próprios (mesmo nas 1.ª e 2.ª categorias)
   if (t === 1) {
@@ -137,7 +141,7 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   }
   // UT II — art. 226.º
   if (t === 2 && ut.parqueAutomatico) extras.push({ texto: 'Parque automático: extintores móveis de CO₂ ou pó ABC em cada piso, junto ao acesso a cada escada', base: 'RT-SCIE, art. 226.º n.º 1' });
-  if (t === 2 && arLivre) extras.push({ texto: 'Parque exterior: no posto de controlo, 1 extintor portátil de eficácia mínima 21 A/113 B/C e 1 móvel de CO₂ ou pó ABC', base: 'RT-SCIE, art. 226.º n.º 2', qtd: 2 });
+  if (t === 2 && arLivre) extras.push({ texto: 'Parque exterior: no posto de controlo, 1 extintor portátil de eficácia mínima 21 A/113 B/C e 1 móvel de CO₂ ou pó ABC', base: 'RT-SCIE, art. 226.º n.º 2', qtd: 1, moveis: 1 });
   // UT VIII — art. 273.º
   if (t === 8 && (x.gare === 'sim' || x.gare === 'eletrica')) {
     extras.push({ texto: 'Câmaras corta-fogo do art. 261.º e posto de segurança: 1 extintor de eficácia mínima 21 A/113 B/C e 1 para riscos elétricos de eficácia mínima 55 B, em nicho com porta', base: 'RT-SCIE, art. 273.º n.º 2' });
@@ -148,7 +152,7 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   // UT XII — art. 307.º
   if (t === 12 && (ut.liquidosInflamaveisL ?? 0) > 0) {
     const r = art307(ut.liquidosInflamaveisL!, x.metalicos);
-    extras.push({ texto: `Combustíveis líquidos (${fmt(ut.liquidosInflamaveisL!)} l, escalão ${r.escalao}): extintores de eficácia mínima ${r.eficacia}${r.moveis ? ` + ${r.moveis} extintor(es) móvel(eis) de 50 kg de pó BC/ABC (ou agente de eficácia equivalente)` : ''}`, base: 'RT-SCIE, art. 307.º', qtd: r.moveis || undefined });
+    extras.push({ texto: `Combustíveis líquidos (${fmt(ut.liquidosInflamaveisL!)} l, escalão ${r.escalao}): extintores de eficácia mínima ${r.eficacia}${r.moveis ? ` + ${r.moveis} extintor(es) móvel(eis) de 50 kg de pó BC/ABC (ou agente de eficácia equivalente)` : ''}`, base: 'RT-SCIE, art. 307.º', moveis: r.moveis || undefined });
   }
 
   // complemento CO2 (não conta para o n.º 2 a))
@@ -160,5 +164,12 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   for (const k of co2) { const d = `CO₂ ${fmt(k.kg, 1)} kg (complemento)`; mapa.set(d, (mapa.get(d) ?? 0) + k.qtd); }
   const totais = [...mapa.entries()].map(([descricao, qtd]) => ({ descricao, qtd }));
 
-  return { exigido: geral || extras.length > 0, motivo, geral, pisos, extras, co2, totais, falta };
+  const resumo = {
+    pisos: pisos.reduce((a, p) => a + p.qtd, 0),
+    situacoes: extras.reduce((a, e) => a + (e.qtd ?? 0), 0),
+    moveis: extras.reduce((a, e) => a + (e.moveis ?? 0), 0),
+    semQtd: extras.filter((e) => !e.qtd && !e.moveis).length,
+    co2: co2.reduce((a, k) => a + k.qtd, 0),
+  };
+  return { exigido: geral || extras.length > 0, motivo, geral, pisos, extras, co2, totais, resumo, falta };
 }

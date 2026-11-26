@@ -113,9 +113,10 @@ export default function UTExtintores({ ut, upU }: UTProps) {
                 <optgroup label="Local de risco C (RJ-SCIE, art. 10.º n.º 3)">{LOCAIS_C.map((o) => <option key={o.a} value={`C:${o.a}`}>{o.a}) {o.t}</option>)}</optgroup>
                 <optgroup label="Local de risco F (RJ-SCIE, art. 10.º n.º 6)">{LOCAIS_F.map((o) => <option key={o.a} value={`F:${o.a}`}>{o.a}) {o.t}</option>)}</optgroup>
               </select>
-              <input className="input h-10 min-w-0 flex-1 basis-[200px] py-0" placeholder="Onde fica (ex.: piso −1, junto à garagem)" value={l.nome} onChange={(e) => upX((z) => { z.locais![i].nome = e.target.value; })} />
+              <input className={`input h-10 min-w-0 flex-1 basis-[200px] py-0 ${l.nome.trim() ? '' : 'falta'}`} placeholder="Onde fica (ex.: piso −1, junto à garagem)" value={l.nome} onChange={(e) => upX((z) => { z.locais![i].nome = e.target.value; })} />
               <button className="btn-icon" title="Retirar local" onClick={() => upX((z) => { z.locais = z.locais!.filter((_, k) => k !== i); })}><Trash2 size={14} /></button>
               {!l.alinea && <p className="w-full text-[11.5px] text-alerta">Falta preencher: tipo de local — confirme na lista se é mesmo local C ou F; se não constar, não precisa de extintor próprio.</p>}
+              {l.alinea && !l.nome.trim() && <p className="w-full text-[11.5px] text-alerta">Falta preencher: onde fica — para se saber onde colocar o extintor.</p>}
             </div>
           ))}
           <button className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-fire-ink hover:underline" onClick={() => upX((z) => { (z.locais ??= []).push({ id: uid(), nome: '', tipo: 'C' }); })}><Plus size={13} /> Acrescentar local C ou F</button>
@@ -173,10 +174,17 @@ export default function UTExtintores({ ut, upU }: UTProps) {
         <p className="mt-2 text-[11.5px] text-ink-3">{CONVERSAO.co2.texto} — {CONVERSAO.fonte}.</p>
       </Section>
 
-      {r.totais.length > 0 && (
-        <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3">
-          <p className="mb-1 text-[12.5px] font-semibold">Resultado — extintores portáteis desta UT</p>
-          <p className="text-[13.5px]">{r.totais.map((x2) => `${x2.qtd} × ${x2.descricao}`).join(' · ')}{r.extras.some((e) => e.qtd) ? ' · mais os das situações acima' : ''}</p>
+      {(r.resumo.pisos + r.resumo.situacoes + r.resumo.moveis + r.resumo.semQtd + r.resumo.co2) > 0 && (
+        <div className="mb-6 border-l-[3px] border-fire bg-fire-soft px-4 py-3 text-[13px]">
+          <p className="mb-2 text-[12.5px] font-semibold">Resultado — extintores desta UT</p>
+          <table className="w-full text-[13px]"><tbody>
+            {r.resumo.pisos > 0 && <tr><td className="py-0.5 pr-3">Nos pisos (A — art. 163.º n.º 2)</td><td className="py-0.5 text-right">{r.totais.filter((x2) => !x2.descricao.startsWith('CO₂')).map((x2) => `${x2.qtd} × ${x2.descricao}`).join(' + ')}</td></tr>}
+            {r.resumo.situacoes > 0 && <tr><td className="py-0.5 pr-3">Nos locais e situações próprias (B)</td><td className="py-0.5 text-right">{r.resumo.situacoes} {r.resumo.situacoes === 1 ? 'extintor portátil' : 'extintores portáteis'}</td></tr>}
+            <tr className="border-t border-fire/40 font-semibold"><td className="pt-1 pr-3">Total de extintores portáteis</td><td className="pt-1 text-right text-[15px]">{r.resumo.pisos + r.resumo.situacoes}</td></tr>
+            {r.resumo.moveis > 0 && <tr><td className="py-0.5 pr-3">Extintores móveis de 50 kg (B)</td><td className="py-0.5 text-right font-semibold">{r.resumo.moveis}</td></tr>}
+            {r.resumo.co2 > 0 && <tr><td className="py-0.5 pr-3">Complemento CO₂ (C — fora do cálculo)</td><td className="py-0.5 text-right">{r.totais.filter((x2) => x2.descricao.startsWith('CO₂')).map((x2) => `${x2.qtd} × ${x2.descricao.replace(' (complemento)', '')}`).join(' + ')}</td></tr>}
+          </tbody></table>
+          {r.resumo.semQtd > 0 && <p className="mt-2 text-[12px] text-ink-2">Mais {r.resumo.semQtd === 1 ? 'a medida' : `as ${r.resumo.semQtd} medidas`} da secção B sem quantidade fixa (ex.: manta ignífuga, extintores nas circulações comuns).</p>}
         </div>
       )}
       <Faltas itens={r.falta.map((f) => { const [a, b] = f.split(' — '); return [a, b ?? ''] as [string, string]; })} />

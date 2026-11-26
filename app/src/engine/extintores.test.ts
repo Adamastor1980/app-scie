@@ -104,3 +104,15 @@ describe('Locais C e F indicados à mão (RJ-SCIE, art. 10.º n.os 3 e 6)', () =
     expect(r.extras[0].base).toContain('art. 10.º n.º 3 g)');
   });
 });
+
+describe('Resumo e localização dos locais C/F', () => {
+  it('total = portáteis dos pisos + das situações; móveis à parte; local sem localização em «Falta preencher»', () => {
+    const u = ut(3, [620]);
+    u.extintores = { pisos: { '0': { agente: 'po', cap: 6 } }, locais: [{ id: 'a', nome: 'piso 0', tipo: 'C', alinea: 'g' }, { id: 'b', nome: '', tipo: 'F', alinea: 'f' }] };
+    const r = dimensionarExtintores(u, 2);
+    expect(r.resumo).toMatchObject({ pisos: 4, situacoes: 2, moveis: 0 });
+    expect(r.falta.join(' ')).toContain('localização do local F');
+    const x = ut(12, [500]); x.liquidosInflamaveisL = 2000;
+    expect(dimensionarExtintores(x, 2).resumo.moveis).toBe(3);
+  });
+});

@@ -18,6 +18,9 @@ export default function EstudoExtintores() {
   // total geral por tipo
   const tot = new Map<string, number>();
   for (const x of res) for (const t of x.r.totais) tot.set(t.descricao, (tot.get(t.descricao) ?? 0) + t.qtd);
+  const sit = res.reduce((a, x) => a + x.r.resumo.situacoes, 0);
+  const mov = res.reduce((a, x) => a + x.r.resumo.moveis, 0);
+  const totPort = res.reduce((a, x) => a + x.r.resumo.pisos, 0) + sit;
   let n = 0; const S = () => String(++n);
 
   return (
@@ -78,11 +81,15 @@ export default function EstudoExtintores() {
         </ul>
 
         <H1 n={S()}>Quadro-resumo</H1>
-        {tot.size ? (
+        {tot.size || sit || mov ? (
           <table className="tbl mb-2"><thead><tr><th>Extintor</th><th className="w-24 text-right">Quantidade</th></tr></thead>
-            <tbody>{[...tot.entries()].map(([d, q]) => <tr key={d}><td>{d}</td><td className="num text-right font-semibold">{q}</td></tr>)}</tbody></table>
+            <tbody>{[...tot.entries()].map(([d, q]) => <tr key={d}><td>{d}{d.startsWith('CO₂') ? '' : ' — nos pisos'}</td><td className="num text-right font-semibold">{q}</td></tr>)}
+              {sit > 0 && <tr><td>Portáteis dos locais e situações próprias (adequados ao risco de cada local)</td><td className="num text-right font-semibold">{sit}</td></tr>}
+              <tr className="border-t-2 border-ink"><td className="font-bold">Total de extintores portáteis</td><td className="num text-right font-bold">{totPort}</td></tr>
+              {mov > 0 && <tr><td>Extintores móveis de 50 kg</td><td className="num text-right font-semibold">{mov}</td></tr>}
+            </tbody></table>
         ) : <P>Sem extintores portáteis calculados por piso.</P>}
-        {res.some((x) => x.r.extras.length) && <p className="text-[11.5px] text-ink-2">Acrescem os meios indicados nas situações específicas de cada UT (secção 4).</p>}
+        {res.some((x) => x.r.resumo.semQtd) && <p className="text-[11.5px] text-ink-2">Acrescem os meios sem quantidade fixa indicados na secção 4 (ex.: manta ignífuga).</p>}
 
         {falta.length > 0 && (
           <div className="no-print mt-6 border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[12px]">

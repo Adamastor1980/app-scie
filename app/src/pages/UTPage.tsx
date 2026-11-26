@@ -56,7 +56,7 @@ export default function UTPage({ eid, uid, step }: { eid: string; uid: string; s
       : []),
     ...(precisaCarga(ut.tipo) ? [{ k: 'carga', t: 'Carga de incêndio', s: `${fmt(carga.q)} MJ/m²` }] : []),
     { k: 'categoria', t: 'Categoria', s: cls.falta.length ? 'por atribuir' : CAT_NOME[cls.cat] },
-    { k: 'extintores', t: 'Extintores', s: (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.pisos.reduce((a, x) => a + x.qtd, 0); return r.geral ? (n ? `${n} portáteis` : 'por calcular') : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
+    { k: 'extintores', t: 'Extintores', s: (() => { const r = dimensionarExtintores(ut, cls.cat); const n = r.resumo.pisos + r.resumo.situacoes; return n ? `${n} portáteis` : r.geral ? 'por calcular' : r.extras.length ? 'situações próprias' : 'não exigidos'; })() },
     { k: 'medidas', t: 'Medidas', s: 'RT-SCIE' },
   ];
   // modo «só extintores»: levantamento, fatores só na UT I (a categoria decide a isenção do art. 163.º n.º 1) e extintores
