@@ -59,6 +59,7 @@ export default function Manutencao() {
   const [qr, setQr] = useState(false);
   const [etq, setEtq] = useState<{ ed: string; inicio: number } | null>(null);
   const user = useNuvem((n) => n.user);
+  const avisoPublico = useNuvem((n) => n.avisoPublico);
   const [lote, setLote] = useState<{ data: string; tipo: TipoManut; ed: string } | null>(null);
   if (!pl) return null;
 
@@ -125,6 +126,7 @@ export default function Manutencao() {
             ? 'Quem ler o QR de um extintor (o cliente, sem conta) vê a ficha desse extintor só de leitura: estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado. Desligar retira a ficha.'
             : 'Exige sessão iniciada com a conta Google: a ficha do cliente fica na nuvem.'}</span></span>
         </label>
+        {pl.partilhar && avisoPublico && <p className="mt-2 max-w-3xl border-l-[3px] border-alerta bg-alerta-soft px-3 py-2 text-[12.5px] text-alerta">{avisoPublico}</p>}
       </Section>
 
       <Section n="02" title="Extintores por edifício e piso" sub="Toque num extintor para ver os dados e o registo das manutenções." right={pl.extintores.length > 1 ? (

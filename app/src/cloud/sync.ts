@@ -24,6 +24,8 @@ interface NuvemState {
   estado: EstadoNuvem;
   user: { uid: string; nome: string; email: string; foto?: string } | null;
   erro?: string;
+  /** a ficha pública de um plano de manutenção foi recusada (regras da Firebase por atualizar) */
+  avisoPublico?: string;
   /** a sessão Google já foi verificada (evita mostrar o ecrã de entrada por instantes) */
   verificado: boolean;
 }
@@ -342,7 +344,12 @@ async function enviar(inicial: boolean) {
     const sf = estavel(f);
     if (publicosEnviados.get(p.id) === sf) continue;
     publicosEnviados.set(p.id, sf);
-    tarefas.push(setDoc(doc(db, 'publico', p.id), limpo(f)).catch((e) => { publicosEnviados.delete(p.id); throw e; }));
+    // a ficha do cliente não deve pôr a sincronização dos projetos em erro: avisa no plano de manutenção
+    tarefas.push(setDoc(doc(db, 'publico', p.id), limpo(f)).then(() => { if (useNuvem.getState().avisoPublico) useNuvem.setState({ avisoPublico: undefined }); }).catch((e) => {
+      const cod = (e as { code?: string }).code;
+      useNuvem.setState({ avisoPublico: cod === 'permission-denied' ? 'A nuvem recusou a ficha do cliente: falta publicar as regras novas da Firebase (firebase/firestore.rules).' : `A ficha do cliente não foi publicada: ${(e as Error).message}` });
+      if (cod !== 'permission-denied') publicosEnviados.delete(p.id); // erro passageiro: volta a tentar
+    }));
   }
   if (!inicial) {
     for (const pid of [...enviados.keys()]) {

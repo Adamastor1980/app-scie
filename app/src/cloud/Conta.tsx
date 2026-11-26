@@ -36,7 +36,7 @@ export default function Conta() {
   }
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      <span className={`flex items-center gap-1.5 text-[11.5px] ${e.c}`} title={erro}>
+      <span className={`flex items-center gap-1.5 text-[11.5px] ${e.c} ${erro && estado === 'erro' ? 'cursor-pointer underline-offset-2 hover:underline' : ''}`} title={erro} onClick={() => { if (erro && estado === 'erro') alert(`Erro de sincronização:\n\n${erro}\n\nOs projetos continuam guardados neste aparelho.`); }}>
         <e.I size={14} className={estado === 'a_sincronizar' || estado === 'a_ligar' ? 'animate-spin' : ''} /> <span className="hidden md:inline">{e.t}</span>
       </span>
       {user.foto ? <img src={user.foto} className="h-7 w-7 rounded-full" referrerPolicy="no-referrer" /> : null}
