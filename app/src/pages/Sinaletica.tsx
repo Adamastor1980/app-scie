@@ -4,7 +4,7 @@ import { useP } from './ProjetoShell';
 import type { ExtintorInv, PlanoSinal, SinalPiso } from '../data/types';
 import { novoEdificio, uid, useStore } from '../store';
 import { Faltas, Field, Num, Section, Text } from '../ui/primitives';
-import { areaPlaca, exigida, faltaPiso, placasPiso, totaisSinal } from '../engine/sinaletica';
+import { LIMITES_SINAL, NAO_EXIGIDA, PLACAS_POR_ELEMENTO, areaPlaca, exigida, faltaPiso, placasPiso, totaisSinal } from '../engine/sinaletica';
 import { inventarioDoMapa, rotuloPisoInv } from '../engine/manutencao';
 
 const PISOS = Array.from({ length: 36 }, (_, k) => 30 - k);
@@ -28,9 +28,31 @@ export default function Sinaletica() {
       <div className="mb-6 border-b-2 border-ink pb-5">
         <p className="label !text-fire-ink">RT-SCIE, arts. 108.º a 112.º</p>
         <h1 className="h-display mt-2 text-[34px] sm:text-[40px]">Sinalética de segurança</h1>
-        <p className="mt-2 max-w-3xl text-[13px] text-ink-3">Por piso, indique o que está na planta: saídas, vias de evacuação, mudanças de direção, escadas e equipamentos. A app dá o mínimo de placas e o tamanho mínimo, com o artigo de cada uma. É um mínimo a confirmar na planta.</p>
+        <p className="mt-2 max-w-3xl text-[13px] text-ink-3">Por piso, indique o que está na planta: saídas, vias de evacuação, mudanças de direção, escadas e equipamentos. A app dá o mínimo de placas e o tamanho mínimo, com o artigo de cada uma.</p>
         {exigida(pl) && tot.total > 0 && <p className="mt-3 font-display text-[18px] font-bold">{tot.total} placas no mínimo <a className="ml-2 align-middle text-[13px] font-semibold text-fire-ink hover:underline" href={`#/p/${p.id}/sinaletica/doc`}>Estudo de sinalética (PDF) →</a></p>}
       </div>
+
+      <section className="mb-10 grid gap-4">
+        <div className="border-l-[3px] border-alerta bg-alerta-soft px-4 py-3 text-[13px]">
+          <p className="font-semibold text-alerta">Limites desta app — leia antes de usar</p>
+          <ul className="mt-1.5 ml-5 list-disc leading-relaxed text-ink-2">{LIMITES_SINAL.map((t, i) => <li key={i} className={i === 0 ? 'font-semibold text-ink' : ''}>{t}</li>)}</ul>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
+          <div className="border border-paper-3 bg-white px-4 py-3 text-[13px]">
+            <p className="font-semibold">Onde não é exigida</p>
+            <p className="ref mb-1.5">RT-SCIE, art. 108.º n.º 4</p>
+            <ul className="ml-5 list-disc leading-relaxed text-ink-2">{NAO_EXIGIDA.map((t) => <li key={t}>{t}</li>)}</ul>
+            <p className="mt-2 text-[12px] text-ink-3">Em todos os outros edifícios e recintos é exigida.</p>
+          </div>
+          <div className="border border-paper-3 bg-white px-4 py-3 text-[13px]">
+            <p className="font-semibold">Onde é exigida — que placas</p>
+            <p className="mb-1.5 text-[12px] text-ink-3">As regras são iguais para todas as utilizações-tipo: as placas dependem do que existe no espaço.</p>
+            <table className="w-full text-[12.5px]"><tbody>
+              {PLACAS_POR_ELEMENTO.map(([el, pl, b]) => <tr key={el} className="border-t border-paper-3 align-top"><td className="py-1.5 pr-3 font-semibold">{el}</td><td className="py-1.5 pr-3 text-ink-2">{pl}</td><td className="ref whitespace-nowrap py-1.5">{b}</td></tr>)}
+            </tbody></table>
+          </div>
+        </div>
+      </section>
 
       <Section n="01" title="Aplicabilidade" sub="RT-SCIE, art. 108.º n.º 4: todos os edifícios e recintos têm sinalização, exceto os espaços comuns da UT I da 1.ª categoria e os fogos de habitação.">
         <select className="input max-w-[560px]" value={pl.aplic} onChange={(e) => upPl((x) => { x.aplic = e.target.value as PlanoSinal['aplic']; })}>

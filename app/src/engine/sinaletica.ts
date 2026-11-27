@@ -69,3 +69,33 @@ export function totaisSinal(pl: PlanoSinal) {
   const itens = [...m.entries()].map(([tipo, v]) => ({ tipo, ...v }));
   return { itens, total: itens.reduce((s, i) => s + i.qtd, 0) };
 }
+
+/* ---------- textos fixos: onde não é exigida, que placas, limites (página e documento) ---------- */
+
+/** RT-SCIE, art. 108.º n.º 4 — onde a sinalização não é exigida */
+export const NAO_EXIGIDA = [
+  'Espaços comuns da utilização-tipo I (habitacional) da 1.ª categoria de risco.',
+  'Fogos de habitação, em edifícios de qualquer categoria de risco.',
+];
+
+/** Que placas leva o espaço: dependem do que existe nele (iguais para todas as UT) */
+export const PLACAS_POR_ELEMENTO: [string, string, string][] = [
+  ['Saídas', 'Saída — visível de qualquer ponto onde a informação deva ser conhecida', 'RT-SCIE, art. 112.º n.os 1 e 5'],
+  ['Vias horizontais de evacuação (corredores)', 'Sentido de evacuação, de 6 a 30 m entre placas, perpendicular ou a 45° ao sentido da fuga', 'RT-SCIE, art. 112.º n.os 2 e 4'],
+  ['Mudanças de direção', 'Sentido de evacuação, inequívoco', 'RT-SCIE, art. 112.º n.º 3'],
+  ['Escadas (vias verticais)', 'No patamar de acesso: n.º do andar ou saída; no patamar intermédio: sentido de evacuação', 'RT-SCIE, art. 112.º n.º 6'],
+  ['Extintores', 'Sinalização do extintor', 'RT-SCIE, art. 163.º n.º 3'],
+  ['Bocas de incêndio do tipo carretel', 'Sinalização do carretel', 'RT-SCIE, art. 164.º'],
+  ['Meios de alarme e alerta (botões)', 'Sinalização da localização', 'RT-SCIE, art. 112.º n.º 2'],
+];
+
+/** Limites do estudo — mostrados na página e no documento, para não se ler o mínimo como contagem final */
+export const LIMITES_SINAL = [
+  'O número de placas só se determina com as plantas. A regra que mais decide — a sinalização visível de qualquer ponto onde a informação deva ser conhecida e, nos locais de permanência e nas vias acessíveis a público, uma placa de saída ou de sentido visível de qualquer ponto (RT-SCIE, arts. 111.º n.º 1 e 112.º n.os 1 e 5) — depende da geometria do espaço. A app conta apenas o mínimo que resulta dos dados introduzidos (saídas, comprimentos das vias, mudanças de direção, escadas e equipamentos); sem as plantas, não é a contagem final.',
+  'A distância de visão, que define o tamanho mínimo (A ≥ d²/2000, art. 109.º), mede-se na planta.',
+  'A posição exata de cada placa (perpendicular ou a 45° ao sentido da fuga, a menos de 2 m de uma fonte de luz, salientes entre 2,1 m e 3 m de altura) confirma-se na planta e no local (arts. 111.º e 112.º).',
+  'Pictogramas, cores e formatos seguem o DL 141/95, a Portaria 1456-A/95 e as normas EN ISO 7010, ISO 3864 e ISO 16069 (art. 108.º n.º 1); estes textos não fazem parte da base legal da app e não são verificados.',
+  'Só entram as placas dos elementos indicados; outros elementos a sinalizar (por exemplo, cortes de energia ou comandos) acrescentam-se à mão em «Outras placas».',
+  'A iluminação de emergência (arts. 113.º a 115.º) não faz parte deste estudo.',
+  'O estudo não verifica as placas que já existem num edifício (se existem e se cumprem).',
+];

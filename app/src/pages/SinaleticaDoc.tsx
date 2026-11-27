@@ -3,7 +3,7 @@ import { Loader2, Printer } from 'lucide-react';
 import { useP } from './ProjetoShell';
 import { Sheet, H1, H2, P, useDocumento } from './doc';
 import { ABREVIATURAS, Abreviaturas, BotaoAssinatura, Capa, EmpresaBloco, FichaTecnica, Indice, RevisoesDistribuicao, TabelaLegislacao, TermoAutor, dataPtDe } from './docComum';
-import { areaPlaca, exigida, faltaPiso, placasPiso, totaisSinal } from '../engine/sinaletica';
+import { LIMITES_SINAL, NAO_EXIGIDA, areaPlaca, exigida, faltaPiso, placasPiso, totaisSinal } from '../engine/sinaletica';
 import { rotuloPisoInv } from '../engine/manutencao';
 import { APLIC } from './Sinaletica';
 import { baseLegalDoc, notaVersao } from '../versao';
@@ -20,7 +20,7 @@ export default function SinaleticaDoc() {
   const pisosOrd = (eid: string) => pl.pisos.filter((s) => s.edificio === eid).sort((a, b) => (a.piso ?? 999) - (b.piso ?? 999));
   const falta = pl.pisos.flatMap((s) => faltaPiso(s).map((f) => `${p.edificios.find((e) => e.id === s.edificio)?.nome ?? ''} · ${rotuloPisoInv(s.piso)}: ${f[0].toLowerCase()}`));
   const maxD = Math.max(0, ...pl.pisos.map((s) => s.dist ?? 0));
-  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Aplicabilidade', ...(ex ? ['Critérios', 'Placas por edifício e piso', 'Totais', 'Regras de instalação'] : []), 'Conclusões', 'Termo do autor', 'Anexos'];
+  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Aplicabilidade', 'Limitações do estudo', ...(ex ? ['Critérios', 'Placas por edifício e piso', 'Totais', 'Regras de instalação'] : []), 'Conclusões', 'Termo do autor', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
   return (
@@ -63,6 +63,10 @@ export default function SinaleticaDoc() {
 
         <H1 n={S()}>Aplicabilidade</H1>
         <P>{APLIC[pl.aplic]} (RT-SCIE, art. 108.º n.º 4).</P>
+        <P>Não é exigida em: {NAO_EXIGIDA.map((t) => t.replace(/\.$/, '').toLowerCase()).join('; ')} (RT-SCIE, art. 108.º n.º 4).</P>
+
+        <H1 n={S()}>Limitações do estudo</H1>
+        <ul className="mb-3 ml-5 list-disc text-[12px] leading-[1.6] text-ink-2">{LIMITES_SINAL.map((t, i) => <li key={i} className={i === 0 ? 'font-semibold text-ink' : ''}>{t}</li>)}</ul>
 
         {ex && (<>
           <H1 n={S()}>Critérios</H1>
@@ -119,7 +123,7 @@ export default function SinaleticaDoc() {
         </>)}
 
         <H1 n={S()}>Conclusões</H1>
-        <P>{ex ? <>Ficam previstas, no mínimo, <b>{tot.total} placas</b> de sinalização de segurança{maxD ? <>, com o tamanho mínimo de cada piso indicado no capítulo 5 (a maior distância de visão é {maxD} m)</> : null}. A localização exata confirma-se na planta.</> : 'A sinalização de segurança não é exigida neste caso.'}{falta.length ? ' Há dados por preencher: o estudo só fica concluído depois de completos.' : ''}</P>
+        <P>{ex ? <>Ficam previstas, no mínimo, <b>{tot.total} placas</b> de sinalização de segurança{maxD ? <>, com o tamanho mínimo de cada piso indicado no capítulo 6 (a maior distância de visão é {maxD} m)</> : null}. É um mínimo: o número final e a localização de cada placa determinam-se nas plantas (capítulo 4, «Limitações do estudo»).</> : 'A sinalização de segurança não é exigida neste caso.'}{falta.length ? ' Há dados por preencher: o estudo só fica concluído depois de completos.' : ''}</P>
         {p.conclusoes && <div className="mt-2 whitespace-pre-line text-[12px] leading-[1.65]">{p.conclusoes}</div>}
 
         {falta.length > 0 && (
