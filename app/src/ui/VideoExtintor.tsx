@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PlayCircle } from 'lucide-react';
 
 /** Vídeo de referência: como usar um extintor (escolhido pelo utilizador). Só carrega quando se toca — sem dados nem cookies antes disso. */
-export const VIDEO_EXTINTOR = 'cpmIM0OXhy8';
+export const VIDEO_EXTINTOR = 'XVqQMFR7gAM';
 
 export default function VideoExtintor() {
   const [ver, setVer] = useState(false);
