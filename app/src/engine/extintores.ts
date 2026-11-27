@@ -157,8 +157,9 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
     const al = (l as { alinea?: string }).alinea;
     extras.push({ texto: `Local de risco ${l.tipo} «${l.nome}»: dotado de extintor próprio`, base: `${arLivre ? 'RT-SCIE, art. 163.º n.º 8' : 'RT-SCIE, art. 163.º n.º 4'}${al ? `; RJ-SCIE, art. 10.º n.º ${l.tipo === 'C' ? 3 : 6} ${al})` : ''}`, qtd: 1 });
   }
-  // n.º 5 — cozinhas e laboratórios C
-  if (ut.temCozinhaC || ut.factos?.cozinha) extras.push({ texto: 'Cozinha ou laboratório (local C): manta ignífuga, em complemento; extintor com eficácia mínima 25F se forem usados óleos ou gorduras', base: 'RT-SCIE, art. 163.º n.º 5' });
+  // n.º 5 — cozinhas e laboratórios C: da lista de locais (alíneas c) e d); b) só se for laboratório) ou do levantamento do projeto completo
+  const cozLista = (x.locais ?? []).some((l) => l.tipo === 'C' && (l.alinea === 'c' || l.alinea === 'd' || (l.alinea === 'b' && l.laboratorio)));
+  if (cozLista || ut.temCozinhaC || ut.factos?.cozinha) extras.push({ texto: 'Cozinha ou laboratório (local C): manta ignífuga, em complemento; extintor com eficácia mínima 25F se forem usados óleos ou gorduras', base: 'RT-SCIE, art. 163.º n.º 5' });
   // n.º 6 — centrais térmicas > 70 kW
   if (x.combustivelCT ? x.combustivelCT !== 'nao' : ut.factos?.centralTermica) {
     if (x.combustivelCT === 'gas') extras.push({ texto: 'Central térmica a gás (> 70 kW): 1 extintor de pó químico ABC, eficácia mínima 5 A/34 B', base: 'RT-SCIE, art. 163.º n.º 6 b)', qtd: 1 });
@@ -209,13 +210,13 @@ export function dimensionarExtintores(ut: UT, cat?: Cat): ResultadoExt {
   const it = (desc: string, cat: ItemMapa['cat'], base: string, qtd: number | null, qtdTxt?: string): ItemMapa => ({ desc, cat, base, qtd, qtdTxt });
   for (const p of pisos) if (p.area > 0) mapaF.push({ onde: `${p.nome} — nas circulações e junto às saídas, a ≤ 15 m de qualquer saída de local de risco; manípulo a ≤ 1,2 m`, oque: `Extintor de ${NOME_AGENTE[p.agente]} ${p.cap} ${UNIDADE[p.agente]}`, qtd: String(p.qtd), lei: `${p.minN} no mínimo e ${p.litros} L de água (${fmt(p.area, 2)} m²)`, base: 'RT-SCIE, art. 163.º n.os 1 a 3',
     itens: [it(`Extintor de ${NOME_AGENTE[p.agente]} ${p.cap} ${UNIDADE[p.agente]} — pisos`, 'portatil', 'RT-SCIE, art. 163.º n.º 2', p.qtd)] });
-  const cozinhaListada = (x.locais ?? []).some((l) => l.tipo === 'C' && ['b', 'c', 'd'].includes(l.alinea ?? '')) || ut.espacos.some((e) => /cozinh|laborat/i.test(e.nome) && (e.local === 'C' || e.local === 'Cag'));
+  const cozinhaListada = cozLista || ut.espacos.some((e) => /cozinh|laborat/i.test(e.nome) && (e.local === 'C' || e.local === 'Cag'));
   const MANTA = 'Manta ignífuga — cozinhas e laboratórios';
   const E25F = 'Extintor de eficácia mínima 25F — cozinha (se houver óleos ou gorduras)';
-  for (const l of [...ut.espacos.filter((e) => ['C', 'Cag', 'F'].includes(e.local)).map((e) => ({ nome: e.nome || 'espaço', tipo: (e.local === 'F' ? 'F' : 'C') as 'C' | 'F', alinea: undefined as string | undefined })), ...(x.locais ?? []).filter((l) => l.alinea).map((l) => ({ nome: [descLocal(l.tipo, l.alinea!), l.nome].filter(Boolean).join(' — '), tipo: l.tipo, alinea: l.alinea }))]) {
+  for (const l of [...ut.espacos.filter((e) => ['C', 'Cag', 'F'].includes(e.local)).map((e) => ({ nome: e.nome || 'espaço', tipo: (e.local === 'F' ? 'F' : 'C') as 'C' | 'F', alinea: undefined as string | undefined })), ...(x.locais ?? []).filter((l) => l.alinea).map((l) => ({ nome: [descLocal(l.tipo, l.alinea!), l.nome].filter(Boolean).join(' — '), tipo: l.tipo, alinea: l.alinea, laboratorio: l.laboratorio }))]) {
     if (arLivre && l.tipo !== 'C') continue;
     const cozinha = l.tipo === 'C' && (l.alinea === 'c' || l.alinea === 'd' || /cozinh/i.test(l.nome));
-    const lab = l.tipo === 'C' && (l.alinea === 'b' || /laborat/i.test(l.nome));
+    const lab = l.tipo === 'C' && ((l.alinea === 'b' && !!(l as { laboratorio?: boolean }).laboratorio) || (!l.alinea && /laborat/i.test(l.nome)));
     const baseL = `RT-SCIE, art. 163.º n.º ${arLivre ? 8 : 4}`;
     mapaF.push({
       onde: `Local de risco ${l.tipo}: ${l.nome}`,

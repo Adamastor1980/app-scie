@@ -157,3 +157,17 @@ describe('Capacidades normalizadas (EN 3) — sem capacidade mínima no RT-SCIE'
     expect(dimensionarExtintores(u, 2).pisos[0]).toMatchObject({ cap: 2, eqL: 4, proposta: 5, cumpre: true });
   });
 });
+
+describe('Art. 163.º n.º 5 — cozinhas e laboratórios a partir da lista de locais C', () => {
+  it('c) cozinha: 25F + manta; b) só com «é laboratório»: manta; b) oficina: só extintor', () => {
+    const tem = (locais: NonNullable<NonNullable<ReturnType<typeof novaUT>['extintores']>['locais']>) => {
+      const u = ut(3, [300]); u.extintores = { locais };
+      const r = dimensionarExtintores(u, 2);
+      const itens = r.mapa.flatMap((l) => l.itens.map((i) => i.desc)).join(' | ');
+      return { manta: /Manta/.test(itens), f25: /25F/.test(itens), n5: r.extras.some((e) => e.base === 'RT-SCIE, art. 163.º n.º 5') };
+    };
+    expect(tem([{ id: 'a', nome: 'piso 0', tipo: 'C', alinea: 'c' }])).toEqual({ manta: true, f25: true, n5: true });
+    expect(tem([{ id: 'a', nome: 'piso 0', tipo: 'C', alinea: 'b' }])).toEqual({ manta: false, f25: false, n5: false });
+    expect(tem([{ id: 'a', nome: 'piso 0', tipo: 'C', alinea: 'b', laboratorio: true }])).toEqual({ manta: true, f25: false, n5: true });
+  });
+});

@@ -49,7 +49,13 @@ export default function UTExtintores({ ut, upU }: UTProps) {
   const livres = OPCOES.filter((o) => !r.pisos.some((p) => p.n === o));
   const soPo = t === 8 && x.gare === 'eletrica';
   // plano de manutenção: os extintores já existem — aqui só se indica o que a lei precisa para verificar
-  const man = useP().p.modo === 'manutencao';
+  const modo = useP().p.modo;
+  const man = modo === 'manutencao';
+  // o antigo quadro «cozinha ou laboratório C» passa para a lista de locais (projetos só de extintores/manutenção)
+  const cozNaLista = (x.locais ?? []).some((l) => l.tipo === 'C' && (l.alinea === 'c' || l.alinea === 'd' || (l.alinea === 'b' && l.laboratorio)));
+  useEffect(() => {
+    if ((modo === 'extintores' || modo === 'manutencao') && ut.factos?.cozinha && !cozNaLista) upU((u) => { ((u.extintores ??= {}).locais ??= []).push({ id: uid(), nome: '', tipo: 'C', alinea: 'c' }); u.factos!.cozinha = false; });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const Lei = ({ b }: { b: string }) => <button className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => setLei(b)}><BookOpen size={12} /> Ver lei</button>;
 
   return (
@@ -123,12 +129,15 @@ export default function UTExtintores({ ut, upU }: UTProps) {
               <button className="btn-icon" title="Retirar local" onClick={() => upX((z) => { z.locais = z.locais!.filter((_, k) => k !== i); })}><Trash2 size={14} /></button>
               {!l.alinea && <p className="w-full text-[11.5px] text-alerta">Falta preencher: tipo de local — confirme na lista se é mesmo local C ou F; se não constar, não precisa de extintor próprio.</p>}
               {l.alinea && !l.nome.trim() && <p className="w-full text-[11.5px] text-alerta">Falta preencher: onde fica — para se saber onde colocar o extintor.</p>}
+              {l.tipo === 'C' && (l.alinea === 'c' || l.alinea === 'd') && <p className="w-full text-[11.5px] text-ink-2">Cozinha: leva também manta ignífuga e, se forem usados óleos ou gorduras, extintor de eficácia mínima 25F (RT-SCIE, art. 163.º n.º 5).</p>}
+              {l.tipo === 'C' && l.alinea === 'b' && (
+                <label className="flex w-full cursor-pointer items-center gap-2 text-[12px]"><input type="checkbox" className="h-4 w-4 accent-[#14233A]" checked={!!l.laboratorio} onChange={(e) => upX((z) => { z.locais![i].laboratorio = e.target.checked; })} /> É laboratório — leva também manta ignífuga (RT-SCIE, art. 163.º n.º 5)</label>
+              )}
             </div>
           ))}
           <button className="mt-3 flex items-center gap-1 text-[12px] font-semibold text-fire-ink hover:underline" onClick={() => upX((z) => { (z.locais ??= []).push({ id: uid(), nome: '', tipo: 'C' }); })}><Plus size={13} /> Acrescentar local C ou F</button>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <Toggle checked={!!(ut.temCozinhaC || ut.factos?.cozinha)} onChange={(v) => upU((u) => { u.factos ??= {}; u.factos.cozinha = v; if (!v) u.temCozinhaC = false; })} label="Cozinha ou laboratório que seja local C" hint="Só se for local C: cozinha > 20 kW ou com combustíveis sólidos, ou laboratório com > 10 l de líquidos inflamáveis (RJ-SCIE, art. 10.º n.º 3 b), c), d))" legal="RT-SCIE, art. 163.º n.º 5" />
           <div className="border border-paper-3 bg-white p-3">
             <div className="mb-1 flex items-baseline justify-between gap-2">
               <p className="text-[13px] font-semibold">Central térmica com mais de 70 kW</p>
