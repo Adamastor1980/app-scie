@@ -5,13 +5,23 @@ import { dimensionarRIA } from '../../engine/ria';
 import { Faltas, Field, Num, Section, Toggle } from '../../ui/primitives';
 
 /** Secção «Rede de incêndio armada (carretéis)» do passo Extintores — RT-SCIE, arts. 164.º a 167.º */
-export default function UTRia({ ut, upU, n, verLei }: { ut: UT; upU: (fn: (u: UT) => void) => void; n: string; verLei: (b: string) => void }) {
+export default function UTRia({ ut, upU, n, verLei, opcional }: { ut: UT; upU: (fn: (u: UT) => void) => void; n: string; verLei: (b: string) => void; opcional?: boolean }) {
   const cls = classificar(ut, efetivoUT(ut));
   const r = dimensionarRIA(ut);
   const x = ut.ria ?? {};
   const upR = (fn: (x: NonNullable<UT['ria']>) => void) => upU((u) => { fn(u.ria ??= {}); });
   const Lei = ({ b }: { b: string }) => <button className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-fire-ink hover:underline" onClick={() => verLei(b)}><BookOpen size={12} /> Ver lei</button>;
   const cor = r.exigida === null ? 'border-alerta bg-alerta-soft' : r.exigida ? 'border-fire bg-fire-soft' : 'border-ok bg-ok-soft';
+
+  // projetos de extintores e de manutenção: a RIA só entra se o técnico a incluir
+  if (opcional && !x.ativa) return (
+    <Section n={n} title="Rede de incêndio armada (carretéis)" sub="Opcional neste tipo de projeto.">
+      <div className="flex flex-wrap items-center justify-between gap-3 border border-paper-3 bg-white px-4 py-3 text-[13px]">
+        <p className="min-w-0 flex-1 basis-[280px]"><b>Não incluída neste estudo.</b> <span className="text-ink-2">A lei pode exigi-la conforme a utilização-tipo, a categoria e os locais com mais de 200 pessoas (RT-SCIE, art. 164.º). Inclua-a se o estudo a abranger.</span></p>
+        <button className="btn h-9 px-4" onClick={() => upR((z) => { z.ativa = true; })}>Incluir</button>
+      </div>
+    </Section>
+  );
 
   return (
     <Section n={n} title="Rede de incêndio armada (carretéis)" sub="Quando a lei a exige e o mínimo de bocas, caudal e alimentação (RT-SCIE, arts. 164.º a 167.º).">
@@ -20,6 +30,7 @@ export default function UTRia({ ut, upU, n, verLei }: { ut: UT; upU: (fn: (u: UT
         <Lei b="RT-SCIE, arts. 164.º a 167.º" />
       </div>
       {r.notas.map((t, i) => <p key={i} className="mb-2 text-[12.5px] text-ink-2">{t}</p>)}
+      {opcional && <button className="mb-3 text-[12px] font-semibold text-ink-3 hover:text-ink hover:underline" onClick={() => upR((z) => { z.ativa = false; })}>Retirar do estudo</button>}
       {cls.falta.length > 0 && (
         <Field label="Categoria de risco (indicada pelo técnico)" className={`mb-4 max-w-[420px] ${x.cat ? '' : 'falta'}`} hint="Neste tipo de projeto a categoria não é calculada: indique a do projeto de SCIE ou da ficha de segurança do edifício. Define se a rede é exigida (art. 164.º).">
           <select className="input" value={x.cat ?? ''} onChange={(e) => upR((z) => { z.cat = e.target.value ? (Number(e.target.value) as 1 | 2 | 3 | 4) : undefined; })}>

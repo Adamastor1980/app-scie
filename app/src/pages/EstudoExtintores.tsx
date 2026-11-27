@@ -23,7 +23,7 @@ export default function EstudoExtintores() {
   const tot = totaisMapa(linhas);
   const port = tot.find((g) => g.cat === 'portatil');
   const DOC = 'Estudo de dimensionamento de extintores';
-  const comRIA = temRIA(uts);
+  const comRIA = temRIA(uts, p.modo);
   const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Caracterização e aplicabilidade', 'Critérios de dimensionamento', 'Dimensionamento por utilização-tipo', 'Localização e instalação', 'Mapa de extintores — o quê, onde e quantos', 'Totais de extintores e outros meios', ...(comRIA ? ['Rede de incêndio armada (carretéis)'] : []), 'Conclusões', 'Termo do autor', 'Anexos'];
   let n = 0; const S = () => String(++n);
 
@@ -110,7 +110,7 @@ export default function EstudoExtintores() {
         {comRIA && (<>
           <H1 n={S()}>Rede de incêndio armada (carretéis)</H1>
           <P>Quando exigida, a rede de incêndio armada com bocas do tipo carretel completa os meios de primeira intervenção (RT-SCIE, arts. 164.º a 167.º).</P>
-          <QuadroRIA uts={uts} />
+          <QuadroRIA uts={uts} modo={p.modo} />
         </>)}
 
         {falta.length > 0 && (

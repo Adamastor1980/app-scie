@@ -1,12 +1,12 @@
 import { Fragment } from 'react';
 import type { Edificio, UT } from '../data/types';
-import { dimensionarRIA } from '../engine/ria';
+import { dimensionarRIA, riaIncluida } from '../engine/ria';
 import { fmt } from '../engine/calc';
 import { tituloUT } from '../nome';
 
 /** Quadro da rede de incêndio armada do tipo carretel (todas as UT) — Estudo de extintores e relatório SCIE */
-export function QuadroRIA({ uts }: { uts: { ed: Edificio; ut: UT }[] }) {
-  const rs = uts.map((x) => ({ ...x, r: dimensionarRIA(x.ut) }));
+export function QuadroRIA({ uts, modo }: { uts: { ed: Edificio; ut: UT }[]; modo?: string }) {
+  const rs = uts.filter((x) => riaIncluida(x.ut, modo)).map((x) => ({ ...x, r: dimensionarRIA(x.ut) }));
   const com = rs.filter((x) => x.r.exigida && !x.r.proibida);
   return (
     <div>
@@ -44,4 +44,4 @@ export function QuadroRIA({ uts }: { uts: { ed: Edificio; ut: UT }[] }) {
   );
 }
 
-export const temRIA = (uts: { ut: UT }[]) => uts.some((x) => dimensionarRIA(x.ut).exigida !== false);
+export const temRIA = (uts: { ut: UT }[], modo?: string) => uts.some((x) => riaIncluida(x.ut, modo) && dimensionarRIA(x.ut).exigida !== false);

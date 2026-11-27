@@ -33,6 +33,9 @@ export const REGRAS_RIA = [
   'Pressão da água indicada por manómetros (art. 167.º n.º 7).',
 ];
 
+/** A RIA entra no estudo? No projeto SCIE completo, sempre (medida obrigatória pela categoria); nos de extintores e de manutenção, só se o técnico a incluir. */
+export const riaIncluida = (ut: UT, modo?: string) => !modo || modo === 'completo' || !!ut.ria?.ativa;
+
 export function dimensionarRIA(ut: UT, cat?: Cat): ResultadoRIA {
   const t = ut.tipo;
   const cls = classificar(ut, efetivoUT(ut));

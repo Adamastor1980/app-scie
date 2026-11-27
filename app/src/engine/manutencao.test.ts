@@ -140,6 +140,9 @@ describe('Carretéis no plano de manutenção', () => {
     u.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 2000 }];
     u.ria = { cat: 2, mangueira: 25, escadas: 2 };
     p.edificios[0].uts.push(u);
+    p.modo = 'extintores';
+    expect(inventarioDoMapa(p).novos.some((e) => e.equip === 'carretel')).toBe(false); // RIA não incluída no estudo
+    u.ria.ativa = true;
     const car = inventarioDoMapa(p).novos.filter((e) => e.equip === 'carretel');
     expect(car.map((e) => e.num)).toEqual(['CAR-01', 'CAR-02']); expect(car[0]).toMatchObject({ piso: 0, mangueira: 25 });
   });

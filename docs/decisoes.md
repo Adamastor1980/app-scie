@@ -239,6 +239,7 @@ Serve de base ao capítulo de metodologia e à secção de limitações do proje
 - **Mínimo de bocas (art. 165.º):** por piso, o maior entre a cobertura e as bocas obrigatórias junto às escadas (c)) e às saídas de locais > 200 pessoas (d)).
 - ⚠️ **Cobertura — critério técnico:** cada boca conta com o quadrado inscrito no círculo de alcance (mangueira + 5 m), ou seja 2·(L+5)² m². A lei exige que todos os pontos fiquem a ≤ 5 m da agulheta e bocas a ≤ 2 L entre si (a) e b)); isso só se confirma na planta. Declarado no ecrã e nos documentos como mínimo.
 - **Caudal (art. 167.º):** 1,5 l/s por boca com metade das bocas abertas (máximo 4), K ≥ 42; 1 l/s com K = 64 na alimentação pela rede pública com garantias (1.ª e 2.ª categorias, n.os 3 e 5). Alimentação conforme os n.os 4 a 6; regras de instalação do art. 166.º.
+- **Opcional nos projetos de extintores e de manutenção (decisão do utilizador):** a RIA só entra no estudo, no inventário e na verificação se o técnico a incluir em cada UT («Incluir» / «Retirar do estudo»); fechada, mostra só a nota de que a lei pode exigi-la (art. 164.º). No projeto SCIE completo está sempre incluída (medida exigível pela categoria calculada).
 - **Projeto só de extintores:** a categoria não é calculada; o técnico indica a do projeto de SCIE ou da ficha de segurança (campo obrigatório para decidir a), b) e c)); os documentos dizem que foi indicada e não calculada. A alínea d) aplica-se mesmo sem categoria.
 
 ### D-44 — Carretéis no plano de manutenção (meios de 1.ª intervenção completos) ✅/⚠️

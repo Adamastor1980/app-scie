@@ -1,6 +1,6 @@
 import type { AgenteInv, ExtintorInv, PlanoManut, Projeto, RegistoManut, TipoManut } from '../data/types';
 import { CONVERSAO, dimensionarExtintores, exigidosPorArea } from './extintores';
-import { dimensionarRIA } from './ria';
+import { dimensionarRIA, riaIncluida } from './ria';
 import { classificar } from './calc';
 
 /**
@@ -135,7 +135,7 @@ export function inventarioDoMapa(p: Projeto, existentes: ExtintorInv[] = []): { 
     }
     // carretéis da rede de incêndio armada (art. 165.º): o mínimo de bocas por piso
     const ria = dimensionarRIA(ut);
-    if (ria.exigida && !ria.proibida) for (const pi of ria.pisos) for (let i = 0; i < pi.minimo; i++) novos.push(mk(ed.id, { equip: 'carretel', piso: pi.n, mangueira: ria.alcance ? ria.alcance - 5 : undefined }));
+    if (riaIncluida(ut, p.modo) && ria.exigida && !ria.proibida) for (const pi of ria.pisos) for (let i = 0; i < pi.minimo; i++) novos.push(mk(ed.id, { equip: 'carretel', piso: pi.n, mangueira: ria.alcance ? ria.alcance - 5 : undefined }));
   }
   return { novos, porContar };
 }

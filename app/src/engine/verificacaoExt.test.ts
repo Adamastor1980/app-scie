@@ -61,6 +61,8 @@ describe('Verificação legal — carretéis (RIA)', () => {
     u.pisos = [{ id: 'a', n: 0, nome: 'Piso 0', cota: 0, area: 2000 }];
     u.ria = { cat: 2, mangueira: 25, escadas: 2 };
     ed.uts.push(u);
+    expect(verificarEdificio(ed, plano([])).res.some((r) => r.tipo === 'ria')).toBe(false); // RIA não incluída: não é verificada
+    u.ria.ativa = true;
     const car = (n: string) => ext(n, { equip: 'carretel', agente: '', cap: 0 });
     let res = verificarEdificio(ed, plano([car('CAR-01'), ext('EXT-01')])).res;
     const ria = res.find((r) => r.tipo === 'ria')!;

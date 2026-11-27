@@ -61,7 +61,8 @@ export function requisitos(ed: Edificio): { reqs: Req[]; porUT: { utId: string; 
     }
     // carretéis (RIA): mínimo de bocas por piso (art. 165.º); sem categoria, faltam dados
     const ria = dimensionarRIA(ut);
-    if (ria.exigida === null) reqs.push({ key: `${ut.id}:ria:cat`, utId: ut.id, ut: nome, tipo: 'ria', titulo: 'Rede de incêndio armada (carretéis)', onde: 'Toda a UT', base: 'RT-SCIE, art. 164.º', qtd: null });
+    if (!ut.ria?.ativa) { /* RIA não incluída pelo técnico (plano de manutenção) */ }
+    else if (ria.exigida === null) reqs.push({ key: `${ut.id}:ria:cat`, utId: ut.id, ut: nome, tipo: 'ria', titulo: 'Rede de incêndio armada (carretéis)', onde: 'Toda a UT', base: 'RT-SCIE, art. 164.º', qtd: null });
     else if (ria.exigida && !ria.proibida) for (const p of ria.pisos) reqs.push({ key: `${ut.id}:ria:${p.n}`, utId: ut.id, ut: nome, tipo: 'ria', titulo: `${p.nome} — carretéis (RIA)`, onde: p.nome, base: `${ria.base}; RT-SCIE, art. 165.º`, qtd: ria.falta.length ? null : p.minimo, piso: p.n });
     for (const l of r.mapa) for (const it of l.itens) {
       if (it.cat === 'complemento' || it.base === 'RT-SCIE, art. 163.º n.º 2') continue;

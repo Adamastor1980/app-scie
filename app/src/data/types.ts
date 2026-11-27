@@ -440,6 +440,8 @@ export interface PlanoSinal {
 
 /** Rede de incêndio armada do tipo carretel — dados para o cálculo (RT-SCIE, arts. 164.º a 167.º) */
 export interface RiaUT {
+  /** incluir a RIA no estudo (projetos de extintores e de manutenção; no projeto completo está sempre incluída) */
+  ativa?: boolean;
   /** comprimento da mangueira dos carretéis (m) — art. 165.º a) e b) */
   mangueira?: number;
   /** escadas (caminhos verticais) que servem os pisos — art. 165.º c) */

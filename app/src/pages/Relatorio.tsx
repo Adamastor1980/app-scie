@@ -348,9 +348,9 @@ export default function Relatorio() {
           <MapaExtintores linhas={linhas} />
           <H2 n={`${sec}.${todas.length + 2}`}>Totais de extintores e outros meios</H2>
           <TotaisExtintores linhas={linhas.map((x) => x.l)} />
-          {temRIA(todas) && (<>
+          {temRIA(todas, p.modo) && (<>
             <H2 n={`${sec}.${todas.length + 3}`}>Rede de incêndio armada (carretéis)</H2>
-            <QuadroRIA uts={todas.map(({ ut, ed }) => ({ ut, ed }))} />
+            <QuadroRIA uts={todas.map(({ ut, ed }) => ({ ut, ed }))} modo={p.modo} />
           </>)}
         </>); })()}
 
