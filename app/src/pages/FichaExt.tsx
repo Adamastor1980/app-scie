@@ -6,6 +6,7 @@ import { novoPlanoManut } from '../store';
 import { go } from '../router';
 import { Faltas, Field, Text } from '../ui/primitives';
 import LerQR from '../ui/LerQR';
+import VideoExtintor from '../ui/VideoExtintor';
 import { ChipEstado, LinhaExt } from './Manutencao';
 import { periodoDe, TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
 
@@ -137,6 +138,8 @@ export default function FichaExt({ eid }: { eid: string }) {
             apagar={() => { if (confirm(`Apagar ${e.num} e o seu registo de manutenções?`)) { upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); }); go(`${base}/manutencao`); } }} />
         </div>
       )}
+
+      {e.equip !== 'carretel' && <div className="mt-4"><VideoExtintor /></div>}
 
       <h2 className="mb-2 mt-6 font-display text-[18px] font-bold">Histórico</h2>
       <Historico registos={e.registos} />

@@ -7,6 +7,7 @@ import { estadoExt, rotuloPisoInv, type FichaPublicaDoc } from '../engine/manute
 import type { ExtintorInv } from '../data/types';
 import { ChipEstado } from './Manutencao';
 import { Historico } from './FichaExt';
+import VideoExtintor from '../ui/VideoExtintor';
 import { NomeApp, Simbolo } from '../ui/Marca';
 
 /**
@@ -54,6 +55,7 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
         <p className="mt-1 text-[13px]">{e.desc}{e.eficacia ? ` · eficácia ${e.eficacia}` : ''}{e.ano ? ` · fabrico ${e.ano}` : ''}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2"><ChipEstado s={s} />{s.naoConforme && <span className="border border-alerta px-1.5 py-0.5 font-mono text-[11px] font-semibold text-alerta">ÚLTIMA: NÃO CONFORME</span>}</div>
       </div>
+      {e.equip !== 'carretel' && <div className="mt-4"><VideoExtintor /></div>}
       <h2 className="mb-2 mt-6 font-display text-[18px] font-bold">Histórico de manutenção</h2>
       <Historico registos={e.registos} />
       {pub.empresa.nome && <p className="mt-6 border-t border-paper-3 pt-3 text-[12.5px] text-ink-3">Plano de manutenção gerido por <b className="text-ink">{pub.empresa.nome}</b>{[pub.empresa.telefone, pub.empresa.email].filter(Boolean).map((x) => ` · ${x}`).join('')}.</p>}

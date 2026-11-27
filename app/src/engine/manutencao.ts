@@ -206,7 +206,7 @@ export interface FichaPublicaDoc {
   dono: string; atualizadoEm: number; projeto: string; cliente: string;
   empresa: { nome: string; telefone: string; email: string };
   periodoMeses: number;
-  extintor: { num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id' | 'tecnico'>[] };
+  extintor: { equip?: 'carretel'; num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id' | 'tecnico'>[] };
 }
 /** Identificador do documento público de um extintor */
 export const idPublico = (pid: string, eid: string) => `${pid}_${eid}`;
@@ -222,6 +222,7 @@ export function fichasPublicas(p: Projeto, dono: string): { id: string; doc: Fic
       empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
       periodoMeses: periodoDe(pl, e),
       extintor: {
+        ...(eCarretel(e) ? { equip: 'carretel' as const } : {}),
         num: e.num, edificio: nomeEd(e.edificio), piso: e.piso, local: e.local, desc: descExt(e), eficacia: e.eficacia, ...(e.ano ? { ano: e.ano } : {}),
         registos: [...e.registos].sort((a, b) => b.data.localeCompare(a.data)).map((r) => ({ data: r.data, tipo: r.tipo, resultado: r.resultado, empresa: r.empresa, registoAnepc: r.registoAnepc, obs: r.obs })),
       },
