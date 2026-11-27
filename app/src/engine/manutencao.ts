@@ -205,6 +205,9 @@ export const faltaEmpresa = (empresa: PlanoManut['empresa']): [string, string][]
 export interface FichaPublicaDoc {
   dono: string; atualizadoEm: number; projeto: string; cliente: string;
   empresa: { nome: string; telefone: string; email: string };
+  /** responsável de segurança, se indicado (contacto em caso de anomalia) */
+  contacto?: { nome: string; telefone: string };
+  manutencao?: string;
   periodoMeses: number;
   extintor: { equip?: 'carretel'; num: string; edificio: string; piso: number | null; local: string; desc: string; eficacia: string; ano?: number; registos: Omit<RegistoManut, 'id' | 'tecnico'>[] };
 }
@@ -220,6 +223,8 @@ export function fichasPublicas(p: Projeto, dono: string): { id: string; doc: Fic
     doc: {
       dono, atualizadoEm: p.atualizadoEm, projeto: p.nome, cliente: p.cliente,
       empresa: { nome: p.empresa.nome, telefone: p.empresa.telefone, email: p.empresa.email },
+      ...(p.autoprotecao?.rs?.nome?.trim() || p.autoprotecao?.rs?.telefone?.trim() ? { contacto: { nome: p.autoprotecao.rs.nome.trim(), telefone: p.autoprotecao.rs.telefone.trim() } } : {}),
+      ...(pl.empresa.nome ? { manutencao: pl.empresa.nome } : {}),
       periodoMeses: periodoDe(pl, e),
       extintor: {
         ...(eCarretel(e) ? { equip: 'carretel' as const } : {}),

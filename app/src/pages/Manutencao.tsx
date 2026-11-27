@@ -9,7 +9,7 @@ import { useP } from './ProjetoShell';
 import VerificacaoExt from './VerificacaoExt';
 import { opcoesServe } from '../engine/verificacaoExt';
 import type { AgenteInv, ExtintorInv, PlanoManut, RegistoManut, TipoManut } from '../data/types';
-import { novoEdificio, novoPlanoManut, uid } from '../store';
+import { novaAutoprotecao, novoEdificio, novoPlanoManut, uid } from '../store';
 import { Area, Faltas, Field, Num, Section, Text, mostrarNovo } from '../ui/primitives';
 import {
   NOME_AGENTE_INV, TIPO_MANUT, inventarioDoMapa, UNID_INV, dataPt, descExt, estadoExt, faltaExt, faltaReg, hojeISO, ordenar, proximoNum, resumoManut, rotuloPisoInv, type EstadoExt,
@@ -123,6 +123,11 @@ export default function Manutencao() {
           <Field label="Empresa de manutenção"><Text value={pl.empresa.nome} onChange={(v) => upPl((x) => { x.empresa.nome = v; })} /></Field>
           <Field label="N.º de registo ANEPC" hint="Obrigatório para empresas de manutenção (RJ-SCIE, art. 23.º)."><Text value={pl.empresa.registoAnepc} onChange={(v) => upPl((x) => { x.empresa.registoAnepc = v; })} /></Field>
           <Field label="Técnico habitual"><Text value={pl.empresa.tecnico} onChange={(v) => upPl((x) => { x.empresa.tecnico = v; })} /></Field>
+        </div>
+        <div className="mt-5 grid max-w-3xl gap-4 border-t border-paper-3 pt-4 sm:grid-cols-2">
+          <p className="text-[12.5px] text-ink-2 sm:col-span-2"><b>Responsável de segurança</b> <span className="text-ink-3">(opcional)</span> — o nome e o telemóvel aparecem na ficha de cada extintor e carretel, também na do cliente ao ler o QR, como contacto em caso de anomalia (usado, danificado, sem selo, fora do lugar). É o mesmo responsável das medidas de autoproteção (RJ-SCIE, art. 6.º).</p>
+          <Field label="Nome"><Text value={p.autoprotecao?.rs?.nome ?? ''} onChange={(v) => up((q) => { (q.autoprotecao ??= novaAutoprotecao()).rs.nome = v; })} /></Field>
+          <Field label="Telemóvel"><input className="input" type="tel" inputMode="tel" value={p.autoprotecao?.rs?.telefone ?? ''} placeholder="ex.: 912 345 678" onChange={(e) => { const v = e.target.value; up((q) => { (q.autoprotecao ??= novaAutoprotecao()).rs.telefone = v; }); }} /></Field>
         </div>
         <p className="mt-5 max-w-3xl border-l-[3px] border-ink-4 bg-white px-3 py-2 text-[12.5px] text-ink-2"><b>Ficha do cliente:</b> quem ler o QR de um extintor, mesmo sem conta, vê a ficha desse extintor só de leitura — estado, próxima manutenção e histórico. Só os dados dos extintores; o resto do projeto não é partilhado.{!user && ' Fica disponível quando iniciar sessão com a conta Google.'}</p>
         {avisoPublico && (

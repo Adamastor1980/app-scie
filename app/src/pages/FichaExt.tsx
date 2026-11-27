@@ -7,6 +7,7 @@ import { go } from '../router';
 import { Faltas, Field, Text } from '../ui/primitives';
 import LerQR from '../ui/LerQR';
 import VideoExtintor from '../ui/VideoExtintor';
+import ContactoAnomalia from '../ui/ContactoAnomalia';
 import { ChipEstado, LinhaExt } from './Manutencao';
 import { periodoDe, TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
 
@@ -139,6 +140,7 @@ export default function FichaExt({ eid }: { eid: string }) {
         </div>
       )}
 
+      <div className="mt-4"><ContactoAnomalia nome={p.autoprotecao?.rs?.nome} telefone={p.autoprotecao?.rs?.telefone} empresa={pl.empresa.nome} carretel={e.equip === 'carretel'} /></div>
       {e.equip !== 'carretel' && <div className="mt-4"><VideoExtintor /></div>}
 
       <h2 className="mb-2 mt-6 font-display text-[18px] font-bold">Histórico</h2>
