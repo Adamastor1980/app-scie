@@ -1,8 +1,58 @@
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Info } from 'lucide-react';
 import type { UT } from '../../data/types';
 import { classificar, efetivoUT, fmt, pisosUT } from '../../engine/calc';
 import { dimensionarRIA } from '../../engine/ria';
 import { Faltas, Field, Num, Section, Toggle } from '../../ui/primitives';
+
+/** Regra principal da RIA para cada UT (RT-SCIE, art. 164.º e específicas) */
+const REGRA_UT: Record<number, string> = {
+  1: 'UT I (habitacionais): obrigatória a partir da 3.ª categoria (art. 164.º c)); e na sala de condomínio com mais de 200 m² (art. 210.º n.º 6 e)).',
+  2: 'UT II (estacionamentos): obrigatória a partir da 2.ª categoria (art. 164.º a)); na 1.ª, se os espaços cobertos tiverem mais de 500 m² (art. 164.º b)).',
+  3: 'UT III (administrativos): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+  4: 'UT IV (escolares): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+  5: 'UT V (hospitalares e lares de idosos): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+  6: 'UT VI (espetáculos e reuniões públicas): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+  7: 'UT VII (hoteleiros e restauração): obrigatória a partir da 2.ª categoria (art. 164.º a)); dispensada no turismo do espaço rural, de natureza e de habitação da 2.ª categoria (art. 257.º).',
+  8: 'UT VIII (comerciais e gares): obrigatória a partir da 2.ª categoria (art. 164.º a)); proibidos meios com água nas plataformas com tração elétrica (art. 273.º n.º 1).',
+  9: 'UT IX (desportivos e de lazer): obrigatória a partir da 3.ª categoria (art. 164.º c)); parques de campismo a partir da 2.ª, a cobrir todos os setores (art. 286.º n.º 1 b)).',
+  10: 'UT X (museus e galerias de arte): obrigatória a partir da 3.ª categoria (art. 164.º c)).',
+  11: 'UT XI (bibliotecas e arquivos): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+  12: 'UT XII (industriais, oficinas e armazéns): obrigatória a partir da 2.ª categoria (art. 164.º a)).',
+};
+
+/** «Quando é obrigatória?» — ajuda para o levantamento, sempre disponível */
+function QuandoObrigatoria({ tipo }: { tipo: number }) {
+  return (
+    <details className="group mb-4 border border-paper-3 bg-white text-[12.5px]">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 font-semibold text-fire-ink"><Info size={15} /> Quando é obrigatória? <span className="font-normal text-ink-3">(ajuda para o levantamento)</span></summary>
+      <div className="border-t border-paper-3 px-4 pb-4 pt-3 leading-relaxed text-ink-2">
+        <p className="mb-3 border-l-[3px] border-fire bg-fire-soft px-3 py-2 text-ink"><b>Nesta UT —</b> {REGRA_UT[tipo]}</p>
+        <p className="mb-1 font-semibold text-ink">Todos os casos (RT-SCIE, art. 164.º)</p>
+        <ul className="mb-3 ml-5 list-disc">
+          <li>a) UT II a VIII, XI e XII da 2.ª categoria de risco ou superior;</li>
+          <li>b) UT II (estacionamentos) da 1.ª categoria com espaços cobertos de mais de 500 m²;</li>
+          <li>c) UT I, IX e X da 3.ª categoria de risco ou superior;</li>
+          <li>d) <b>em qualquer UT</b>, os locais que possam receber mais de 200 pessoas — mesmo que a UT não a exija.</li>
+        </ul>
+        <p className="mb-1 font-semibold text-ink">Regras específicas</p>
+        <ul className="mb-3 ml-5 list-disc">
+          <li>Sala de condomínio com área bruta superior a 200 m² (UT I) — exigida (art. 210.º n.º 6 e));</li>
+          <li>Turismo do espaço rural, de natureza e de habitação da 2.ª categoria (UT VII) — dispensada (art. 257.º);</li>
+          <li>Plataformas de embarque com tração elétrica (UT VIII) — proibidos meios que usem água (art. 273.º n.º 1);</li>
+          <li>Parques de campismo da 2.ª categoria ou superior (UT IX) — bocas a cobrir todos os setores (art. 286.º n.º 1 b)).</li>
+        </ul>
+        <p className="mb-1 font-semibold text-ink">O que observar no local</p>
+        <ul className="ml-5 list-disc">
+          <li>A <b>categoria de risco</b> do edifício: consta do projeto de SCIE aprovado ou da ficha de segurança.</li>
+          <li>Salas que possam receber <b>mais de 200 pessoas</b>: auditórios, salas de reuniões ou formação grandes, refeitórios, ginásios, salas de espetáculo, igrejas.</li>
+          <li>Nos estacionamentos, a <b>área coberta</b>; nos condomínios, a <b>área da sala de condomínio</b>.</li>
+          <li>Se já existem carretéis: o <b>comprimento da mangueira</b> (veja a marcação do carretel ou meça), quantas <b>escadas</b> servem cada piso e se há <b>bocas junto às saídas</b> para as escadas (a menos de 3 m) e junto às saídas das salas grandes.</li>
+          <li>Acesso livre a cada carretel (1 m de raio, 2 m de altura), manípulo a ≤ 1,5 m e sinalização (arts. 164.º e 166.º).</li>
+        </ul>
+      </div>
+    </details>
+  );
+}
 
 /** Secção «Rede de incêndio armada (carretéis)» do passo Extintores — RT-SCIE, arts. 164.º a 167.º */
 export default function UTRia({ ut, upU, n, verLei, opcional }: { ut: UT; upU: (fn: (u: UT) => void) => void; n: string; verLei: (b: string) => void; opcional?: boolean }) {
@@ -20,6 +70,7 @@ export default function UTRia({ ut, upU, n, verLei, opcional }: { ut: UT; upU: (
         <p className="min-w-0 flex-1 basis-[280px]"><b>Não incluída neste estudo.</b> <span className="text-ink-2">A lei pode exigi-la conforme a utilização-tipo, a categoria e os locais com mais de 200 pessoas (RT-SCIE, art. 164.º). Inclua-a se o estudo a abranger.</span></p>
         <button className="btn h-9 px-4" onClick={() => upR((z) => { z.ativa = true; })}>Incluir</button>
       </div>
+      <div className="mt-3"><QuandoObrigatoria tipo={ut.tipo} /></div>
     </Section>
   );
 
@@ -29,6 +80,7 @@ export default function UTRia({ ut, upU, n, verLei, opcional }: { ut: UT; upU: (
         <p className="min-w-0 flex-1 basis-[280px]"><b>{r.exigida === null ? 'Por saber' : r.exigida ? 'Exigida' : 'Não exigida'}</b> — {r.motivo}</p>
         <Lei b="RT-SCIE, arts. 164.º a 167.º" />
       </div>
+      <QuandoObrigatoria tipo={ut.tipo} />
       {r.notas.map((t, i) => <p key={i} className="mb-2 text-[12.5px] text-ink-2">{t}</p>)}
       {opcional && <button className="mb-3 text-[12px] font-semibold text-ink-3 hover:text-ink hover:underline" onClick={() => upR((z) => { z.ativa = false; })}>Retirar do estudo</button>}
       {cls.falta.length > 0 && (
