@@ -8,6 +8,7 @@ import { Faltas, Field, Text } from '../ui/primitives';
 import LerQR from '../ui/LerQR';
 import VideoExtintor from '../ui/VideoExtintor';
 import ContactoAnomalia from '../ui/ContactoAnomalia';
+import MensagemEpoca from '../ui/MensagemEpoca';
 import { ChipEstado, LinhaExt } from './Manutencao';
 import { periodoDe, TIPO_MANUT, dataPt, descExt, estadoExt, faltaEmpresa, hojeISO, lerUrlExt, procurarExt, registoOK, rotuloPisoInv } from '../engine/manutencao';
 
@@ -139,6 +140,8 @@ export default function FichaExt({ eid }: { eid: string }) {
             apagar={() => { if (confirm(`Apagar ${e.num} e o seu registo de manutenções?`)) { upPl((x) => { x.extintores = x.extintores.filter((z) => z.id !== e.id); }); go(`${base}/manutencao`); } }} />
         </div>
       )}
+
+      <div className="mt-4"><MensagemEpoca /></div>
 
       <div className="mt-4"><ContactoAnomalia nome={p.autoprotecao?.rs?.nome} telefone={p.autoprotecao?.rs?.telefone} empresa={pl.empresa.nome} carretel={e.equip === 'carretel'} /></div>
       {e.equip !== 'carretel' && <div className="mt-4"><VideoExtintor /></div>}

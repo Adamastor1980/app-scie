@@ -9,6 +9,7 @@ import { ChipEstado } from './Manutencao';
 import { Historico } from './FichaExt';
 import VideoExtintor from '../ui/VideoExtintor';
 import ContactoAnomalia from '../ui/ContactoAnomalia';
+import MensagemEpoca from '../ui/MensagemEpoca';
 import { NomeApp, Simbolo } from '../ui/Marca';
 
 /**
@@ -56,6 +57,7 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
         <p className="mt-1 text-[13px]">{e.desc}{e.eficacia ? ` · eficácia ${e.eficacia}` : ''}{e.ano ? ` · fabrico ${e.ano}` : ''}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2"><ChipEstado s={s} />{s.naoConforme && <span className="border border-alerta px-1.5 py-0.5 font-mono text-[11px] font-semibold text-alerta">ÚLTIMA: NÃO CONFORME</span>}</div>
       </div>
+      <div className="mt-4"><MensagemEpoca /></div>
       <div className="mt-4"><ContactoAnomalia nome={pub.contacto?.nome} telefone={pub.contacto?.telefone} empresa={pub.manutencao} carretel={e.equip === 'carretel'} /></div>
       {e.equip !== 'carretel' && <div className="mt-4"><VideoExtintor /></div>}
       <h2 className="mb-2 mt-6 font-display text-[18px] font-bold">Histórico de manutenção</h2>
