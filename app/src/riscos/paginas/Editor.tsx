@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, BookOpen, ChevronDown, ChevronUp, Copy, FileText, Lightbulb, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Grid3x3, ChevronDown, ChevronUp, Copy, FileText, Lightbulb, Plus, Search, Trash2, X } from 'lucide-react';
 import { useRiscos } from '../store';
 import { useStore } from '../../store';
 import { go } from '../../router';
@@ -8,6 +8,7 @@ import { BIBLIOTECA, GRUPOS, LOCAIS_TIPO, type EntradaBiblioteca } from '../bibl
 import { EFICACIA, ESTADO_MEDIDA, LIMITE_ACEITAVEL, NC, ND, NE, NIVEIS, TIPO_MEDIDA, calcular, faltaLinha, ndDoQuadro2, painel } from '../motor';
 import { novaLinha, novaMedida, rid } from '../dados';
 import type { AvaliacaoRiscos, Eficacia, EstadoMedida, LinhaRisco, MedidaPlano, Pessoa, TipoMedida } from '../tipos';
+import Quadros from './Matrizes';
 import { BadgeVersao, Caixa, ChipNivel, dataPt, faltaIdent, refR, textoNP } from './comum';
 
 type Up = (fn: (a: AvaliacaoRiscos) => void) => void;
@@ -22,6 +23,7 @@ const SECS = [
 export default function Editor({ id, sec }: { id: string; sec: string }) {
   const a = useRiscos((s) => s.avaliacoes.find((x) => x.id === id));
   const atualizar = useRiscos((s) => s.atualizar);
+  const [matrizes, setMatrizes] = useState(false);
   if (!a) return (
     <main className="mx-auto max-w-[720px] px-4 py-10">
       <p className="mb-4 font-display text-[20px] font-bold">Avaliação não encontrada.</p>
@@ -49,6 +51,7 @@ export default function Editor({ id, sec }: { id: string; sec: string }) {
                 <option value="light">Light</option><option value="completa">Completa</option>
               </select>
             </label>
+            <button className="btn h-10 px-3" onClick={() => setMatrizes(true)}><Grid3x3 size={16} /> Matrizes</button>
             <button className="btn-fire h-10 px-4" onClick={() => go(`/riscos/a/${id}/relatorio`)}><FileText size={16} /> Relatório</button>
           </div>
           <nav className="-mb-px mt-3 flex gap-1 overflow-x-auto">
@@ -70,96 +73,127 @@ export default function Editor({ id, sec }: { id: string; sec: string }) {
         {atual === 'reavaliacao' && <Reavaliacao a={a} up={up} />}
         {atual === 'painel' && <Painel a={a} up={up} />}
       </main>
+      {matrizes && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center" onClick={() => setMatrizes(false)}>
+          <div className="flex max-h-[94dvh] w-full max-w-[900px] flex-col bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-ink px-4 py-3">
+              <div><p className="font-display text-[17px] font-bold">Matrizes do método SSARA</p><p className="text-[12px] text-ink-3">Quadros 1 a 8 (NTP 330, como na matriz V5.0). Também vão para o relatório, no capítulo «Metodologia».</p></div>
+              <button className="btn-ghost" onClick={() => setMatrizes(false)}><X size={18} /></button>
+            </div>
+            <div className="overflow-y-auto px-4 py-4"><Quadros /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ───────────────────────── Identificação ───────────────────────── */
 
+/* Componentes de campo fora do ecrã: se fossem criados dentro dele, cada letra recriava a caixa e o cursor saía do campo */
+function CampoT({ l, v, set, cls = '', ph, hint }: { l: string; v: string; set: (s: string) => void; cls?: string; ph?: string; hint?: string }) {
+  return <Field label={l} className={cls} hint={hint}><Text value={v} onChange={set} placeholder={ph} /></Field>;
+}
+function CampoD({ l, v, set, cls = '' }: { l: string; v: string; set: (s: string) => void; cls?: string }) {
+  return <Field label={l} className={cls}><input type="date" className="input" value={v} onChange={(e) => set(e.target.value)} /></Field>;
+}
+function CampoPessoa({ a, up, l, k, hint, cls = '' }: { a: AvaliacaoRiscos; up: Up; l: string; k: keyof AvaliacaoRiscos['equipa']; hint?: string; cls?: string }) {
+  const p = a.equipa[k];
+  const set = (campo: keyof Pessoa) => (v: string) => up((x) => { x.equipa[k][campo] = v; });
+  return (
+    <div className={`grid gap-3 sm:grid-cols-[1.3fr_1fr_150px] ${cls}`}>
+      <Field label={l} hint={hint}><Text value={p.nome} onChange={set('nome')} placeholder="Nome" /></Field>
+      <Field label="Função"><Text value={p.funcao} onChange={set('funcao')} /></Field>
+      <Field label="Data"><input type="date" className="input" value={p.data} onChange={(e) => set('data')(e.target.value)} /></Field>
+    </div>
+  );
+}
+
 function Identificacao({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
   const c = a.versao === 'completa';
   const fi = faltaIdent(a);
   const f = (campo: string) => (fi.some((x) => x[0] === campo) ? 'falta' : '');
-  const T = ({ l, v, set, cls = '', ph, hint }: { l: string; v: string; set: (s: string) => void; cls?: string; ph?: string; hint?: string }) => <Field label={l} className={cls} hint={hint}><Text value={v} onChange={set} placeholder={ph} /></Field>;
-  const D = ({ l, v, set, cls = '' }: { l: string; v: string; set: (s: string) => void; cls?: string }) => <Field label={l} className={cls}><input type="date" className="input" value={v} onChange={(e) => set(e.target.value)} /></Field>;
   const empresa = useStore((s) => s.empresaPadrao);
   const autor = useStore((s) => s.autorPadrao);
   const usarEmpresa = () => up((x) => {
     if (empresa) Object.assign(x.executante, { designacao: empresa.nome || '', nipc: empresa.nif || '', morada: empresa.morada || '', contacto: [empresa.telefone, empresa.email].filter(Boolean).join(' · ') });
     if (autor) { x.executante.responsavelTecnico = autor.nome || ''; x.executante.habilitacoes = [autor.qualificacao, autor.ordem && `${autor.ordem} n.º ${autor.numero || '—'}`].filter(Boolean).join(' · '); }
   });
-  const P = ({ l, k, hint }: { l: string; k: keyof AvaliacaoRiscos['equipa']; hint?: string }) => {
-    const p = a.equipa[k];
-    const set = (campo: keyof Pessoa) => (v: string) => up((x) => { x.equipa[k][campo] = v; });
-    return (
-      <div className={`grid gap-3 sm:grid-cols-[1.3fr_1fr_150px] ${k === 'elaborado' ? f('Elaborado por') : ''}`}>
-        <Field label={l} hint={hint}><Text value={p.nome} onChange={set('nome')} placeholder="Nome" /></Field>
-        <Field label="Função"><Text value={p.funcao} onChange={set('funcao')} /></Field>
-        <Field label="Data"><input type="date" className="input" value={p.data} onChange={(e) => set('data')(e.target.value)} /></Field>
-      </div>
-    );
-  };
   return (
     <>
       <Faltas itens={fi} titulo="Falta preencher" />
       <div className="h-4" />
       <Caixa titulo="Local e trabalho avaliados">
         <div className="grid gap-3 sm:grid-cols-2">
-          <T l="Local avaliado" v={a.trabalho.local} set={(v) => up((x) => { x.trabalho.local = v; })} cls={f('Local avaliado')} ph="Ex.: Oficina de manutenção — piso 0" />
-          <T l="Atividade / processo" v={a.trabalho.atividade} set={(v) => up((x) => { x.trabalho.atividade = v; })} cls={f('Atividade')} ph="Ex.: Manutenção mecânica de equipamentos" />
+          <CampoT l="Local avaliado" v={a.trabalho.local} set={(v) => up((x) => { x.trabalho.local = v; })} cls={f('Local avaliado')} ph="Ex.: Oficina de manutenção — piso 0" />
+          <CampoT l="Atividade / processo" v={a.trabalho.atividade} set={(v) => up((x) => { x.trabalho.atividade = v; })} cls={f('Atividade')} ph="Ex.: Manutenção mecânica de equipamentos" />
           {c && <>
-            <T l="Tipo de intervenção" v={a.trabalho.tipoIntervencao} set={(v) => up((x) => { x.trabalho.tipoIntervencao = v; })} ph="Ex.: Inicial, periódica, após alteração, após acidente" />
-            <T l="Equipamentos utilizados" v={a.trabalho.equipamentos} set={(v) => up((x) => { x.trabalho.equipamentos = v; })} />
-            <T l="Período de trabalho" v={a.trabalho.periodo} set={(v) => up((x) => { x.trabalho.periodo = v; })} ph="Ex.: 2 turnos, 08h–24h" />
-            <T l="Razão da avaliação" v={a.trabalho.razao} set={(v) => up((x) => { x.trabalho.razao = v; })} ph="Ex.: Nova linha; revisão anual" />
+            <CampoT l="Tipo de intervenção" v={a.trabalho.tipoIntervencao} set={(v) => up((x) => { x.trabalho.tipoIntervencao = v; })} ph="Ex.: Inicial, periódica, após alteração, após acidente" />
+            <CampoT l="Equipamentos utilizados" v={a.trabalho.equipamentos} set={(v) => up((x) => { x.trabalho.equipamentos = v; })} />
+            <CampoT l="Período de trabalho" v={a.trabalho.periodo} set={(v) => up((x) => { x.trabalho.periodo = v; })} ph="Ex.: 2 turnos, 08h–24h" />
+            <CampoT l="Razão da avaliação" v={a.trabalho.razao} set={(v) => up((x) => { x.trabalho.razao = v; })} ph="Ex.: Nova linha; revisão anual" />
           </>}
         </div>
       </Caixa>
       <Caixa titulo="Entidade avaliada">
         <div className="grid gap-3 sm:grid-cols-2">
-          <T l="Designação" v={a.entidade.designacao} set={(v) => up((x) => { x.entidade.designacao = v; })} cls={f('Entidade avaliada')} />
-          <T l="Morada" v={a.entidade.morada} set={(v) => up((x) => { x.entidade.morada = v; })} />
+          <CampoT l="Designação" v={a.entidade.designacao} set={(v) => up((x) => { x.entidade.designacao = v; })} cls={f('Entidade avaliada')} />
+          <CampoT l="Morada" v={a.entidade.morada} set={(v) => up((x) => { x.entidade.morada = v; })} />
           {c && <>
-            <T l="NIPC" v={a.entidade.nipc} set={(v) => up((x) => { x.entidade.nipc = v; })} />
-            <T l="CAE" v={a.entidade.cae} set={(v) => up((x) => { x.entidade.cae = v; })} />
-            <T l="Responsável da entidade" v={a.entidade.responsavel} set={(v) => up((x) => { x.entidade.responsavel = v; })} />
-            <T l="Contacto" v={a.entidade.contacto} set={(v) => up((x) => { x.entidade.contacto = v; })} />
-            <T l="Técnico de SST da entidade" v={a.entidade.tecnicoSST} set={(v) => up((x) => { x.entidade.tecnicoSST = v; })} />
+            <CampoT l="NIPC" v={a.entidade.nipc} set={(v) => up((x) => { x.entidade.nipc = v; })} />
+            <CampoT l="CAE" v={a.entidade.cae} set={(v) => up((x) => { x.entidade.cae = v; })} />
+            <CampoT l="Responsável da entidade" v={a.entidade.responsavel} set={(v) => up((x) => { x.entidade.responsavel = v; })} />
+            <CampoT l="Contacto" v={a.entidade.contacto} set={(v) => up((x) => { x.entidade.contacto = v; })} />
+            <CampoT l="Técnico de SST da entidade" v={a.entidade.tecnicoSST} set={(v) => up((x) => { x.entidade.tecnicoSST = v; })} />
           </>}
         </div>
       </Caixa>
       {c && (
         <Caixa titulo="Entidade executante" direita={<button className="text-[12.5px] font-semibold text-fire-ink hover:underline" onClick={usarEmpresa}>Usar «A minha empresa»</button>}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <T l="Designação" v={a.executante.designacao} set={(v) => up((x) => { x.executante.designacao = v; })} cls={f('Entidade executante')} />
-            <T l="NIPC" v={a.executante.nipc} set={(v) => up((x) => { x.executante.nipc = v; })} />
-            <T l="Morada" v={a.executante.morada} set={(v) => up((x) => { x.executante.morada = v; })} />
-            <T l="Contacto" v={a.executante.contacto} set={(v) => up((x) => { x.executante.contacto = v; })} />
-            <T l="Responsável técnico" v={a.executante.responsavelTecnico} set={(v) => up((x) => { x.executante.responsavelTecnico = v; })} />
-            <T l="Habilitações / título profissional" v={a.executante.habilitacoes} set={(v) => up((x) => { x.executante.habilitacoes = v; })} hint="Técnico superior ou técnico de SHT certificado (Lei n.º 102/2009, art. 100.º n.º 1)" />
-            <T l="Modalidade do serviço de SST" v={a.executante.servicoSST} set={(v) => up((x) => { x.executante.servicoSST = v; })} ph="Interno, comum ou externo (art. 74.º)" />
+            <CampoT l="Designação" v={a.executante.designacao} set={(v) => up((x) => { x.executante.designacao = v; })} cls={f('Entidade executante')} />
+            <CampoT l="NIPC" v={a.executante.nipc} set={(v) => up((x) => { x.executante.nipc = v; })} />
+            <CampoT l="Morada" v={a.executante.morada} set={(v) => up((x) => { x.executante.morada = v; })} />
+            <CampoT l="Contacto" v={a.executante.contacto} set={(v) => up((x) => { x.executante.contacto = v; })} />
+            <CampoT l="Responsável técnico" v={a.executante.responsavelTecnico} set={(v) => up((x) => { x.executante.responsavelTecnico = v; })} />
+            <CampoT l="Habilitações / título profissional" v={a.executante.habilitacoes} set={(v) => up((x) => { x.executante.habilitacoes = v; })} hint="Técnico superior ou técnico de SHT certificado (Lei n.º 102/2009, art. 100.º n.º 1)" />
+            <CampoT l="Modalidade do serviço de SST" v={a.executante.servicoSST} set={(v) => up((x) => { x.executante.servicoSST = v; })} ph="Interno, comum ou externo (art. 74.º)" />
           </div>
         </Caixa>
       )}
       <Caixa titulo="Equipa e consulta">
         <div className="flex flex-col gap-4">
-          <P l="Elaborado por" k="elaborado" />
-          {c && <P l="Revisto por" k="revisto" />}
-          {c && <P l="Aprovado por" k="aprovado" />}
-          <P l="Consulta dos trabalhadores" k="consulta" hint="Representante dos trabalhadores para a SST ou, na falta, os trabalhadores. O empregador consulta-os por escrito sobre a avaliação de riscos (art. 18.º n.º 1 a)) e regista em livro próprio (n.º 6)." />
+          <CampoPessoa a={a} up={up} l="Elaborado por" k="elaborado" cls={f('Elaborado por')} />
+          {c && <CampoPessoa a={a} up={up} l="Revisto por" k="revisto" cls={''} />}
+          {c && <CampoPessoa a={a} up={up} l="Aprovado por" k="aprovado" cls={''} />}
+          <CampoPessoa a={a} up={up} l="Consulta dos trabalhadores" k="consulta" cls={''} hint="Representante dos trabalhadores para a SST ou, na falta, os trabalhadores. O empregador consulta-os por escrito sobre a avaliação de riscos (art. 18.º n.º 1 a)) e regista em livro próprio (n.º 6)." />
         </div>
       </Caixa>
       <Caixa titulo="Documento e datas">
         <div className="grid gap-3 sm:grid-cols-3">
-          <T l="Título" v={a.titulo} set={(v) => up((x) => { x.titulo = v; })} cls="sm:col-span-3" />
-          <T l="Código" v={a.codigo} set={(v) => up((x) => { x.codigo = v; })} ph="Ex.: AR-2026-01" />
-          <T l="Revisão" v={a.revisao} set={(v) => up((x) => { x.revisao = v; })} />
-          <D l="Data da avaliação" v={a.metodo.dataAvaliacao} set={(v) => up((x) => { x.metodo.dataAvaliacao = v; })} cls={f('Data da avaliação')} />
-          {c && <D l="Data de emissão" v={a.dataEmissao} set={(v) => up((x) => { x.dataEmissao = v; })} />}
-          {c && <D l="Atualizada em" v={a.metodo.atualizadoEm} set={(v) => up((x) => { x.metodo.atualizadoEm = v; })} />}
-          <D l="Próxima revisão" v={a.metodo.proximaRevisao} set={(v) => up((x) => { x.metodo.proximaRevisao = v; })} />
-          {c && <T l="Classificação" v={a.classificacao} set={(v) => up((x) => { x.classificacao = v; })} />}
+          <CampoT l="Título" v={a.titulo} set={(v) => up((x) => { x.titulo = v; })} cls="sm:col-span-3" />
+          <CampoT l="Código" v={a.codigo} set={(v) => up((x) => { x.codigo = v; })} ph="Ex.: AR-2026-01" />
+          <CampoT l="Revisão" v={a.revisao} set={(v) => up((x) => { x.revisao = v; })} />
+          <CampoD l="Data da avaliação" v={a.metodo.dataAvaliacao} set={(v) => up((x) => { x.metodo.dataAvaliacao = v; })} cls={f('Data da avaliação')} />
+          {c && <CampoD l="Data de emissão" v={a.dataEmissao} set={(v) => up((x) => { x.dataEmissao = v; })} />}
+          {c && <CampoD l="Atualizada em" v={a.metodo.atualizadoEm} set={(v) => up((x) => { x.metodo.atualizadoEm = v; })} />}
+          <CampoD l="Próxima revisão" v={a.metodo.proximaRevisao} set={(v) => up((x) => { x.metodo.proximaRevisao = v; })} />
+          {c && <CampoT l="Classificação" v={a.classificacao} set={(v) => up((x) => { x.classificacao = v; })} />}
         </div>
+        {c && (
+          <div className="mt-4">
+            <p className="label mb-2">Registo de revisões</p>
+            {(a.revisoes ?? []).map((r, k) => (
+              <div key={k} className="mb-2 grid gap-2 sm:grid-cols-[80px_150px_1fr_32px]">
+                <Text value={r.revisao} onChange={(v) => up((x) => { x.revisoes![k].revisao = v; })} placeholder="Rev." />
+                <input type="date" className="input" value={r.data} onChange={(e) => up((x) => { x.revisoes![k].data = e.target.value; })} />
+                <Text value={r.descricao} onChange={(v) => up((x) => { x.revisoes![k].descricao = v; })} placeholder="Descrição da alteração" />
+                <button className="btn-ghost justify-center hover:!text-alerta" onClick={() => up((x) => { x.revisoes!.splice(k, 1); })}><X size={14} /></button>
+              </div>
+            ))}
+            <button className="text-[12.5px] font-semibold text-fire-ink hover:underline" onClick={() => up((x) => { (x.revisoes ??= []).push({ revisao: x.revisao, data: new Date().toISOString().slice(0, 10), descricao: '' }); })}>+ Adicionar revisão</button>
+          </div>
+        )}
         <p className="mt-3 text-[12px] text-ink-3">A avaliação é revista sempre que haja alterações (novos equipamentos, processos, acidentes) — Lei n.º 102/2009, art. 15.º n.º 2 a) e n.º 3. A lei não fixa uma periodicidade; a data de revisão é decisão técnica.</p>
       </Caixa>
     </>

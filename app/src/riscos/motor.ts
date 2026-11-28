@@ -14,6 +14,13 @@ export const NE = [
   { v: 2, nome: 'Ocasional (EO)', sig: 'Algumas vezes durante o dia de trabalho e por períodos curtos de tempo.' },
   { v: 1, nome: 'Esporádica (EE)', sig: 'Irregularmente.' },
 ] as const;
+/** Quadro 5 — significado do NP (matriz V5.0) */
+export const NP_SIG = [
+  { sigla: 'MA', nome: 'Muito alta', intervalo: '24 – 40', sig: 'Situação deficiente, com exposição continuada ou muito deficiente, com exposição frequente. A materialização deste risco ocorre com frequência.' },
+  { sigla: 'A', nome: 'Alta', intervalo: '10 – 20', sig: 'Situação deficiente, com exposição frequente ou ocasional ou situação muito deficiente com exposição ocasional ou esporádica. A materialização do risco é possível em vários momentos do processo operacional.' },
+  { sigla: 'M', nome: 'Média', intervalo: '6 – 8', sig: 'Situação deficiente, com exposição esporádica ou situação melhorável com exposição continuada ou frequente. Existe a possibilidade de dano.' },
+  { sigla: 'B', nome: 'Baixa', intervalo: '2 – 4', sig: 'Situação melhorável, com exposição ocasional ou esporádica. Não é expectável a ocorrência de risco, ainda que seja concebível.' },
+] as const;
 /** Quadro 6 — Nível de Consequências (NC) */
 export const NC = [
   { v: 100, nome: 'Mortal ou catastrófico (M)', pessoais: 'Um morto ou mais', materiais: 'Destruição total do sistema. Difícil renovação' },

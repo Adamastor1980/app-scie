@@ -59,6 +59,8 @@ export interface AvaliacaoRiscos {
   /** completa — reavaliação e verificação da eficácia (Lei n.º 102/2009, art. 15.º) */
   reavaliacao: { reavaliadoPor: string; verificadoPor: string; aprovadoPor: string; data: string; consulta: string; proxima: string; observacoes: string };
   conclusoes: string;
+  /** registo de revisões do documento (completa) */
+  revisoes?: { revisao: string; data: string; descricao: string }[];
   criadoEm: number;
   atualizadoEm: number;
 }

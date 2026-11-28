@@ -5,9 +5,10 @@ import { useStore } from '../../store';
 import { go } from '../../router';
 import type { Projeto } from '../../data/types';
 import { H1, H2, P, Sheet, useDocumento } from '../../pages/doc';
-import { EFICACIA, ESTADO_MEDIDA, LIMITE_ACEITAVEL, NC, ND, NE, NIVEIS, TIPO_MEDIDA, calcular, faltaLinha, painel } from '../motor';
+import { EFICACIA, ESTADO_MEDIDA, LIMITE_ACEITAVEL, NIVEIS, TIPO_MEDIDA, calcular, faltaLinha, nivel, painel } from '../motor';
+import Quadros from './Matrizes';
 import type { AvaliacaoRiscos } from '../tipos';
-import { ChipNivel, dataLonga, dataPt, faltaIdent, refR, textoNP } from './comum';
+import { ChipNivel, dataLonga, dataPt, faltaIdent, refR } from './comum';
 import { VERSAO_APP } from '../../versao';
 
 /** Artigos da Lei n.º 102/2009 em que assenta a avaliação (texto original, DR 1.ª série n.º 176, 10-09-2009) */
@@ -49,7 +50,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
   const assinaturaAutor = autor?.assinatura && autor.nome && a.equipa.elaborado.nome.trim() === autor.nome.trim() ? autor.assinatura : undefined;
   const medidas = linhas.filter((x) => x.l.medidas.some((m) => m.descricao.trim())).sort((x, y) => (y.r.nr ?? 0) - (x.r.nr ?? 0));
   const custoTotal = a.riscos.flatMap((l) => l.medidas).reduce((s, m) => s + (m.custo ?? 0), 0);
-  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Identificação', 'Metodologia', 'Resultados da avaliação', 'Fichas de risco', 'Plano de ação', ...(c ? ['Reavaliação e eficácia das medidas'] : []), 'Conclusões', 'Termo de responsabilidade', 'Anexos'];
+  const CAPS = ['Apresentação da empresa', 'Introdução e enquadramento legal', 'Identificação', 'Metodologia', 'Resultados da avaliação', 'Matriz de avaliação de riscos', 'Plano de ação', ...(c ? ['Reavaliação e eficácia das medidas'] : []), 'Conclusões', 'Termo de responsabilidade', 'Anexos'];
   let n = 0; const S = () => String(++n);
   const linhaT = (rot: string, v?: string | number) => <tr key={rot}><td className="w-[38%] font-semibold">{rot}</td><td>{v === undefined || v === '' ? '—' : v}</td></tr>;
 
@@ -110,6 +111,13 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         </tbody></table>
         <H1 n="—">Índice</H1>
         <ol className="space-y-1.5 text-[12.5px]">{CAPS.map((t, i) => <li key={t} className="flex items-baseline gap-3 border-b border-dotted border-ink-4 pb-1"><span className="w-6 font-mono text-fire-ink">{i + 1}</span>{t}</li>)}</ol>
+        <div className="avoid-break mt-10">
+          <H1 n="—">Controlo do documento</H1>
+          <table className="tbl mb-4 text-[11px]"><thead><tr><th className="w-16">Revisão</th><th className="w-24">Data</th><th>Descrição da alteração</th></tr></thead>
+            <tbody>{(a.revisoes?.length ? a.revisoes : [{ revisao: a.revisao || '00', data: a.dataEmissao || a.metodo.dataAvaliacao, descricao: 'Emissão' }]).map((x, k) => <tr key={k}><td className="num">{x.revisao}</td><td>{dataPt(x.data)}</td><td>{x.descricao || '—'}</td></tr>)}</tbody></table>
+          <table className="tbl text-[11px]"><thead><tr><th>Etapa</th><th>Nome</th><th>Função</th><th className="w-24">Data</th><th className="w-32">Assinatura</th></tr></thead>
+            <tbody>{([['Elaboração', a.equipa.elaborado], ...(c ? [['Verificação', a.equipa.revisto], ['Aprovação', a.equipa.aprovado]] : [])] as [string, AvaliacaoRiscos['equipa']['elaborado']][]).map(([k, p]) => <tr key={k}><td className="font-semibold">{k}</td><td>{p.nome || '—'}</td><td>{p.funcao || '—'}</td><td>{dataPt(p.data)}</td><td className="h-9">{k === 'Elaboração' && comAss && assinaturaAutor ? <img src={assinaturaAutor} alt="" className="max-h-8" /> : null}</td></tr>)}</tbody></table>
+        </div>
       </Sheet>
 
       <Sheet className="page-break">
@@ -164,18 +172,8 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         <H1 n={S()}>Metodologia</H1>
         <P>Foi usado o método SSARA, descrito na Nota Técnica de Prevenção n.º 330 do INSST. Para cada perigo identificado estima-se a probabilidade de o risco se materializar e a gravidade das consequências:</P>
         <p className="my-3 bg-paper px-4 py-3 text-center font-mono text-[13px] font-bold">NP = ND × NE &nbsp;·&nbsp; NR = NP × NC</p>
-        <H2 n={`${n}.1`}>Nível de deficiência (ND)</H2>
-        <table className="tbl mb-2"><thead><tr><th className="w-12">ND</th><th className="w-40">Nível</th><th>Significado</th></tr></thead><tbody>{ND.map((x) => <tr key={x.v}><td className="num font-bold">{x.v}</td><td>{x.nome}</td><td className="text-[11px]">{x.sig}</td></tr>)}</tbody></table>
-        <p className="mb-3 text-[10.5px] text-ink-3">Apoio ao ND (como na matriz): não cumpre o requisito legal e sem informação → 10; não cumpre o requisito legal → 6; cumpre, mas falta informação ou formação → 2; cumpre, com informação e formação → 1.</p>
-        <H2 n={`${n}.2`}>Nível de exposição (NE)</H2>
-        <table className="tbl mb-3"><thead><tr><th className="w-12">NE</th><th className="w-40">Nível</th><th>Significado</th></tr></thead><tbody>{NE.map((x) => <tr key={x.v}><td className="num font-bold">{x.v}</td><td>{x.nome}</td><td className="text-[11px]">{x.sig}</td></tr>)}</tbody></table>
-        <H2 n={`${n}.3`}>Nível de probabilidade (NP)</H2>
-        <table className="tbl mb-3"><thead><tr><th className="w-28">NP</th><th>Nível</th></tr></thead><tbody>{[['24 – 40', 'Muito alta (MA)'], ['10 – 20', 'Alta (A)'], ['6 – 8', 'Média (M)'], ['2 – 4', 'Baixa (B)']].map(([k, t]) => <tr key={k}><td className="num">{k}</td><td>{t}</td></tr>)}</tbody></table>
-        <H2 n={`${n}.4`}>Nível de consequência (NC)</H2>
-        <table className="tbl mb-3"><thead><tr><th className="w-12">NC</th><th className="w-40">Nível</th><th>Danos pessoais</th><th>Danos materiais</th></tr></thead><tbody>{NC.map((x) => <tr key={x.v}><td className="num font-bold">{x.v}</td><td>{x.nome}</td><td className="text-[11px]">{x.pessoais}</td><td className="text-[11px]">{x.materiais}</td></tr>)}</tbody></table>
-        <H2 n={`${n}.5`}>Nível de intervenção</H2>
-        <table className="tbl mb-3"><thead><tr><th className="w-14">Nível</th><th className="w-28">NR</th><th>Significado</th></tr></thead><tbody>{NIVEIS.map((x) => <tr key={x.n}><td><span className="inline-block w-8 text-center font-mono font-bold text-white" style={{ background: x.cor }}>{x.n}</span></td><td className="num">{x.intervalo}</td><td className="text-[11px]">{x.sig}</td></tr>)}</tbody></table>
-        <H2 n={`${n}.6`}>Medidas e risco residual</H2>
+        <Quadros compacto />
+        <H2 n={`${n}.1`}>Medidas e risco residual</H2>
         <P>As medidas são propostas pela ordem dos princípios gerais de prevenção (art. 15.º n.º 2): eliminar o perigo; substituir o que é perigoso; proteção coletiva e engenharia; medidas organizativas, sinalização, informação e formação; e equipamento de proteção individual em último recurso, dando prioridade à proteção coletiva. Após as medidas, o risco é reavaliado (NR'); considera-se aceitável o risco residual de nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}), critério da matriz da entidade executante.</P>
       </Sheet>
 
@@ -188,37 +186,41 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         <table className="tbl mb-5"><thead><tr><th>Nível</th><th className="text-right">Avaliação inicial</th>{pn.reavaliados > 0 && <th className="text-right">Após as medidas</th>}<th>Ação</th></tr></thead><tbody>
           {NIVEIS.map((x, k) => <tr key={x.n}><td><span className="inline-block w-8 text-center font-mono font-bold text-white" style={{ background: x.cor }}>{x.n}</span></td><td className="num">{pn.distInicial[k]}</td>{pn.reavaliados > 0 && <td className="num">{pn.distResidual[k]}</td>}<td className="text-[11px]">{x.sig}</td></tr>)}
         </tbody></table>
-        <H2 n={`${n}.2`}>Quadro de avaliação</H2>
-        <table className="tbl text-[10.5px]"><thead><tr><th>Ref.</th>{c && <th>Área</th>}<th>Perigo</th><th>Risco</th>{c && <th className="text-right">Exp.</th>}<th className="text-right">ND</th><th className="text-right">NE</th><th className="text-right">NP</th><th className="text-right">NC</th><th className="text-right">NR</th><th>Nível</th></tr></thead>
-          <tbody>{linhas.map(({ l, i, r }) => {
-            const nd = r.np && l.ne ? r.np / l.ne : undefined;
-            return <tr key={l.id} className="avoid-break"><td className="font-mono font-bold">{refR(i)}</td>{c && <td>{l.area || '—'}</td>}<td>{l.perigo || '—'}</td><td>{l.risco || '—'}</td>{c && <td className="num">{l.expostos ?? '—'}</td>}<td className="num">{nd ?? '—'}</td><td className="num">{l.ne ?? '—'}</td><td className="num">{r.np ?? '—'}</td><td className="num">{l.nc ?? '—'}</td><td className="num font-bold">{r.nr ?? '—'}</td><td><ChipNivel nr={r.nr} pequeno /></td></tr>;
-          })}</tbody></table>
         {!linhas.length && <P>Sem riscos registados.</P>}
       </Sheet>
 
       <Sheet className="page-break">
-        <H1 n={S()}>Fichas de risco</H1>
-        <P>Para cada risco: avaliação{c ? ', medidas existentes' : ''}, medidas propostas pela ordem da lei e risco residual.</P>
-        {linhas.map(({ l, i, r }) => (
-          <div key={l.id} className="avoid-break mb-5 border border-paper-3">
-            <div className="flex items-center justify-between gap-3 border-b border-paper-3 bg-paper px-3 py-2">
-              <p className="text-[12px] font-bold"><span className="mr-2 font-mono text-fire-ink">{refR(i)}</span>{l.perigo || 'Perigo por indicar'}</p>
-              <span className="flex items-center gap-1"><ChipNivel nr={r.nr} pequeno />{r.nr2 !== undefined && <><span className="text-ink-4">→</span><ChipNivel nr={r.nr2} pequeno /></>}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1 px-3 py-2 text-[11px]">
-              <p><span className="text-ink-3">Risco:</span> {l.risco || '—'}</p>
-              <p><span className="text-ink-3">Atividade:</span> {l.atividade || '—'}{c && l.area ? ` · ${l.area}` : ''}{c && l.expostos ? ` · ${l.expostos} expostos` : ''}</p>
-              <p><span className="text-ink-3">Avaliação:</span> NP {textoNP(r.np)} × NC {l.nc ?? '—'} = <b>NR {r.nr ?? '—'}</b>{r.nivel ? ` — ${r.nivel.sig}` : ''}</p>
-              {r.nr2 !== undefined && <p><span className="text-ink-3">Residual:</span> NR' {r.nr2}{r.reducao !== undefined ? ` (−${Math.round(r.reducao * 100)} %)` : ''} — {r.aceitavelCalc ? 'aceitável' : 'não aceitável'}</p>}
-              {c && l.existentes && <p className="col-span-2"><span className="text-ink-3">Medidas existentes:</span> {l.existentes}</p>}
-            </div>
-            {l.medidas.some((m) => m.descricao.trim()) && (
-              <table className="tbl text-[10.5px]"><thead><tr><th>Medida proposta</th><th className="w-44">Tipo</th>{c && <th className="w-28">Responsável</th>}{c && <th className="w-20">Prazo</th>}</tr></thead>
-                <tbody>{[...l.medidas].filter((m) => m.descricao.trim()).sort((x, y) => (x.tipo ?? 9) - (y.tipo ?? 9)).map((m) => <tr key={m.id}><td>{m.descricao}</td><td>{m.tipo ? TIPO_MEDIDA[m.tipo] : '—'}</td>{c && <td>{m.responsavel || '—'}</td>}{c && <td>{dataPt(m.prazo)}</td>}</tr>)}</tbody></table>
-            )}
-          </div>
-        ))}
+        <H1 n={S()}>Matriz de avaliação de riscos</H1>
+        <div className="mb-3 grid grid-cols-[110px_1fr_110px_1fr] border border-ink text-[10.5px]">
+          <span className="bg-ink px-2 py-1 font-semibold text-white">Local</span><span className="px-2 py-1">{a.trabalho.local || '—'}</span>
+          <span className="bg-ink px-2 py-1 font-semibold text-white">Atividade</span><span className="px-2 py-1">{a.trabalho.atividade || '—'}</span>
+          {c && <><span className="bg-ink px-2 py-1 font-semibold text-white">Razão</span><span className="px-2 py-1">{a.trabalho.razao || '—'}</span>
+          <span className="bg-ink px-2 py-1 font-semibold text-white">Expostos</span><span className="px-2 py-1">{a.riscos.reduce((s, l) => Math.max(s, l.expostos ?? 0), 0) || '—'}</span></>}
+        </div>
+        <table className="tbl matriz-ar table-fixed text-[9.5px]">
+          <colgroup><col style={{ width: 30 }} /><col style={{ width: '17%' }} /><col style={{ width: '13%' }} />{[0, 1, 2].map((k) => <col key={k} style={{ width: 22 }} />)}<col style={{ width: 32 }} /><col />{c && <col style={{ width: 46 }} />}{[0, 1, 2].map((k) => <col key={k} style={{ width: 22 }} />)}<col style={{ width: 32 }} /></colgroup>
+          <thead>
+            <tr><th rowSpan={2}>N.º</th><th rowSpan={2}>Atividade / perigo</th><th rowSpan={2}>Risco</th><th colSpan={4} className="!text-center">Risco inicial</th><th rowSpan={2}>Medidas preventivas e de controlo</th>{c && <th rowSpan={2}>Resp.</th>}<th colSpan={4} className="!text-center">Risco residual</th></tr>
+            <tr>{['ND', 'NE', 'NC', 'NR', "ND'", "NE'", "NC'", "NR'"].map((k) => <th key={k} className="!px-1 !text-center">{k}</th>)}</tr>
+          </thead>
+          <tbody>{linhas.map(({ l, i, r }) => {
+            const nd = r.np && l.ne ? r.np / l.ne : undefined;
+            const ms = [...l.medidas].filter((m) => m.descricao.trim()).sort((x, y) => (x.tipo ?? 9) - (y.tipo ?? 9));
+            const nrCel = (v?: number) => { const nv = nivel(v); return <td className="!px-1 text-center font-mono font-bold" style={nv ? { background: nv.cor, color: '#fff' } : undefined}>{v ?? '—'}{nv && <span className="block text-[8.5px] font-medium">{nv.n}</span>}</td>; };
+            return (
+              <tr key={l.id} className="avoid-break">
+                <td className="font-mono font-bold">{refR(i)}</td>
+                <td><span className="block text-ink-3">{[c && l.area, l.atividade].filter(Boolean).join(' · ')}</span>{l.perigo || '—'}</td>
+                <td>{l.risco || '—'}{c && l.existentes && <span className="mt-1 block text-ink-3">Existentes: {l.existentes}</span>}</td>
+                <td className="num !px-1">{nd ?? '—'}</td><td className="num !px-1">{l.ne ?? '—'}</td><td className="num !px-1">{l.nc ?? '—'}</td>{nrCel(r.nr)}
+                <td>{ms.length ? <ul>{ms.map((m) => <li key={m.id}>- {m.descricao}{m.tipo ? <span className="text-ink-3"> [{m.tipo}]</span> : ''}</li>)}</ul> : '—'}</td>
+                {c && <td>{[...new Set(ms.map((m) => m.responsavel).filter(Boolean))].join(', ') || '—'}</td>}
+                <td className="num !px-1">{l.nd2 ?? '—'}</td><td className="num !px-1">{l.ne2 ?? '—'}</td><td className="num !px-1">{l.nc2 ?? '—'}</td>{nrCel(r.nr2)}
+              </tr>
+            );
+          })}</tbody>
+        </table>
+        <p className="mt-2 text-[10px] text-ink-3">[1] Eliminação · [2] Substituição · [3] Proteção coletiva / engenharia · [4] Organizativa, sinalização, informação e formação · [5] EPI — ordem dos princípios gerais de prevenção (Lei n.º 102/2009, art. 15.º n.º 2). Risco residual aceitável: nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}).</p>
       </Sheet>
 
       <Sheet className="page-break">
@@ -230,6 +232,13 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
               {c && <><td>{m.responsavel || '—'}</td><td>{dataPt(m.prazo)}</td><td className="num">{m.custo ? m.custo.toLocaleString('pt-PT') + ' €' : '—'}</td><td>{ESTADO_MEDIDA[m.estado]}</td></>}</tr>
           )))}</tbody></table>
         {!medidas.length && <P>Sem medidas propostas.</P>}
+        {c && pn.medidas > 0 && (
+          <div className="avoid-break mt-5">
+            <H2 n={`${n}.1`}>Estado de execução das medidas</H2>
+            <table className="tbl max-w-[420px] text-[11px]"><thead><tr><th>Estado</th><th className="text-right">Medidas</th><th className="text-right">%</th></tr></thead>
+              <tbody>{Object.entries(ESTADO_MEDIDA).map(([k, t]) => { const q = a.riscos.flatMap((l) => l.medidas).filter((m) => m.descricao.trim() && m.estado === k).length; return <tr key={k}><td>{t}</td><td className="num">{q}</td><td className="num">{Math.round((q / pn.medidas) * 100)} %</td></tr>; })}</tbody></table>
+          </div>
+        )}
       </Sheet>
 
       {c && (
