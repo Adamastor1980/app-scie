@@ -12,6 +12,11 @@ import type { AvaliacaoRiscos } from './tipos';
 const limpo = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 let parar: (() => void)[] = [];
 const enviados = new Map<string, number>();
+/** fotografias já na nuvem */
+const fotosNaNuvem = new Set<string>();
+/** fotografias que este aparelho já viu em uso: só estas se apagam da nuvem quando deixam de ser usadas (evita apagar uma foto nova de outro aparelho cuja avaliação ainda não chegou) */
+const vistasEmUso = new Set<string>();
+const referidas = (avs: AvaliacaoRiscos[]) => new Set(avs.flatMap((a) => a.riscos.flatMap((l) => (l.fotos ?? []).map((f) => f.id))));
 let remoto = false;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -19,7 +24,11 @@ async function iniciar(uid: string) {
   const f = fb();
   if (!f) return;
   const col = collection(f.db, 'users', uid, 'riscos');
-  const snap = await getDocs(col);
+  const colF = collection(f.db, 'users', uid, 'riscos_fotos');
+  const [snap, snapF] = await Promise.all([getDocs(col), getDocs(colF)]);
+  const fotos = { ...useRiscos.getState().fotos };
+  snapF.forEach((d) => { fotosNaNuvem.add(d.id); if (!fotos[d.id]) fotos[d.id] = (d.data() as { imagem: string }).imagem; });
+  remoto = true; useRiscos.setState({ fotos }); remoto = false;
   const st = useRiscos.getState();
   const locais = new Map(st.avaliacoes.map((a) => [a.id, a]));
   for (const d of snap.docs) {
@@ -48,12 +57,18 @@ async function iniciar(uid: string) {
     });
     if (mudou) { remoto = true; useRiscos.setState({ avaliacoes: lista }); remoto = false; }
   });
+  const u3: Unsubscribe = onSnapshot(colF, (s) => {
+    if (s.metadata.hasPendingWrites) return;
+    const novas: Record<string, string> = {};
+    s.docChanges().forEach((c) => { if (c.type === 'removed') { fotosNaNuvem.delete(c.doc.id); return; } fotosNaNuvem.add(c.doc.id); if (!useRiscos.getState().fotos[c.doc.id]) novas[c.doc.id] = (c.doc.data() as { imagem: string }).imagem; });
+    if (Object.keys(novas).length) { remoto = true; useRiscos.setState((st) => ({ fotos: { ...st.fotos, ...novas } })); remoto = false; }
+  });
   const u2 = useRiscos.subscribe(() => {
     if (remoto) return;
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => { enviar(uid).catch(() => undefined); }, 1200);
   });
-  parar = [u1, u2];
+  parar = [u1, u2, u3];
 }
 
 async function enviar(uid: string) {
@@ -71,12 +86,19 @@ async function enviar(uid: string) {
       const ap = { ...useRiscos.getState().apagadas }; delete ap[id]; remoto = true; useRiscos.setState({ apagadas: ap }); remoto = false; enviados.delete(id);
     }).catch(() => undefined));
   }
+  // fotografias: enviar as novas e apagar as que já nenhuma avaliação usa
+  const usadas = referidas(st.avaliacoes);
+  for (const [id, imagem] of Object.entries(st.fotos)) {
+    if (usadas.has(id) && !fotosNaNuvem.has(id)) { fotosNaNuvem.add(id); tarefas.push(setDoc(doc(f.db, 'users', uid, 'riscos_fotos', id), { imagem }).catch(() => fotosNaNuvem.delete(id))); }
+  }
+  usadas.forEach((id) => vistasEmUso.add(id));
+  for (const id of [...fotosNaNuvem]) if (!usadas.has(id) && vistasEmUso.has(id)) tarefas.push(deleteDoc(doc(f.db, 'users', uid, 'riscos_fotos', id)).then(() => fotosNaNuvem.delete(id)).catch(() => undefined));
   await Promise.all(tarefas);
 }
 
 function terminar(limparLocal: boolean) {
-  parar.forEach((p) => p()); parar = []; enviados.clear();
-  if (limparLocal) { remoto = true; useRiscos.setState({ avaliacoes: [], apagadas: {} }); remoto = false; }
+  parar.forEach((p) => p()); parar = []; enviados.clear(); fotosNaNuvem.clear(); vistasEmUso.clear();
+  if (limparLocal) { remoto = true; useRiscos.setState({ avaliacoes: [], apagadas: {}, fotos: {} }); remoto = false; }
 }
 
 /** Liga a sincronização do módulo de riscos à sessão comum (chamado uma vez na raiz da app) */

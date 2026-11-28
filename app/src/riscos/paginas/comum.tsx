@@ -27,6 +27,7 @@ export function faltaIdent(a: AvaliacaoRiscos): [string, string][] {
   if (!a.trabalho.atividade.trim()) f.push(['Atividade', 'trabalho ou processo avaliado']);
   if (!a.metodo.dataAvaliacao) f.push(['Data da avaliação', 'data a que se reporta a avaliação (o documento deve manter-se atualizado — art. 98.º n.º 2 a))']);
   if (!a.equipa.elaborado.nome.trim()) f.push(['Elaborado por', 'técnico que fez a avaliação e assina o relatório (art. 98.º n.º 1 b))']);
+  if (!a.sensiveis) f.push(['Grupos sensíveis', 'indicar se há trabalhadores particularmente sensíveis expostos, ou «Nenhum identificado» (art. 18.º n.º 1 a))']);
   if (a.versao === 'completa' && !a.executante.designacao.trim()) f.push(['Entidade executante', 'quem realiza a avaliação (serviço interno ou externo de SST)']);
   return f;
 }

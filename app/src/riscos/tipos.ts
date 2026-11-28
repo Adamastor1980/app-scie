@@ -40,6 +40,7 @@ export interface LinhaRisco {
   /** completa — acompanhamento */ estado?: EstadoMedida; responsavel: string; dataAvaliacao: string; prazo: string; avaliador: string;
   /** reavaliação — risco residual */
   implementadas: string; nd2?: number; ne2?: number; nc2?: number;
+  /** fotografias do local ou da situação (a imagem fica à parte: ver store.fotos) */ fotos?: { id: string; legenda: string }[];
   /** completa */ aceitavel?: boolean; eficacia?: Eficacia; dataReav: string; verificadoPor: string; acoesAdicionais: string;
 }
 
@@ -59,6 +60,10 @@ export interface AvaliacaoRiscos {
   /** completa — reavaliação e verificação da eficácia (Lei n.º 102/2009, art. 15.º) */
   reavaliacao: { reavaliadoPor: string; verificadoPor: string; aprovadoPor: string; data: string; consulta: string; proxima: string; observacoes: string };
   conclusoes: string;
+  /** grupos de trabalhadores particularmente sensíveis expostos (ids de GRUPOS_SENSIVEIS) e observações */
+  sensiveis?: string[]; sensiveisObs?: string;
+  /** outras pessoas expostas além dos trabalhadores da atividade (manutenção, limpeza, subcontratados, visitantes…) */
+  outrosExpostos?: string;
   /** registo de revisões do documento (completa) */
   revisoes?: { revisao: string; data: string; descricao: string }[];
   criadoEm: number;

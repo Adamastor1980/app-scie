@@ -7,6 +7,7 @@ import type { Projeto } from '../../data/types';
 import { H1, H2, P, Sheet, useDocumento } from '../../pages/doc';
 import { EFICACIA, ESTADO_MEDIDA, LIMITE_ACEITAVEL, NIVEIS, TIPO_MEDIDA, calcular, faltaLinha, nivel, painel } from '../motor';
 import Quadros from './Matrizes';
+import { GRUPOS_SENSIVEIS } from '../grupos';
 import type { AvaliacaoRiscos } from '../tipos';
 import { ChipNivel, dataLonga, dataPt, faltaIdent, refR } from './comum';
 import { VERSAO_APP } from '../../versao';
@@ -45,6 +46,8 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
   const { zoom, aGerar, imprimir } = useDocumento(pseudo, 'Avaliação de riscos', 'ar-folhas');
   const [comAss, setComAss] = useState(true);
   const pn = painel(a);
+  const fotos = useRiscos((s) => s.fotos);
+  const comFotos = a.riscos.map((l, i) => ({ l, i })).filter(({ l }) => l.fotos?.some((f) => fotos[f.id]));
   const linhas = a.riscos.map((l, i) => ({ l, i, r: calcular(l) }));
   const faltas = [...faltaIdent(a).map((f) => f[0]), ...linhas.flatMap(({ l, i }) => faltaLinha(l, a.versao).map((f) => `${refR(i)}: ${f[0]}`))];
   const assinaturaAutor = autor?.assinatura && autor.nome && a.equipa.elaborado.nome.trim() === autor.nome.trim() ? autor.assinatura : undefined;
@@ -162,7 +165,14 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
           {c && <>{linhaT('Tipo de intervenção', a.trabalho.tipoIntervencao)}{linhaT('Equipamentos', a.trabalho.equipamentos)}{linhaT('Período de trabalho', a.trabalho.periodo)}</>}
           {linhaT('Data da avaliação', dataPt(a.metodo.dataAvaliacao))}
         </tbody></table>
-        <H2 n={`${n}.${c ? 4 : 3}`}>Equipa</H2>
+        <H2 n={`${n}.${c ? 4 : 3}`}>Trabalhadores expostos e grupos sensíveis</H2>
+        <P>{a.outrosExpostos ? <>Além dos trabalhadores que realizam a atividade, estão expostos: {a.outrosExpostos}.</> : 'Estão expostos os trabalhadores que realizam a atividade avaliada.'}{' '}
+          {a.sensiveis === undefined ? 'Grupos particularmente sensíveis: por indicar.' : a.sensiveis.length ? <>Foram identificados trabalhadores particularmente sensíveis: <b>{a.sensiveis.map((g) => GRUPOS_SENSIVEIS.find((x) => x.id === g)?.nome.toLowerCase()).filter(Boolean).join('; ')}</b>.</> : 'Não foram identificados trabalhadores de grupos particularmente sensíveis.'}</P>
+        {!!a.sensiveis?.length && <>
+          {GRUPOS_SENSIVEIS.filter((g) => a.sensiveis!.includes(g.id) && g.nota).map((g) => <p key={g.id} className="mb-1 text-[11px] text-ink-2">· <b>{g.nome}:</b> {g.nota}</p>)}
+          {a.sensiveisObs && <P><b>Medidas de proteção especial:</b> {a.sensiveisObs}</P>}
+        </>}
+        <H2 n={`${n}.${c ? 5 : 4}`}>Equipa</H2>
         <table className="tbl mb-4"><thead><tr><th>Papel</th><th>Nome</th><th>Função</th><th className="w-24">Data</th></tr></thead><tbody>
           {([['Elaborado', a.equipa.elaborado], ...(c ? [['Revisto', a.equipa.revisto], ['Aprovado', a.equipa.aprovado]] : []), ['Consulta dos trabalhadores', a.equipa.consulta]] as [string, AvaliacaoRiscos['equipa']['elaborado']][]).map(([k, p]) => <tr key={k}><td className="font-semibold">{k}</td><td>{p.nome || '—'}</td><td>{p.funcao || '—'}</td><td>{dataPt(p.data)}</td></tr>)}
         </tbody></table>
@@ -210,7 +220,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
             return (
               <tr key={l.id} className="avoid-break">
                 <td className="font-mono font-bold">{refR(i)}</td>
-                <td><span className="block text-ink-3">{[c && l.area, l.atividade].filter(Boolean).join(' · ')}</span>{l.perigo || '—'}</td>
+                <td><span className="block text-ink-3">{[c && l.area, l.atividade].filter(Boolean).join(' · ')}</span>{l.perigo || '—'}{l.fotos?.length ? <span className="block text-ink-3">Foto {l.fotos.map((_, k) => `${refR(i)}.${k + 1}`).join(', ')}</span> : null}</td>
                 <td>{l.risco || '—'}{c && l.existentes && <span className="mt-1 block text-ink-3">Existentes: {l.existentes}</span>}</td>
                 <td className="num !px-1">{nd ?? '—'}</td><td className="num !px-1">{l.ne ?? '—'}</td><td className="num !px-1">{l.nc ?? '—'}</td>{nrCel(r.nr)}
                 <td>{ms.length ? <ul>{ms.map((m) => <li key={m.id}>- {m.descricao}{m.tipo ? <span className="text-ink-3"> [{m.tipo}]</span> : ''}</li>)}</ul> : '—'}</td>
@@ -279,11 +289,22 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
 
       <Sheet className="page-break">
         <H1 n={S()}>Anexos</H1>
-        <H2 n="A">Abreviaturas</H2>
+        {comFotos.length > 0 && <>
+          <H2 n="A">Registo fotográfico</H2>
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            {comFotos.flatMap(({ l, i }) => (l.fotos ?? []).filter((f) => fotos[f.id]).map((f, k) => (
+              <figure key={f.id} className="avoid-break border border-paper-3">
+                <img src={fotos[f.id]} alt="" className="h-[60mm] w-full object-cover" />
+                <figcaption className="px-2 py-1.5 text-[10.5px]"><b className="font-mono">{refR(i)}.{k + 1}</b> {f.legenda || l.perigo}</figcaption>
+              </figure>
+            )))}
+          </div>
+        </>}
+        <H2 n={comFotos.length ? 'B' : 'A'}>Abreviaturas</H2>
         <table className="tbl mb-6"><tbody>{ABREV.map(([k, d]) => <tr key={k}><td className="w-20 font-mono font-semibold">{k}</td><td className="text-[11.5px]">{d}</td></tr>)}</tbody></table>
         {faltas.length > 0 && (
           <div className="no-print">
-            <H2 n="B">Dados por preencher</H2>
+            <H2 n={comFotos.length ? 'C' : 'B'}>Dados por preencher</H2>
             <ul className="text-[12px] text-alerta">{faltas.map((f, k) => <Fragment key={k}><li>· {f}</li></Fragment>)}</ul>
           </div>
         )}

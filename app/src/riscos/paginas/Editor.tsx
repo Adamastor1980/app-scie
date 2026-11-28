@@ -9,6 +9,9 @@ import { EFICACIA, ESTADO_MEDIDA, LIMITE_ACEITAVEL, NC, ND, NE, NIVEIS, TIPO_MED
 import { novaLinha, novaMedida, rid } from '../dados';
 import type { AvaliacaoRiscos, Eficacia, EstadoMedida, LinhaRisco, MedidaPlano, Pessoa, TipoMedida } from '../tipos';
 import Quadros from './Matrizes';
+import { GRUPOS_SENSIVEIS } from '../grupos';
+import { caberNaNuvem, compressImage, readFile } from '../../ui/primitives';
+import { Camera } from 'lucide-react';
 import { BadgeVersao, Caixa, ChipNivel, dataPt, faltaIdent, refR, textoNP } from './comum';
 
 type Up = (fn: (a: AvaliacaoRiscos) => void) => void;
@@ -161,6 +164,22 @@ function Identificacao({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
           </div>
         </Caixa>
       )}
+      <Caixa titulo="Quem está exposto">
+        <Field label="Outras pessoas expostas" hint="Além de quem faz a atividade: manutenção, limpeza, subcontratados, visitantes, vizinhança. Deixe vazio se não houver.">
+          <Text value={a.outrosExpostos ?? ''} onChange={(v) => up((x) => { x.outrosExpostos = v; })} placeholder="Ex.: empresa de limpeza subcontratada; visitantes acompanhados" />
+        </Field>
+        <div className={`mt-4 ${f('Grupos sensíveis')}`}>
+          <p className="label mb-1.5">Grupos particularmente sensíveis expostos</p>
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" className={`border px-2.5 py-1.5 text-[12.5px] font-semibold ${a.sensiveis && !a.sensiveis.length ? 'border-ink bg-ink text-white' : f('Grupos sensíveis') ? 'border-alerta bg-alerta-soft' : 'border-paper-3 bg-white'}`} onClick={() => up((x) => { x.sensiveis = []; })}>Nenhum identificado</button>
+            {GRUPOS_SENSIVEIS.map((g) => { const on = a.sensiveis?.includes(g.id); return (
+              <button key={g.id} type="button" className={`border px-2.5 py-1.5 text-[12.5px] font-semibold ${on ? 'border-ink bg-ink text-white' : f('Grupos sensíveis') ? 'border-alerta bg-alerta-soft' : 'border-paper-3 bg-white'}`} onClick={() => up((x) => { const s = new Set(x.sensiveis ?? []); if (on) s.delete(g.id); else s.add(g.id); x.sensiveis = [...s]; })}>{g.nome}</button>
+            ); })}
+          </div>
+          {GRUPOS_SENSIVEIS.filter((g) => a.sensiveis?.includes(g.id) && g.nota).map((g) => <p key={g.id} className="mt-2 border-l-[3px] border-fire bg-paper px-3 py-1.5 text-[12px]"><b>{g.nome}:</b> {g.nota}</p>)}
+          {!!a.sensiveis?.length && <div className="mt-3"><Field label="Medidas de proteção especial"><Area rows={2} value={a.sensiveisObs ?? ''} onChange={(v) => up((x) => { x.sensiveisObs = v; })} placeholder="Ex.: trabalhadora grávida afastada da exposição a agentes químicos; aprendizes sempre acompanhados" /></Field></div>}
+        </div>
+      </Caixa>
       <Caixa titulo="Equipa e consulta">
         <div className="flex flex-col gap-4">
           <CampoPessoa a={a} up={up} l="Elaborado por" k="elaborado" cls={f('Elaborado por')} />
@@ -365,6 +384,8 @@ function LinhaCartao({ a, l, i, up, aberto, alternar }: { a: AvaliacaoRiscos; l:
             {r.nivel && <span className="text-ink-2">{r.nivel.sig}</span>}
           </div>
 
+          <Fotos a={a} l={l} />
+
           <p className="label mb-2 mt-5">Medidas preventivas a implementar</p>
           <Medidas l={l} upL={upL} falta={f('Medidas a implementar')} />
 
@@ -377,6 +398,43 @@ function LinhaCartao({ a, l, i, up, aberto, alternar }: { a: AvaliacaoRiscos; l:
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const MAX_FOTOS = 4;
+function Fotos({ a, l }: { a: AvaliacaoRiscos; l: LinhaRisco }) {
+  const fotos = useRiscos((s) => s.fotos);
+  const juntar = useRiscos((s) => s.juntarFoto);
+  const tirar = useRiscos((s) => s.tirarFoto);
+  const atualizar = useRiscos((s) => s.atualizar);
+  const [aLer, setALer] = useState(false);
+  const lista = l.fotos ?? [];
+  const escolher = async (fs: FileList | null) => {
+    if (!fs?.length) return;
+    setALer(true);
+    try {
+      for (const f of [...fs].slice(0, MAX_FOTOS - lista.length)) juntar(a.id, l.id, await caberNaNuvem(await compressImage(await readFile(f), 1400, 0.78, true), 700_000));
+    } finally { setALer(false); }
+  };
+  return (
+    <div className="mt-5">
+      <p className="label mb-2">Fotografias <span className="normal-case tracking-normal text-ink-4">(opcional · até {MAX_FOTOS})</span></p>
+      <div className="flex flex-wrap gap-2">
+        {lista.map((f) => (
+          <div key={f.id} className="w-[150px] border border-paper-3 bg-white">
+            {fotos[f.id] ? <img src={fotos[f.id]} alt="" className="h-[100px] w-full object-cover" /> : <div className="grid h-[100px] place-items-center text-[11px] text-ink-3">a carregar…</div>}
+            <input className="w-full border-t border-paper-3 px-1.5 py-1 text-[12px] outline-none" placeholder="Legenda" value={f.legenda} onChange={(e) => atualizar(a.id, (x) => { const z = x.riscos.find((k) => k.id === l.id)?.fotos?.find((k) => k.id === f.id); if (z) z.legenda = e.target.value; })} />
+            <button className="w-full border-t border-paper-3 py-1 text-[11.5px] text-ink-3 hover:text-alerta" onClick={() => { if (confirm('Retirar esta fotografia?')) tirar(a.id, l.id, f.id); }}>Retirar</button>
+          </div>
+        ))}
+        {lista.length < MAX_FOTOS && (
+          <label className="grid h-[100px] w-[150px] cursor-pointer place-items-center border border-dashed border-ink-4 bg-white text-center text-[12px] text-ink-3 hover:border-ink">
+            <span><Camera size={20} className="mx-auto mb-1" />{aLer ? 'A preparar…' : 'Tirar ou escolher'}</span>
+            <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { escolher(e.target.files); e.target.value = ''; }} />
+          </label>
+        )}
+      </div>
     </div>
   );
 }
