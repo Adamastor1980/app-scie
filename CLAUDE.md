@@ -1,6 +1,6 @@
 # Cautela — regras de trabalho
 
-A Cautela tem módulos independentes: **SCIE** e **Avaliação de riscos (SST)**. Cada módulo tem a sua base legal, o seu código e as suas decisões; retirar um não pode afetar o outro. Comum a todos: a conta, «A minha empresa» (empresa, autor, assinatura) e o aspeto visual.
+A Cautela tem módulos independentes: **SCIE**, **Avaliação de riscos (SST)** e **FPS (estaleiros)**. Cada módulo tem a sua base legal, o seu código e as suas decisões; retirar um não pode afetar o outro. Comum a todos: a conta, «A minha empresa» (empresa, autor, assinatura) e o aspeto visual.
 
 ## Antes de alterar
 - Não alterar só porque o utilizador pede. Verificar primeiro se faz sentido, técnica e legalmente.
@@ -12,6 +12,7 @@ A Cautela tem módulos independentes: **SCIE** e **Avaliação de riscos (SST)**
 - **SCIE:** Lei n.º 123/2019 (RJ-SCIE), Portaria n.º 135/2020 (RT-SCIE) e Despacho n.º 8954/2020. Decisões em `docs/decisoes.md`. Quando a lei for alterada, rever as regras e atualizar `LEI_VERIFICADA_EM` em `app/src/versao.ts`.
 - **Avaliação de riscos (SST):** Lei n.º 102/2009 (regime jurídico da promoção da segurança e saúde no trabalho) — obrigatória daqui em diante para este módulo; método SSARA (NTP 330 do INSST), tal como na matriz do utilizador. Decisões em `docs/riscos/decisoes.md`.
   - ⚠️ O texto em `docs/legislacao/lei_102_2009.pdf` é a publicação original (DR, 10-09-2009). A lei foi alterada várias vezes: usar a versão consolidada quando o utilizador a fornecer e, até lá, assinalar que as citações seguem o texto original.
+- **FPS — fichas de procedimentos de segurança:** Decreto-Lei n.º 273/2003 (`docs/legislacao/dl_273_2003.pdf`, texto original de 29-10-2003; usar a versão consolidada quando for fornecida), art. 14.º, com os arts. 2.º, 5.º, 7.º, 9.º e 15.º para o enquadramento. Decisões em `docs/fps/decisoes.md`.
 - Os textos estão em `docs/legislacao/` e devem ser consultados sempre que se decide algo legal.
 - Cada interpretação legal nova ou alterada é registada no ficheiro de decisões do módulo (decisão, base legal, porquê, estado).
 - Respostas em português de Portugal, factuais e honestas, mesmo que não vão ao encontro da ideia do utilizador.

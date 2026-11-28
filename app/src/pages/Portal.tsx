@@ -1,12 +1,14 @@
-import { ArrowRight, Building, ClipboardCheck, Flame } from 'lucide-react';
+import { ArrowRight, Building, ClipboardCheck, Flame, HardHat } from 'lucide-react';
 import { useStore } from '../store';
 import { useRiscos } from '../riscos/store';
+import { useFPS } from '../fps/store';
 import { go } from '../router';
 
 /** Entrada da Cautela: escolher o caminho (módulos independentes) */
 export default function Portal() {
   const nScie = useStore((s) => s.projetos.length);
   const nRiscos = useRiscos((s) => s.avaliacoes.length);
+  const nFps = useFPS((s) => s.fichas.length);
   const empresa = useStore((s) => s.empresaPadrao);
   const autor = useStore((s) => s.autorPadrao);
   const Cartao = ({ to, icone, titulo, sub, linhas, n }: { to: string; icone: React.ReactNode; titulo: string; sub: string; linhas: string[]; n: number }) => (
@@ -27,11 +29,13 @@ export default function Portal() {
         <h1 className="h-display text-[44px]">Para onde vamos hoje?</h1>
         <p className="mt-2 text-[14px] text-ink-3">Escolha o caminho. Os dados da sua empresa e do autor são comuns a todos.</p>
       </div>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <Cartao to="/scie" icone={<Flame size={24} />} titulo="Segurança contra incêndio" sub="SCIE · Lei n.º 123/2019, Portaria n.º 135/2020, Despacho n.º 8954/2020" n={nScie}
           linhas={['Projetos SCIE, categoria de risco e medidas', 'Extintores, carretéis e manutenção com QR', 'Sinalética, MAP e relatórios']} />
         <Cartao to="/riscos" icone={<ClipboardCheck size={24} />} titulo="Avaliação de riscos" sub="SST · Lei n.º 102/2009 · método SSARA (NTP 330)" n={nRiscos}
           linhas={['Versão Light ou Completa', 'Biblioteca de perigos e medidas (sugestões)', 'Plano de ação, reavaliação e relatório']} />
+        <Cartao to="/fps" icone={<HardHat size={24} />} titulo="Fichas de procedimentos de segurança" sub="Estaleiros · DL n.º 273/2003, art. 14.º" n={nFps}
+          linhas={['Confirma se é FPS ou plano de segurança e saúde', 'Trabalhos com riscos especiais e medidas', 'Emergência e tomada de conhecimento']} />
       </div>
       <a href="#/empresa" className="mt-6 flex flex-wrap items-center justify-between gap-3 border border-paper-3 bg-white p-4 hover:bg-paper">
         <span className="flex items-center gap-3"><Building size={18} className="text-ink-3" /><span><span className="block text-[13.5px] font-semibold">{empresa?.nome || 'A minha empresa'}</span><span className="block text-[12px] text-ink-3">{[autor?.nome, autor?.qualificacao].filter(Boolean).join(' · ') || 'Dados da empresa e do autor, comuns a todos os caminhos'}</span></span></span>
