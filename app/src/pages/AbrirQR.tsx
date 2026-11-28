@@ -42,7 +42,7 @@ export default function AbrirQR({ pid, eid }: { pid: string; eid: string }) {
     <div>
       <p className="font-display text-[20px] font-bold">Ficha não disponível</p>
       <p className="mt-2 text-[14px] text-ink-2">Este extintor não tem ficha partilhada. Se é o técnico responsável, entre na app com a sua conta para ver o histórico e registar a manutenção.</p>
-      <button className="btn mt-4" onClick={() => go('/')}>Entrar na app</button>
+      <button className="btn mt-4" onClick={() => go('/scie')}>Entrar na app</button>
     </div>,
   );
   const s = estadoExt({ ...(e as unknown as ExtintorInv), registos: e.registos.map((r, i) => ({ ...r, tecnico: '', id: String(i) })) }, pub.periodoMeses);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Building, FolderOpen } from 'lucide-react';
+import { BookOpen, Building, ClipboardCheck, Flame } from 'lucide-react';
 import { go, match, useHash } from './router';
 import { useStore } from './store';
 import Home from './pages/Home';
@@ -12,6 +12,9 @@ import { nuvemDisponivel } from './cloud/firebase';
 import Entrar from './pages/Entrar';
 import AbrirQR from './pages/AbrirQR';
 import { NomeApp, Simbolo } from './ui/Marca';
+import Portal from './pages/Portal';
+import { useLigacaoRiscos } from './riscos/nuvem';
+import RiscosRaiz from './riscos/paginas/Raiz';
 
 function Logo() {
   return (
@@ -33,9 +36,12 @@ export default function App() {
   }, []);
 
   useLigacaoNuvem();
+  useLigacaoRiscos();
   const pm = match('/p/:pid', path) || matchPrefix(path);
   const isTabelas = path.startsWith('/tabelas');
   const isPerfil = path.startsWith('/empresa');
+  const isRiscos = path.startsWith('/riscos');
+  const isScie = !!pm || path.startsWith('/scie');
   const { user, verificado } = useNuvem();
 
   // QR de um extintor: o dono vai para a ficha completa; o cliente (sem sessão) vê a ficha pública só de leitura
@@ -55,12 +61,15 @@ export default function App() {
         <div className="flex min-w-0 items-center gap-2 sm:gap-8">
           <Logo />
           <nav className="flex items-center">
-            <a href="#/" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${!isTabelas && !isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
-              <FolderOpen size={15} /> <span className="hidden md:inline">Projetos</span>
+            <a href="#/scie" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isScie ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <Flame size={15} /> <span className="hidden md:inline">SCIE</span>
             </a>
-            <a href="#/tabelas" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+            <a href="#/riscos" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isRiscos ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
+              <ClipboardCheck size={15} /> <span className="hidden md:inline">Avaliação de riscos</span>
+            </a>
+            {!isRiscos && <a href="#/tabelas" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isTabelas ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
               <BookOpen size={15} /> <span className="hidden md:inline">Tabelas legais</span>
-            </a>
+            </a>}
             <a href="#/empresa" className={`flex h-14 items-center gap-2 border-b-2 px-2.5 text-[13px] md:px-3 font-semibold ${isPerfil ? 'border-fire text-white' : 'border-transparent text-white/60 hover:text-white'}`}>
               <Building size={15} /> <span className="hidden md:inline">A minha empresa</span>
             </a>
@@ -69,11 +78,12 @@ export default function App() {
         <div className="flex shrink-0 items-center gap-6">
         <Conta />
         <div className="hidden items-center gap-3 font-mono text-[10.5px] uppercase tracking-wider text-white/50 2xl:flex">
+          {isRiscos ? <><span>Lei 102/2009</span><span className="text-fire">■</span><span>SSARA · NTP 330</span></> : <>
           <span>DL 220/2008 · Lei 123/2019</span>
           <span className="text-fire">■</span>
           <span>Portaria 135/2020</span>
           <span className="text-fire">■</span>
-          <span>Despacho 8954/2020</span>
+          <span>Despacho 8954/2020</span></>}
         </div>
         </div>
       </header>
@@ -85,8 +95,12 @@ export default function App() {
         <Perfil />
       ) : pm ? (
         <ProjetoShell pid={pm.pid} path={path} />
-      ) : (
+      ) : isRiscos ? (
+        <RiscosRaiz path={path} />
+      ) : path.startsWith('/scie') ? (
         <Home />
+      ) : (
+        <Portal />
       )}
     </div>
   );

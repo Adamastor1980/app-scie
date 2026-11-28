@@ -52,7 +52,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
     return (
       <div className="p-10">
         <p className="mb-4 font-display text-xl font-bold">Projeto não encontrado.</p>
-        <button className="btn" onClick={() => go('/')}>Voltar aos projetos</button>
+        <button className="btn" onClick={() => go('/scie')}>Voltar aos projetos</button>
       </div>
     );
   }
@@ -213,7 +213,7 @@ export default function ProjetoShell({ pid, path }: { pid: string; path: string 
           {p.exemplo && (
             <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-fire bg-fire-soft px-4 py-2 text-[12.5px] sm:px-8">
               <span><b>Exemplo</b> — serve só para ver o funcionamento: não fica nos seus projetos nem na nuvem, e desaparece ao fechar a app.</span>
-              <a href="#/" className="font-semibold text-fire-ink hover:underline">Voltar aos projetos</a>
+              <a href="#/scie" className="font-semibold text-fire-ink hover:underline">Voltar aos projetos</a>
             </div>
           )}
           {page}
