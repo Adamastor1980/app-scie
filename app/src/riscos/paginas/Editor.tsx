@@ -226,7 +226,7 @@ function SelNivel({ valor, set, op, rotulo, falta }: { valor?: number; set: (v?:
     <Field label={rotulo} className={falta ? 'falta' : ''}>
       <select className={`input ${valor ? 'preenchido' : ''}`} value={valor ?? ''} onChange={(e) => set(e.target.value ? Number(e.target.value) : undefined)}>
         <option value="">—</option>
-        {op.map((o) => <option key={o.v} value={o.v}>{o.v} — {o.nome}</option>)}
+        {op.map((o) => <option key={o.v} value={o.v}>{op === ND && o.v === 1 ? 'A — Aceitável: risco controlado (sem valor)' : `${o.v} — ${o.nome}`}</option>)}
       </select>
     </Field>
   );
@@ -346,8 +346,8 @@ function LinhaCartao({ a, l, i, up, aberto, alternar }: { a: AvaliacaoRiscos; l:
           <span className="block truncate text-[13.5px] font-semibold">{l.perigo || <span className="text-alerta">Perigo por indicar</span>}</span>
           <span className="block truncate text-[12px] text-ink-3">{[c && l.area, l.risco].filter(Boolean).join(' · ') || '—'}{fl.length ? <span className="text-alerta"> · falta {fl.length}</span> : ''}</span>
         </span>
-        <ChipNivel nr={r.nr} />
-        {r.nr2 !== undefined && <span className="hidden items-center gap-1 sm:flex"><span className="text-ink-4">→</span><ChipNivel nr={r.nr2} /></span>}
+        <ChipNivel nr={r.nr} controlado={r.controlado} />
+        {(r.nr2 !== undefined || r.controlado2) && <span className="hidden items-center gap-1 sm:flex"><span className="text-ink-4">→</span><ChipNivel nr={r.nr2} controlado={r.controlado2} /></span>}
         {aberto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
       {aberto && (
@@ -380,8 +380,9 @@ function LinhaCartao({ a, l, i, up, aberto, alternar }: { a: AvaliacaoRiscos; l:
             <SelNivel rotulo="NC — consequência" valor={l.nc} op={NC} falta={f('NC')} set={(v) => upL((x) => { x.nc = v; })} />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 bg-paper px-3 py-2 text-[12.5px]">
+            {r.controlado ? <><ChipNivel controlado /><span className="text-ink-2">ND aceitável: não se detetaram anomalias significativas, o risco está controlado. Não se calcula NP nem NR (Quadro 1).</span></> : <>
             <span>NP = {textoNP(r.np)}</span><span>NR = <b>{r.nr ?? '—'}</b></span><ChipNivel nr={r.nr} />
-            {r.nivel && <span className="text-ink-2">{r.nivel.sig}</span>}
+            {r.nivel && <span className="text-ink-2">{r.nivel.sig}</span>}</>}
           </div>
 
           <Fotos a={a} l={l} />
@@ -389,7 +390,7 @@ function LinhaCartao({ a, l, i, up, aberto, alternar }: { a: AvaliacaoRiscos; l:
           <p className="label mb-2 mt-5">Medidas preventivas a implementar</p>
           <Medidas l={l} upL={upL} falta={f('Medidas a implementar')} />
 
-          {!c && <Residual l={l} upL={upL} />}
+          {!c && !r.controlado && <Residual l={l} upL={upL} />}
           {c && <p className="mt-4 text-[12px] text-ink-3">Responsáveis, prazos e custos: separador «Plano de ação». Risco residual e eficácia: «Reavaliação».</p>}
           <Faltas itens={fl} titulo="Falta preencher" />
           <div className="mt-4 flex justify-end gap-1">
@@ -469,6 +470,7 @@ function Residual({ l, upL }: { l: LinhaRisco; upL: (fn: (x: LinhaRisco) => void
         <SelNivel rotulo="NE'" valor={l.ne2} op={NE} set={(v) => upL((x) => { x.ne2 = v; })} />
         <SelNivel rotulo="NC'" valor={l.nc2} op={NC} set={(v) => upL((x) => { x.nc2 = v; })} />
       </div>
+      {r.controlado2 && <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 bg-paper px-3 py-2 text-[12.5px]"><ChipNivel controlado /><span className="font-semibold text-ok">Aceitável — após as medidas a deficiência é aceitável e o risco fica controlado</span></div>}
       {r.nr2 !== undefined && (
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 bg-paper px-3 py-2 text-[12.5px]">
           <span>NR' = <b>{r.nr2}</b></span><ChipNivel nr={r.nr2} />
@@ -491,7 +493,7 @@ function Plano({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
       <p className="mb-4 max-w-[760px] text-[13px] text-ink-3">Ordenado pela prioridade (NR mais alto primeiro). As medidas de prevenção devem corresponder ao resultado da avaliação (Lei n.º 102/2009, art. 15.º n.º 3); as que dependem de outros responsáveis da empresa são-lhes comunicadas (art. 98.º n.º 3). {pn.medidas} medidas · {pn.medidasConcluidas} concluídas.</p>
       {!linhas.length && <p className="border border-dashed border-ink-4 p-6 text-center text-[13px] text-ink-3">Ainda não há medidas. Indique-as em cada risco, no separador «Riscos».</p>}
       {linhas.map(({ l, i, r }) => (
-        <Caixa key={l.id} titulo={`${refR(i)} · ${l.perigo || 'Perigo por indicar'}`} direita={<ChipNivel nr={r.nr} />}>
+        <Caixa key={l.id} titulo={`${refR(i)} · ${l.perigo || 'Perigo por indicar'}`} direita={<ChipNivel nr={r.nr} controlado={r.controlado} />}>
           {[...l.medidas].sort((x, y) => (x.tipo ?? 9) - (y.tipo ?? 9)).map((m) => (
             <div key={m.id} className="mb-3 border-l-[3px] border-paper-3 pl-3 last:mb-0">
               <p className="text-[13px] font-semibold">{m.descricao || <span className="text-alerta">Descrição por indicar</span>} <span className="font-normal text-ink-3">· {m.tipo ? TIPO_MEDIDA[m.tipo] : 'tipo por indicar'}</span></p>
@@ -523,7 +525,7 @@ function Reavaliacao({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
         const r = calcular(l);
         const upL = (fn: (x: LinhaRisco) => void) => up((av) => { const z = av.riscos.find((k) => k.id === l.id); if (z) fn(z); });
         return (
-          <Caixa key={l.id} titulo={`${refR(i)} · ${l.perigo || 'Perigo por indicar'}`} direita={<span className="flex items-center gap-1"><ChipNivel nr={r.nr} pequeno /><span className="text-ink-4">→</span><ChipNivel nr={r.nr2} pequeno /></span>}>
+          <Caixa key={l.id} titulo={`${refR(i)} · ${l.perigo || 'Perigo por indicar'}`} direita={<span className="flex items-center gap-1"><ChipNivel nr={r.nr} controlado={r.controlado} pequeno /><span className="text-ink-4">→</span><ChipNivel nr={r.nr2} controlado={r.controlado2} pequeno /></span>}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Medidas efetivamente implementadas" className="sm:col-span-2"><Area rows={2} value={l.implementadas} onChange={(v) => upL((x) => { x.implementadas = v; })} /></Field>
             </div>
@@ -579,6 +581,7 @@ function Painel({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
       </div>
       <Caixa titulo="Distribuição por nível de intervenção">
         <div className="flex flex-col gap-2">
+          {(pn.controlados > 0 || pn.controlados2 > 0) && <p className="text-[12px]"><span className="font-mono font-bold text-ok">Controlados</span> (ND aceitável, sem NR): {pn.controlados} inicial{pn.reavaliados > 0 ? ` · ${pn.controlados2} residual` : ''}</p>}
           {NIVEIS.map((n, k) => (
             <div key={n.n} className="grid grid-cols-[34px_1fr] items-center gap-2 text-[12px]">
               <span className="font-mono font-bold" style={{ color: n.cor }}>{n.n}</span>
@@ -592,7 +595,7 @@ function Painel({ a, up }: { a: AvaliacaoRiscos; up: Up }) {
       </Caixa>
       {pn.ranking.length > 0 && (
         <Caixa titulo="Prioridades (NR mais alto)">
-          <ol className="flex flex-col gap-1">{pn.ranking.map(({ l, r }) => <li key={l.id} className="flex items-center gap-3 text-[12.5px]"><ChipNivel nr={r.nr} pequeno /><span className="w-9 font-mono text-ink-3">{refR(a.riscos.indexOf(l))}</span><span className="min-w-0 flex-1 truncate">{l.perigo}</span>{r.nr2 !== undefined && <ChipNivel nr={r.nr2} pequeno />}</li>)}</ol>
+          <ol className="flex flex-col gap-1">{pn.ranking.map(({ l, r }) => <li key={l.id} className="flex items-center gap-3 text-[12.5px]"><ChipNivel nr={r.nr} controlado={r.controlado} pequeno /><span className="w-9 font-mono text-ink-3">{refR(a.riscos.indexOf(l))}</span><span className="min-w-0 flex-1 truncate">{l.perigo}</span>{r.nr2 !== undefined && <ChipNivel nr={r.nr2} controlado={r.controlado2} pequeno />}</li>)}</ol>
         </Caixa>
       )}
       <Caixa titulo="Conclusões" direita={<button className="text-[12.5px] font-semibold text-fire-ink hover:underline" onClick={() => { if (!a.conclusoes.trim() || confirm('Substituir o texto atual pela sugestão?')) up((x) => { x.conclusoes = textoConclusoes(x); }); }}>Sugerir texto</button>}>

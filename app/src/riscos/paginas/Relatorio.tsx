@@ -184,7 +184,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         <p className="my-3 bg-paper px-4 py-3 text-center font-mono text-[13px] font-bold">NP = ND × NE &nbsp;·&nbsp; NR = NP × NC</p>
         <Quadros compacto />
         <H2 n={`${n}.1`}>Medidas e risco residual</H2>
-        <P>As medidas são propostas pela ordem dos princípios gerais de prevenção (art. 15.º n.º 2): eliminar o perigo; substituir o que é perigoso; proteção coletiva e engenharia; medidas organizativas, sinalização, informação e formação; e equipamento de proteção individual em último recurso, dando prioridade à proteção coletiva. Após as medidas, o risco é reavaliado (NR'); considera-se aceitável o risco residual de nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}), critério da matriz da entidade executante.</P>
+        <P>As medidas são propostas pela ordem dos princípios gerais de prevenção (art. 15.º n.º 2): eliminar o perigo; substituir o que é perigoso; proteção coletiva e engenharia; medidas organizativas, sinalização, informação e formação; e equipamento de proteção individual em último recurso, dando prioridade à proteção coletiva. Após as medidas, o risco é reavaliado (NR'); considera-se aceitável o risco residual controlado (ND aceitável) ou de nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}), critério da matriz da entidade executante.</P>
       </Sheet>
 
       <Sheet className="page-break">
@@ -194,6 +194,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         </div>
         <H2 n={`${n}.1`}>Distribuição por nível de intervenção</H2>
         <table className="tbl mb-5"><thead><tr><th>Nível</th><th className="text-right">Avaliação inicial</th>{pn.reavaliados > 0 && <th className="text-right">Após as medidas</th>}<th>Ação</th></tr></thead><tbody>
+          {(pn.controlados > 0 || pn.controlados2 > 0) && <tr><td className="font-mono text-[10px] font-bold text-ok">Controlado</td><td className="num">{pn.controlados}</td>{pn.reavaliados > 0 && <td className="num">{pn.controlados2}</td>}<td className="text-[11px]">ND aceitável: não se detetaram anomalias significativas; não se calcula NR.</td></tr>}
           {NIVEIS.map((x, k) => <tr key={x.n}><td><span className="inline-block w-8 text-center font-mono font-bold text-white" style={{ background: x.cor }}>{x.n}</span></td><td className="num">{pn.distInicial[k]}</td>{pn.reavaliados > 0 && <td className="num">{pn.distResidual[k]}</td>}<td className="text-[11px]">{x.sig}</td></tr>)}
         </tbody></table>
         {!linhas.length && <P>Sem riscos registados.</P>}
@@ -214,23 +215,23 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
             <tr>{['ND', 'NE', 'NC', 'NR', "ND'", "NE'", "NC'", "NR'"].map((k) => <th key={k} className="!px-1 !text-center">{k}</th>)}</tr>
           </thead>
           <tbody>{linhas.map(({ l, i, r }) => {
-            const nd = r.np && l.ne ? r.np / l.ne : undefined;
+            const nd = r.controlado ? 'A' : r.np && l.ne ? r.np / l.ne : undefined;
             const ms = [...l.medidas].filter((m) => m.descricao.trim()).sort((x, y) => (x.tipo ?? 9) - (y.tipo ?? 9));
-            const nrCel = (v?: number) => { const nv = nivel(v); return <td className="!px-1 text-center font-mono font-bold" style={nv ? { background: nv.cor, color: '#fff' } : undefined}>{v ?? '—'}{nv && <span className="block text-[8.5px] font-medium">{nv.n}</span>}</td>; };
+            const nrCel = (v?: number, ctrl?: boolean) => { if (ctrl) return <td className="!px-1 text-center text-[8.5px] font-bold text-ok">Contro-<br />lado</td>; const nv = nivel(v); return <td className="!px-1 text-center font-mono font-bold" style={nv ? { background: nv.cor, color: '#fff' } : undefined}>{v ?? '—'}{nv && <span className="block text-[8.5px] font-medium">{nv.n}</span>}</td>; };
             return (
               <tr key={l.id} className="avoid-break">
                 <td className="font-mono font-bold">{refR(i)}</td>
                 <td><span className="block text-ink-3">{[c && l.area, l.atividade].filter(Boolean).join(' · ')}</span>{l.perigo || '—'}{l.fotos?.length ? <span className="block text-ink-3">Foto {l.fotos.map((_, k) => `${refR(i)}.${k + 1}`).join(', ')}</span> : null}</td>
                 <td>{l.risco || '—'}{c && l.existentes && <span className="mt-1 block text-ink-3">Existentes: {l.existentes}</span>}</td>
-                <td className="num !px-1">{nd ?? '—'}</td><td className="num !px-1">{l.ne ?? '—'}</td><td className="num !px-1">{l.nc ?? '—'}</td>{nrCel(r.nr)}
+                <td className="num !px-1">{nd ?? '—'}</td><td className="num !px-1">{l.ne ?? '—'}</td><td className="num !px-1">{l.nc ?? '—'}</td>{nrCel(r.nr, r.controlado)}
                 <td>{ms.length ? <ul>{ms.map((m) => <li key={m.id}>- {m.descricao}{m.tipo ? <span className="text-ink-3"> [{m.tipo}]</span> : ''}</li>)}</ul> : '—'}</td>
                 {c && <td>{[...new Set(ms.map((m) => m.responsavel).filter(Boolean))].join(', ') || '—'}</td>}
-                <td className="num !px-1">{l.nd2 ?? '—'}</td><td className="num !px-1">{l.ne2 ?? '—'}</td><td className="num !px-1">{l.nc2 ?? '—'}</td>{nrCel(r.nr2)}
+                <td className="num !px-1">{r.controlado2 ? 'A' : l.nd2 ?? '—'}</td><td className="num !px-1">{l.ne2 ?? '—'}</td><td className="num !px-1">{l.nc2 ?? '—'}</td>{nrCel(r.nr2, r.controlado2)}
               </tr>
             );
           })}</tbody>
         </table>
-        <p className="mt-2 text-[10px] text-ink-3">[1] Eliminação · [2] Substituição · [3] Proteção coletiva / engenharia · [4] Organizativa, sinalização, informação e formação · [5] EPI — ordem dos princípios gerais de prevenção (Lei n.º 102/2009, art. 15.º n.º 2). Risco residual aceitável: nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}).</p>
+        <p className="mt-2 text-[10px] text-ink-3">[1] Eliminação · [2] Substituição · [3] Proteção coletiva / engenharia · [4] Organizativa, sinalização, informação e formação · [5] EPI — ordem dos princípios gerais de prevenção (Lei n.º 102/2009, art. 15.º n.º 2). ND «A» (aceitável): risco controlado, sem NR. Risco residual aceitável: controlado ou nível III ou IV (NR' &lt; {LIMITE_ACEITAVEL}).</p>
       </Sheet>
 
       <Sheet className="page-break">
@@ -238,7 +239,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
         <P>Medidas ordenadas pela prioridade (nível de risco mais elevado primeiro). As medidas que dependem de outros responsáveis da empresa são-lhes comunicadas (Lei n.º 102/2009, art. 98.º n.º 3).{c && custoTotal ? ` Custo total estimado: ${custoTotal.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}.` : ''}</P>
         <table className="tbl text-[10.5px]"><thead><tr><th>Ref.</th><th>Nível</th><th>Medida</th><th>Tipo</th>{c && <><th>Responsável</th><th>Prazo</th><th className="text-right">Custo</th><th>Estado</th></>}</tr></thead>
           <tbody>{medidas.map(({ l, i, r }) => [...l.medidas].filter((m) => m.descricao.trim()).sort((x, y) => (x.tipo ?? 9) - (y.tipo ?? 9)).map((m, k) => (
-            <tr key={m.id} className="avoid-break">{k === 0 ? <><td className="font-mono font-bold">{refR(i)}</td><td><ChipNivel nr={r.nr} pequeno /></td></> : <><td /><td /></>}<td>{m.descricao}</td><td>{m.tipo ? TIPO_MEDIDA[m.tipo].split(' — ')[1] : '—'}</td>
+            <tr key={m.id} className="avoid-break">{k === 0 ? <><td className="font-mono font-bold">{refR(i)}</td><td><ChipNivel nr={r.nr} controlado={r.controlado} pequeno /></td></> : <><td /><td /></>}<td>{m.descricao}</td><td>{m.tipo ? TIPO_MEDIDA[m.tipo].split(' — ')[1] : '—'}</td>
               {c && <><td>{m.responsavel || '—'}</td><td>{dataPt(m.prazo)}</td><td className="num">{m.custo ? m.custo.toLocaleString('pt-PT') + ' €' : '—'}</td><td>{ESTADO_MEDIDA[m.estado]}</td></>}</tr>
           )))}</tbody></table>
         {!medidas.length && <P>Sem medidas propostas.</P>}
@@ -256,7 +257,7 @@ function Documento({ a }: { a: AvaliacaoRiscos }) {
           <H1 n={S()}>Reavaliação e eficácia das medidas</H1>
           <P>Risco residual após a implementação das medidas e verificação da sua eficácia (art. 15.º n.º 3 — níveis eficazes de proteção).</P>
           <table className="tbl text-[10.5px]"><thead><tr><th>Ref.</th><th>Medidas implementadas</th><th className="text-right">NR</th><th className="text-right">NR'</th><th className="text-right">Redução</th><th>Aceitável</th><th>Eficácia</th><th>Verificado</th></tr></thead>
-            <tbody>{linhas.map(({ l, i, r }) => <tr key={l.id} className="avoid-break"><td className="font-mono font-bold">{refR(i)}</td><td>{l.implementadas || '—'}{l.acoesAdicionais && <span className="block text-alerta">Ações adicionais: {l.acoesAdicionais}</span>}</td><td className="num">{r.nr ?? '—'}</td><td className="num font-bold">{r.nr2 ?? '—'}</td><td className="num">{r.reducao !== undefined ? `${Math.round(r.reducao * 100)} %` : '—'}</td><td>{r.aceitavelCalc === undefined ? '—' : r.aceitavelCalc ? 'Sim' : 'Não'}</td><td>{l.eficacia ? EFICACIA[l.eficacia] : '—'}</td><td>{[l.verificadoPor, l.dataReav && dataPt(l.dataReav)].filter(Boolean).join(' · ') || '—'}</td></tr>)}</tbody></table>
+            <tbody>{linhas.map(({ l, i, r }) => <tr key={l.id} className="avoid-break"><td className="font-mono font-bold">{refR(i)}</td><td>{l.implementadas || '—'}{l.acoesAdicionais && <span className="block text-alerta">Ações adicionais: {l.acoesAdicionais}</span>}</td><td className="num">{r.controlado ? 'Controlado' : r.nr ?? '—'}</td><td className="num font-bold">{r.controlado2 ? 'Controlado' : r.nr2 ?? '—'}</td><td className="num">{r.reducao !== undefined ? `${Math.round(r.reducao * 100)} %` : '—'}</td><td>{r.aceitavelCalc === undefined ? '—' : r.aceitavelCalc ? 'Sim' : 'Não'}</td><td>{l.eficacia ? EFICACIA[l.eficacia] : '—'}</td><td>{[l.verificadoPor, l.dataReav && dataPt(l.dataReav)].filter(Boolean).join(' · ') || '—'}</td></tr>)}</tbody></table>
           {(a.reavaliacao.reavaliadoPor || a.reavaliacao.data || a.reavaliacao.observacoes) && (
             <table className="tbl mt-4"><tbody>{linhaT('Reavaliado por', a.reavaliacao.reavaliadoPor)}{linhaT('Verificado por', a.reavaliacao.verificadoPor)}{linhaT('Aprovado por', a.reavaliacao.aprovadoPor)}{linhaT('Data', dataPt(a.reavaliacao.data))}{linhaT('Consulta dos trabalhadores', a.reavaliacao.consulta)}{linhaT('Próxima reavaliação', dataPt(a.reavaliacao.proxima))}{linhaT('Observações', a.reavaliacao.observacoes)}</tbody></table>
           )}

@@ -3,7 +3,8 @@ import { nivel, nivelNP } from '../motor';
 import type { AvaliacaoRiscos, VersaoSSARA } from '../tipos';
 
 /** Chip do nível de intervenção (Quadro 8), com a cor da matriz */
-export function ChipNivel({ nr, pequeno }: { nr?: number; pequeno?: boolean }) {
+export function ChipNivel({ nr, pequeno, controlado }: { nr?: number; pequeno?: boolean; controlado?: boolean }) {
+  if (controlado) return <span className={`inline-flex items-center border border-ok px-1.5 font-mono font-bold text-ok ${pequeno ? 'text-[10.5px]' : 'py-0.5 text-[12px]'}`} title="ND aceitável: risco controlado, não se calcula NR">Controlado</span>;
   const n = nivel(nr);
   if (!n) return <span className={`inline-flex items-center border border-dashed border-ink-4 px-1.5 font-mono text-ink-4 ${pequeno ? 'text-[10.5px]' : 'text-[12px]'}`}>—</span>;
   return (

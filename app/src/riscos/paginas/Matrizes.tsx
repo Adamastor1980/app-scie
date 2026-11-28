@@ -22,11 +22,13 @@ export default function Quadros({ compacto }: { compacto?: boolean }) {
   return (
     <div>
       <Cab n={1} t="Nível de deficiência (ND)" />
-      <table className={tbl}><thead><tr><th className="w-10">ND</th><th className="w-36">Nível</th><th>Significado</th></tr></thead><tbody>{ND.map((x) => <tr key={x.v}><td className="num font-bold">{x.v}</td><td>{x.nome}</td><td>{x.sig}</td></tr>)}</tbody></table>
+      <table className={tbl}><thead><tr><th className="w-10">ND</th><th className="w-36">Nível</th><th>Significado</th></tr></thead><tbody>{ND.map((x) => <tr key={x.v}><td className="num font-bold">{x.v === 1 ? '–' : x.v}</td><td>{x.nome}</td><td>{x.sig}</td></tr>)}</tbody></table>
+
+      <p className="mb-1 text-[10.5px] text-ink-3">Aceitável (A) não tem valor: o risco está controlado e não se calcula NP nem NR (NTP 330; aulas, Quadro 1).</p>
 
       <Cab n={2} t="Níveis de deficiência — critérios" />
       <table className={tbl}><thead><tr><th>ND</th><th>Cumpre o requisito legal?</th><th>A informação está presente?</th><th>A formação foi dada?</th></tr></thead>
-        <tbody>{q2.map(([l, i, f, v], k) => <tr key={k}><td className="font-semibold">{ND.find((x) => x.v === v)!.nome} · {v}</td><td>{sn(l)}</td><td>{sn(i)}</td><td>{sn(f)}</td></tr>)}</tbody></table>
+        <tbody>{q2.map(([l, i, f, v], k) => <tr key={k}><td className="font-semibold">{ND.find((x) => x.v === v)!.nome} · {v === 1 ? '–' : v}</td><td>{sn(l)}</td><td>{sn(i)}</td><td>{sn(f)}</td></tr>)}</tbody></table>
 
       <Cab n={3} t="Nível de exposição (NE)" />
       <table className={tbl}><thead><tr><th className="w-10">NE</th><th className="w-36">Nível</th><th>Significado</th></tr></thead><tbody>{NE.map((x) => <tr key={x.v}><td className="num font-bold">{x.v}</td><td>{x.nome}</td><td>{x.sig}</td></tr>)}</tbody></table>
@@ -34,7 +36,7 @@ export default function Quadros({ compacto }: { compacto?: boolean }) {
       <Cab n={4} t="Nível de probabilidade (NP = ND × NE)" />
       <table className={`${tbl} max-w-[460px]`}><thead><tr><th>ND \ NE</th>{NE.map((e) => <th key={e.v} className="text-center">{e.v}</th>)}</tr></thead>
         <tbody>{ND.filter((d) => d.v > 1).map((d) => <tr key={d.v}><td className="font-mono font-bold">{d.v}</td>{NE.map((e) => { const v = d.v * e.v; const s = nivelNP(v)!; return <Cel key={e.v} cor={corNP[s.sigla]}>{s.sigla} · {v}</Cel>; })}</tr>)}</tbody></table>
-      <p className="mb-1 text-[10.5px] text-ink-3">ND = 1 (aceitável) não entra na matriz: com deficiência aceitável não se calcula probabilidade.</p>
+      <p className="mb-1 text-[10.5px] text-ink-3">O nível aceitável não entra na matriz: com deficiência aceitável não se calcula a probabilidade.</p>
 
       <Cab n={5} t="Significado dos níveis de probabilidade" />
       <table className={tbl}><thead><tr><th className="w-32">Nível</th><th className="w-20">NP</th><th>Significado</th></tr></thead><tbody>{NP_SIG.map((x) => <tr key={x.sigla}><td className="font-semibold"><span className="mr-1.5 inline-block h-2.5 w-2.5" style={{ background: corNP[x.sigla] }} />{x.nome} ({x.sigla})</td><td className="num">{x.intervalo}</td><td>{x.sig}</td></tr>)}</tbody></table>

@@ -57,7 +57,12 @@ export function ndDoQuadro2(q: { legal?: boolean; informacao?: boolean; formacao
   return 1;
 }
 
-export const np = (nd?: number, ne?: number) => (nd && ne ? nd * ne : undefined);
+/**
+ * ND «Aceitável»: na NTP 330 e nas aulas (Quadros 1 e 2) não tem valor numérico — o risco está controlado e não se calcula NP nem NR.
+ * Guarda-se internamente como 1 (compatível com a matriz V5.0), mas nunca entra no cálculo.
+ */
+export const ND_ACEITAVEL = 1;
+export const np = (nd?: number, ne?: number) => (nd && nd !== ND_ACEITAVEL && ne ? nd * ne : undefined);
 export const nr = (np_?: number, nc?: number) => (np_ && nc ? np_ * nc : undefined);
 /** Quadro 4 — significado do NP */
 export function nivelNP(v?: number): { sigla: string; nome: string } | undefined {
@@ -76,13 +81,19 @@ export function nivel(v?: number): (typeof NIVEIS)[number] | undefined {
 export interface ResultadoLinha {
   np?: number; nr?: number; nivel?: (typeof NIVEIS)[number];
   np2?: number; nr2?: number; nivel2?: (typeof NIVEIS)[number];
+  /** ND aceitável: risco controlado, sem NR (inicial / residual) */ controlado?: boolean; controlado2?: boolean;
   reducao?: number; aceitavelCalc?: boolean;
 }
 export function calcular(l: LinhaRisco): ResultadoLinha {
   const nd = l.nd ?? ndDoQuadro2(l.q2 ?? {});
   const p = np(nd, l.ne), r = nr(p, l.nc);
   const p2 = np(l.nd2, l.ne2), r2 = nr(p2, l.nc2);
-  return { np: p, nr: r, nivel: nivel(r), np2: p2, nr2: r2, nivel2: nivel(r2), reducao: r && r2 !== undefined ? (r - r2) / r : undefined, aceitavelCalc: r2 !== undefined ? r2 < LIMITE_ACEITAVEL : undefined };
+  const controlado = nd === ND_ACEITAVEL, controlado2 = l.nd2 === ND_ACEITAVEL;
+  return {
+    np: p, nr: r, nivel: nivel(r), np2: p2, nr2: r2, nivel2: nivel(r2), controlado, controlado2,
+    reducao: r && r2 !== undefined ? (r - r2) / r : r && controlado2 ? 1 : undefined,
+    aceitavelCalc: controlado2 ? true : r2 !== undefined ? r2 < LIMITE_ACEITAVEL : undefined,
+  };
 }
 
 /** Campos obrigatórios por preencher numa linha: [campo, para que serve] */
@@ -92,8 +103,9 @@ export function faltaLinha(l: LinhaRisco, versao: 'light' | 'completa'): [string
   if (!l.perigo.trim()) f.push(['Perigo', 'fonte, situação ou ato com potencial de dano (Lei n.º 102/2009, art. 15.º n.º 2 a))']);
   if (!l.risco.trim()) f.push(['Risco', 'o dano que o perigo pode causar']);
   if (!(l.nd ?? ndDoQuadro2(l.q2 ?? {}))) f.push(['ND', 'nível de deficiência (Quadro 1) — ou responda às três perguntas do Quadro 2']);
-  if (!l.ne) f.push(['NE', 'nível de exposição (Quadro 3)']);
-  if (!l.nc) f.push(['NC', 'nível de consequência (Quadro 6)']);
+  const ctrl = (l.nd ?? ndDoQuadro2(l.q2 ?? {})) === ND_ACEITAVEL; // aceitável: não se calcula NR, NE e NC dispensáveis
+  if (!ctrl && !l.ne) f.push(['NE', 'nível de exposição (Quadro 3)']);
+  if (!ctrl && !l.nc) f.push(['NC', 'nível de consequência (Quadro 6)']);
   if (versao === 'completa' && !l.area.trim()) f.push(['Área / setor', 'onde se realiza a atividade']);
   const r = calcular(l).nr;
   if (r && r >= LIMITE_ACEITAVEL && !l.medidas.some((m) => m.descricao.trim())) f.push(['Medidas a implementar', `nível ${nivel(r)!.n}: a lei exige medidas de prevenção que correspondam à avaliação (art. 15.º n.º 3)`]);
@@ -104,16 +116,17 @@ export function faltaLinha(l: LinhaRisco, versao: 'light' | 'completa'): [string
 export function painel(a: AvaliacaoRiscos) {
   const res = a.riscos.map((l) => ({ l, r: calcular(l) }));
   const avaliados = res.filter((x) => x.r.nr);
-  const reav = res.filter((x) => x.r.nr2 !== undefined && x.r.nr2 > 0);
+  const reav = res.filter((x) => (x.r.nr2 !== undefined && x.r.nr2 > 0) || x.r.controlado2);
   const media = (xs: number[]) => (xs.length ? xs.reduce((s, v) => s + v, 0) / xs.length : undefined);
   const dist = (k: 'nivel' | 'nivel2') => NIVEIS.map((n) => res.filter((x) => x.r[k]?.n === n.n).length);
   const medidas = a.riscos.flatMap((l) => l.medidas.filter((m) => m.descricao.trim()));
   return {
-    avaliados: avaliados.length, reavaliados: reav.length,
-    nrMedio: media(avaliados.map((x) => x.r.nr!)), nrMedioResidual: media(reav.map((x) => x.r.nr2!)),
+    avaliados: avaliados.length + res.filter((x) => x.r.controlado).length, reavaliados: reav.length,
+    controlados: res.filter((x) => x.r.controlado).length, controlados2: res.filter((x) => x.r.controlado2).length,
+    nrMedio: media(avaliados.map((x) => x.r.nr!)), nrMedioResidual: media(reav.filter((x) => x.r.nr2).map((x) => x.r.nr2!)),
     criticos: avaliados.filter((x) => x.r.nivel && (x.r.nivel.n === 'I' || x.r.nivel.n === 'II')).length,
     reducaoMedia: media(reav.filter((x) => x.r.reducao !== undefined).map((x) => x.r.reducao!)),
-    naoAceitaveis: reav.filter((x) => x.r.nr2! >= LIMITE_ACEITAVEL).length,
+    naoAceitaveis: reav.filter((x) => (x.r.nr2 ?? 0) >= LIMITE_ACEITAVEL).length,
     ineficazes: a.riscos.filter((l) => l.eficacia === 'ineficaz').length,
     distInicial: dist('nivel'), distResidual: dist('nivel2'),
     medidas: medidas.length, medidasConcluidas: medidas.filter((m) => m.estado === 'concluido').length,
